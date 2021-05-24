@@ -24,7 +24,7 @@ namespace Badaboom_indexer
 
             var indexer = new Indexer(web3);
 
-            await indexer.IndexInRangeParallel(ulong.Parse(args[1]), ulong.Parse(args[2]));
+            await indexer.IndexInRangeParallel(ulong.Parse(args[1]), ulong.Parse(args[2]), 10);
 
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
         }

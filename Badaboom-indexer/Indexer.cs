@@ -30,10 +30,11 @@ namespace Badaboom_indexer
             ConsoleColor.Magenta.WriteLine("Indexing proccess started!\n");
 
             for (int i = 0; i < tasksCount; i++)
-            {
                 tasks.Add(this.IndexInRange(startBlock + step * (ulong)i, startBlock + step * (ulong)(i + 1)));
-            }
 
+            if (step * (ulong)tasksCount + startBlock < endBlock)
+                tasks.Add(this.IndexInRange(startBlock + step * (ulong)(tasksCount), endBlock));
+            
             await Task.WhenAll(tasks);
         } 
 
