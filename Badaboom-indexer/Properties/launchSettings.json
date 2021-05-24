@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Badaboom-indexer": {
+      "commandName": "Project",
+      "commandLineArgs": "http://localhost:8545 1000000 2000000"
+    }
+  }
+}
