@@ -14,12 +14,21 @@ namespace Badaboom_indexer
     {
         private Web3 _web3;
 
-        public Indexer(Web3 web3)
+        public ulong LastBlockNumber { get; private set; }
+
+
+        public static async Task<Indexer> CreateInstance(Web3 web3)
         {
-            _web3 = web3;
+            ulong lastBlockNumber = (await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
+
+            return new Indexer(web3, lastBlockNumber);
         }
 
-
+        private Indexer(Web3 web3, ulong lastBlockNumber)
+        {
+            _web3 = web3;
+            LastBlockNumber = lastBlockNumber;
+        }
 
         public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, int tasksCount = 1)
         {
@@ -34,19 +43,19 @@ namespace Badaboom_indexer
 
             if (step * (ulong)tasksCount + startBlock < endBlock)
                 tasks.Add(this.IndexInRange(startBlock + step * (ulong)(tasksCount), endBlock));
-            
+
             await Task.WhenAll(tasks);
-        } 
+        }
 
         public async Task IndexInRange(ulong startBlock, ulong endBlock)
         {
             if (startBlock >= endBlock) throw new ArgumentException("start block cannot be bigger then end block");
 
+            ConsoleColor.Cyan.WriteLine($"Blocks [{startBlock}] - [{endBlock}]");
+
+
             for (ulong i = startBlock; i < endBlock; i++)
             {
-                if (i % 100 == 0 || i == 0)
-                    ConsoleColor.Cyan.WriteLine($"Blocks [{i}] - [{(i + 100 <= endBlock ? i + 100 : endBlock)}]");
-
                 try
                 {
                     var txs = await GetBlockTransactions(i);
@@ -87,21 +96,15 @@ namespace Badaboom_indexer
             return block.Transactions.Select(t =>
             {
                 string value = t.Value.HexValue;
+
                 return new Transaction
                 {
                     ContractAddress = t.From,
-                    Time = UnixTimeToDateTime(block.Timestamp.ToUlong()),
+                    Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.ToUlong()).UtcDateTime,
                     Hash = t.TransactionHash,
                     MethodId = value.Substring(0, value.Length > 10 ? 10 : value.Length)
                 };
             });
-        }
-
-        public DateTime UnixTimeToDateTime(ulong unixtime)
-        {
-            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            dtDateTime = dtDateTime.AddMilliseconds(unixtime).ToLocalTime();
-            return dtDateTime;
         }
     }
 }

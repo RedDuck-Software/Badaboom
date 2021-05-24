@@ -22,7 +22,7 @@ namespace Badaboom_indexer
         {
             var web3 = new Web3(args[0]);
 
-            var indexer = new Indexer(web3);
+            var indexer = await Indexer.CreateInstance(web3);
 
             await indexer.IndexInRangeParallel(ulong.Parse(args[1]), ulong.Parse(args[2]), 10);
 
