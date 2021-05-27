@@ -1,10 +1,7 @@
 ﻿using Dapper;
 using Database.Models;
-using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Database.Respositories
@@ -12,6 +9,7 @@ namespace Database.Respositories
     public class TransactionRepository : RepositoryBase
     {
         public TransactionRepository(string connectionString) : base(connectionString) {}
+
         public TransactionRepository() : base(ConnectionStrings.DefaultConnection) {}
 
 
@@ -29,7 +27,7 @@ namespace Database.Respositories
         public async Task AddNewTransactionAsync(Transaction tx)
         {
             var sql = "insert into Transactions(ContractAddress,Hash,MethodId,Time) " +
-                "values (@ContractAddress, @Hash, @MethodId, @Time)";
+                $"values (@ContractAddress,@Hash,@MethodId,@Time)";
 
             try
             {
@@ -38,5 +36,18 @@ namespace Database.Respositories
             catch (SqlException) { }
         }
 
+
+
+        public async Task AddNewCallAsync(Call call)
+        {
+            var sql = "insert into Calls(TransactionId,PrevCallId,NextCallId,ContractAddress,MethodId)" +
+                $"values(@TransactionId,@PrevCallId,@NextCallId,@ContractAddress)";
+
+            try
+            {
+                await SqlConnection.ExecuteAsync(sql, call);
+            }
+            catch (SqlException) { }
+        }
     }
 }

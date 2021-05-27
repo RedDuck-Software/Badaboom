@@ -1,9 +1,19 @@
 create table [Transactions](
-	Id INT NOT NULL IDENTITY(1,1) PRIMARY KEY , 
-	ContractAddress NVARCHAR(42) NOT NULL,
+	TransactionId INT NOT NULL IDENTITY(1,1) PRIMARY KEY , 
 	Hash NVARCHAR(66) NOT NULL UNIQUE,	
-	MethodId NVARCHAR(10) NOT NULL, 
-	Time DATETIME NOT NULL,
+	Time DATETIME NULL,
+
+);
+
+create table [Calls] (
+	CallId INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+	TransactionId INT NOT NULL UNIQUE FOREIGN KEY REFERENCES Transactions(TransactionId),
+
+	PrevCallId INT NULL, 
+	NextCallId INT NULL
+
+	ContractAddress NVARCHAR(42) NOT NULL,
+	MethodId NVARCHAR(10) NOT NULL,
 );
 
 CREATE NONCLUSTERED INDEX IX_Transactions_ContractAddress_Method

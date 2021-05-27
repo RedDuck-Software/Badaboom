@@ -8,13 +8,14 @@ using Database.Models;
 using Database.Respositories;
 using Nethereum.Hex.HexTypes;
 using Nethereum.Web3;
+
 namespace Badaboom_indexer
 {
     public class Indexer
     {
         private Web3 _web3;
 
-        public ulong LastBlockNumber { get; private set; }
+        public ulong LatestBlockNumber { get; private set; }
 
 
         public static async Task<Indexer> CreateInstance(Web3 web3)
@@ -27,7 +28,7 @@ namespace Badaboom_indexer
         private Indexer(Web3 web3, ulong lastBlockNumber)
         {
             _web3 = web3;
-            LastBlockNumber = lastBlockNumber;
+            LatestBlockNumber = lastBlockNumber;
         }
 
         public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, int tasksCount = 1)
