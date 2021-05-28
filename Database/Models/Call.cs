@@ -8,7 +8,14 @@ namespace Database.Models
 
         public int TransactionId { get; set; }
 
-		public string ContractAddress { get; set; }
+
+        public string Error { get; set; }
+        
+
+        public string To { get; set; }
+
+        public string ContractAddress { get; set; }  
+
 
         public string MethodId { get; set;  } 
 

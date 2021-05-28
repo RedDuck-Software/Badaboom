@@ -2,15 +2,16 @@
 using Database.Models;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Database.Respositories
 {
     public class TransactionRepository : RepositoryBase
     {
-        public TransactionRepository(string connectionString) : base(connectionString) {}
+        public TransactionRepository(string connectionString) : base(connectionString) { }
 
-        public TransactionRepository() : base(ConnectionStrings.DefaultConnection) {}
+        public TransactionRepository() : base(ConnectionStrings.DefaultConnection) { }
 
 
         public async Task<IEnumerable<Transaction>> GetTransactionsByAddressAndMethod(string address, string methodId)
@@ -26,16 +27,23 @@ namespace Database.Respositories
         }
 
 
-        public async Task AddNewTransactionAsync(Transaction tx)
+        public async Task<Transaction> AddNewTransactionAsync(Transaction tx)
         {
-            var sql = "insert into Transactions(Hash,Time) " +
-                $"values (@Hash,@Time)";
+            var sql = "insert into Transactions(Hash,Time)" +
+                $"values (@Hash,@Time) SELECT CAST(SCOPE_IDENTITY() AS INT)  ";
 
             try
             {
-                await SqlConnection.ExecuteAsync(sql, tx);
+                var id = await SqlConnection.QueryAsync<int>(sql, tx);
+
+                tx.Id = id.Single();
+
+                return tx;
             }
-            catch (SqlException) { }
+            catch (SqlException)
+            {
+                return null;
+            }
         }
 
 

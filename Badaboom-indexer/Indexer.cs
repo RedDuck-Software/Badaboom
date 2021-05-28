@@ -4,28 +4,31 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Badaboom_indexer.Extensions;
+using Badaboom_indexer.Models;
 using Database.Models;
 using Database.Respositories;
 using Nethereum.Hex.HexTypes;
+using Nethereum.Parity;
 using Nethereum.Web3;
+using Newtonsoft.Json;
 
 namespace Badaboom_indexer
 {
     public class Indexer
     {
-        private Web3 _web3;
+        private Web3Parity _web3;
 
         public ulong LatestBlockNumber { get; private set; }
 
 
-        public static async Task<Indexer> CreateInstance(Web3 web3)
+        public static async Task<Indexer> CreateInstance(Web3Parity web3)
         {
             ulong lastBlockNumber = (await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
 
             return new Indexer(web3, lastBlockNumber);
         }
 
-        private Indexer(Web3 web3, ulong lastBlockNumber)
+        private Indexer(Web3Parity web3, ulong lastBlockNumber)
         {
             _web3 = web3;
             LatestBlockNumber = lastBlockNumber;
@@ -69,9 +72,43 @@ namespace Badaboom_indexer
 
                     foreach (var tx in txs)
                     {
+                        Transaction txInserted;
+
                         using (var repo = new TransactionRepository())
                         {
-                            await repo.AddNewTransactionAsync(tx);
+                            txInserted = await repo.AddNewTransactionAsync(tx);
+                        }
+
+                        if (txInserted is null) continue;
+
+                        var parityTraceRaw = (await _web3.Trace.TraceTransaction.SendRequestAsync(tx.Hash));
+                        
+
+                        if (parityTraceRaw is null)
+                        {
+                            using (var cRepo = new TransactionRepository())
+                                await cRepo.AddNewCallAsync(new Call() { ContractAddress = tx.RawTransaction.ContractAddress, MethodId = tx.RawTransaction.MethodId });
+
+                            ConsoleColor.Gray.WriteLine($"Unnable to get trace of transaction {tx.Hash}, skiping internal calls");
+
+                            continue;
+                        }
+
+                        var parityTrace = parityTraceRaw.ToObject<IEnumerable<ParityTrace>>();
+
+
+                        foreach (var action in parityTrace)
+                        {
+                            using (var cRepo = new TransactionRepository())
+                            {
+                                await cRepo.AddNewCallAsync(
+                                    new Call 
+                                    { 
+                                        ContractAddress = action.Action.To, 
+                                        MethodId = _getMethodIdFromInput(action.Action.Input), 
+                                        TransactionId = txInserted.Id 
+                                    });
+                            }
                         }
 
                         ConsoleColor.Blue.WriteLine(tx.Hash);
@@ -89,23 +126,31 @@ namespace Badaboom_indexer
             }
         }
 
-
         private async Task<IEnumerable<Transaction>> GetBlockTransactions(ulong blockNubmer)
         {
             var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(blockNubmer.ToHexBigInteger());
 
             return block.Transactions.Select(t =>
             {
-                string value = t.Value.HexValue;
+                string input = t.Value.HexValue;
 
                 return new Transaction
                 {
-                    ContractAddress = t.From,
                     Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.ToUlong()).UtcDateTime,
                     Hash = t.TransactionHash,
-                    MethodId = value.Substring(0, value.Length > 10 ? 10 : value.Length)
+                    RawTransaction = new RawTransaction
+                    {
+                        ContractAddress = t.From,
+                        MethodId = _getMethodIdFromInput(input)
+                    }
                 };
             });
+        }
+
+        private string _getMethodIdFromInput(string value)
+        {
+            if (value is null) return String.Empty;
+            return value.Substring(0, value.Length > 10 ? 10 : value.Length);
         }
     }
 }

@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 using System.Numerics;
 using Nethereum.Hex.HexTypes;
 using Nethereum.RPC.Eth.DTOs;
-
+using Badaboom_indexer.Models;
 
 namespace Badaboom_indexer
 {
@@ -32,56 +32,57 @@ namespace Badaboom_indexer
             string contract = "0x110379fc7B83Ff04B22D440C35392d0d7735DD63";
             ulong blockNumber = 10319428;
 
-            var res = await parity.Eth.GetStorageAt.SendRequestAsync(
+            /* var res = await parity.Eth.GetStorageAt.SendRequestAsync(
+                 contract,
+                 new HexBigInteger("0"),
+                 new BlockParameter(blockNumber));
+
+             Console.WriteLine(res);
+
+             res = await parity.Eth.GetStorageAt.SendRequestAsync(
+                 contract,
+                 new HexBigInteger("1"),
+                 new BlockParameter(blockNumber));
+             Console.WriteLine(res);
+
+
+             res = await parity.Eth.GetStorageAt.SendRequestAsync(
+                 contract,
+                 new HexBigInteger("2"),
+                 new BlockParameter(blockNumber));
+             Console.WriteLine(res);
+
+             res = await parity.Eth.GetStorageAt.SendRequestAsync(
+                 contract,
+                 new HexBigInteger("3"),
+                 new BlockParameter(blockNumber));
+             Console.WriteLine(res);
+
+             res = await parity.Eth.GetStorageAt.SendRequestAsync(
+                 contract,
+                 new HexBigInteger("4"),
+                 new BlockParameter(blockNumber));
+             Console.WriteLine(res);
+
+             res = await parity.Eth.GetStorageAt.SendRequestAsync(
                 contract,
-                new HexBigInteger("0"),
+                new HexBigInteger("5"),
                 new BlockParameter(blockNumber));
-
-            Console.WriteLine(res);
-
-            res = await parity.Eth.GetStorageAt.SendRequestAsync(
-                contract,
-                new HexBigInteger("1"),
-                new BlockParameter(blockNumber));
-            Console.WriteLine(res);
+             Console.WriteLine(res);
+ */
 
 
-            res = await parity.Eth.GetStorageAt.SendRequestAsync(
-                contract,
-                new HexBigInteger("2"),
-                new BlockParameter(blockNumber));
-            Console.WriteLine(res);
-
-            res = await parity.Eth.GetStorageAt.SendRequestAsync(
-                contract,
-                new HexBigInteger("3"),
-                new BlockParameter(blockNumber));
-            Console.WriteLine(res);
-
-            res = await parity.Eth.GetStorageAt.SendRequestAsync(
-                contract,
-                new HexBigInteger("4"),
-                new BlockParameter(blockNumber));
-            Console.WriteLine(res);
-
-            res = await parity.Eth.GetStorageAt.SendRequestAsync(
-               contract,
-               new HexBigInteger("5"),
-               new BlockParameter(blockNumber));
             //var res = await parity.Trace.TraceTransaction.SendRequestAsync("0x9e12e5a13e9dcceb1cc949494ccbf5391616556ff1e730a467aaa7cc80238615");
-            Console.WriteLine(res);
 
-
-
-           /* var indexer = await Indexer.CreateInstance(parity);
+            var indexer = await Indexer.CreateInstance(parity);
 
             var startBlock = args.Length > 1 ? ulong.Parse(args[1]) : 0;
 
             var endBlock = args.Length > 2 ? ulong.Parse(args[2]) : indexer.LatestBlockNumber;
 
-            await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
+            await indexer.IndexInRangeParallel(50000, endBlock, 1);
 
-            ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");*/
+            ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
         }
     }
 }

@@ -8,7 +8,11 @@ create table [Calls] (
 	CallId INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 	TransactionId INT NOT NULL UNIQUE FOREIGN KEY REFERENCES Transactions(TransactionId),
 
+	Error Text null, 
+
+	[From] NVARCHAR(42) NOT NULL,
 	ContractAddress NVARCHAR(42) NOT NULL,
+
 	MethodId NVARCHAR(10) NOT NULL,
 );
 
