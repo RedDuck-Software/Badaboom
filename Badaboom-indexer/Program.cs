@@ -36,7 +36,7 @@ namespace Badaboom_indexer
 
             var endBlock = args.Length > 2 ? ulong.Parse(args[2]) : indexer.LatestBlockNumber;
 
-            await indexer.IndexInRangeParallel(50000, endBlock, 1);
+            await indexer.IndexInRangeParallel(1000000, endBlock, 1);
 
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
         }

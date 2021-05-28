@@ -36,5 +36,11 @@ namespace Badaboom_indexer.Models
 
         [JsonProperty("to")]
         public string To { get; set; }
+
+        [JsonProperty("gas")]
+        public string GasUsed { get; set; }
+
+        [JsonProperty("value")]
+        public string Value { get; set; }
     }
 }

@@ -79,7 +79,11 @@ namespace Badaboom_indexer
                             txInserted = await repo.AddNewTransactionAsync(tx);
                         }
 
-                        if (txInserted is null) continue;
+                        if (txInserted is null)
+                        {
+                            ConsoleColor.DarkYellow.WriteLine($"Tx {tx.Hash} is already in DB");
+                            continue;
+                        } 
 
                         var parityTraceRaw = (await _web3.Trace.TraceTransaction.SendRequestAsync(tx.Hash));
 
@@ -92,7 +96,7 @@ namespace Badaboom_indexer
                                     { 
                                         ContractAddress = tx.RawTransaction.ContractAddress, 
                                         MethodId = tx.RawTransaction.MethodId,
-                                        From = tx.RawTransaction.From 
+                                        From = tx.RawTransaction.From
                                     });
 
                             ConsoleColor.Gray.WriteLine($"Unnable to get trace of transaction {tx.Hash}, skiping internal calls");
@@ -105,6 +109,12 @@ namespace Badaboom_indexer
 
                         foreach (var trace in txParityTraces)
                         {
+                            if (!(trace.Type == "create" || trace.Type == "call"))
+                            {
+                                ConsoleColor.DarkBlue.WriteLine($"Transactions with callType is not {trace.Type} included");
+                                continue;
+                            }
+
                             using (var cRepo = new TransactionRepository())
                             {
                                 await cRepo.AddNewCallAsync(
