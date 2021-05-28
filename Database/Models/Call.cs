@@ -8,12 +8,10 @@ namespace Database.Models
 
         public int TransactionId { get; set; }
 
-        public int? PrevCallId { get; set; }
-
-        public int? NextCallId { get; set; }
-
 		public string ContractAddress { get; set; }
 
         public string MethodId { get; set;  } 
+
+        public Transaction Transaction { get; set; }
     }
 }
