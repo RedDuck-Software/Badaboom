@@ -18,6 +18,8 @@ namespace Database.Models
 
 	public class RawTransaction
     {
+		public string From { get; set; }
+
 		public string ContractAddress { get; set; }
 
 		public string MethodId { get; set; }

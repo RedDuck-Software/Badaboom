@@ -12,7 +12,7 @@ namespace Database.Models
         public string Error { get; set; }
         
 
-        public string To { get; set; }
+        public string From { get; set; }
 
         public string ContractAddress { get; set; }  
 

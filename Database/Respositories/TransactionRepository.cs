@@ -50,8 +50,8 @@ namespace Database.Respositories
 
         public async Task AddNewCallAsync(Call call)
         {
-            var sql = "insert into Calls(TransactionId,ContractAddress,MethodId)" +
-                $"values(@TransactionId,@ContractAddress, @MethodId)";
+            var sql = "insert into Calls(TransactionId,Error,From,ContractAddress,MethodId)" +
+                $"values(@TransactionId,@Error,@From,@ContractAddress,@MethodId)";
 
             try
             {

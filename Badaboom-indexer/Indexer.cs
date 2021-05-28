@@ -82,31 +82,38 @@ namespace Badaboom_indexer
                         if (txInserted is null) continue;
 
                         var parityTraceRaw = (await _web3.Trace.TraceTransaction.SendRequestAsync(tx.Hash));
-                        
+
 
                         if (parityTraceRaw is null)
                         {
                             using (var cRepo = new TransactionRepository())
-                                await cRepo.AddNewCallAsync(new Call() { ContractAddress = tx.RawTransaction.ContractAddress, MethodId = tx.RawTransaction.MethodId });
+                                await cRepo.AddNewCallAsync(
+                                    new Call() 
+                                    { 
+                                        ContractAddress = tx.RawTransaction.ContractAddress, 
+                                        MethodId = tx.RawTransaction.MethodId,
+                                        From = tx.RawTransaction.From 
+                                    });
 
                             ConsoleColor.Gray.WriteLine($"Unnable to get trace of transaction {tx.Hash}, skiping internal calls");
 
                             continue;
                         }
 
-                        var parityTrace = parityTraceRaw.ToObject<IEnumerable<ParityTrace>>();
+                        var txParityTraces = parityTraceRaw.ToObject<IEnumerable<ParityTrace>>();
 
 
-                        foreach (var action in parityTrace)
+                        foreach (var trace in txParityTraces)
                         {
                             using (var cRepo = new TransactionRepository())
                             {
                                 await cRepo.AddNewCallAsync(
-                                    new Call 
+                                    new Call
                                     { 
-                                        ContractAddress = action.Action.To, 
-                                        MethodId = _getMethodIdFromInput(action.Action.Input), 
-                                        TransactionId = txInserted.Id 
+                                        From = trace.Action.From,
+                                        ContractAddress = trace.Action.To,
+                                        MethodId = _getMethodIdFromInput(trace.Action.Input),
+                                        TransactionId = txInserted.Id
                                     });
                             }
                         }
@@ -140,8 +147,9 @@ namespace Badaboom_indexer
                     Hash = t.TransactionHash,
                     RawTransaction = new RawTransaction
                     {
-                        ContractAddress = t.From,
-                        MethodId = _getMethodIdFromInput(input)
+                        From = t.From,
+                        ContractAddress = t.To,
+                        MethodId = _getMethodIdFromInput(input),
                     }
                 };
             });

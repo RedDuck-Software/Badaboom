@@ -31,6 +31,9 @@ namespace Badaboom_indexer.Models
         [JsonProperty("input")]
         public string Input { get; set; }
 
+        [JsonProperty("from")]
+        public string From { get; set; }
+
         [JsonProperty("to")]
         public string To { get; set; }
     }
