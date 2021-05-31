@@ -20,11 +20,10 @@ namespace Database.Respositories
             var sql = "SELECT TOP 1 * FROM SuccessfulBlocks ORDER BY BlockNumber DESC";
 
             var res = await SqlConnection.QueryAsync<Block>(sql);
-
             return res.Count() == 0 ? null : res.First();
         }
 
-        
+
         public async Task<IEnumerable<Block>> GetAllFailedBlocksAsync()
         {
             var sql =

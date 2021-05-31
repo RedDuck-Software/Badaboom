@@ -23,5 +23,7 @@ namespace Database.Models
 		public string ContractAddress { get; set; }
 
 		public string MethodId { get; set; }
+
+		public string Value { get; set; }
     }
 }

@@ -32,10 +32,10 @@ namespace Badaboom_indexer
 
             ulong step = (endBlock - startBlock) / (ulong)tasksCount;
 
-            ConsoleColor.Magenta.WriteLine("Indexing proccess started!\n");
+            ConsoleColor.Magenta.WriteLine($"Indexing proccess started with {tasksCount} tasks\n");
 
-            for (int i = 0; i < tasksCount; i++) { }
-            tasks.Add(this.IndexInRange(startBlock + step * (ulong)i, startBlock + step * (ulong)(i + 1)));
+            for (int i = 0; i < tasksCount; i++)
+                tasks.Add(this.IndexInRange(startBlock + step * (ulong)i, startBlock + step * (ulong)(i + 1)));
 
             if (step * (ulong)tasksCount + startBlock < endBlock)
                 tasks.Add(this.IndexInRange(startBlock + step * (ulong)(tasksCount), endBlock));
@@ -52,7 +52,10 @@ namespace Badaboom_indexer
                 using (var bRepo = new BlocksRepository())
                     lastBlockRecorded = await bRepo.GetLastSuccessfulBlockAsync() ?? new() { BlockNumber = 0 };
 
-                await this.IndexInRangeParallel((ulong)lastBlockRecorded.BlockNumber, this.LatestBlockNumber, 10);
+                await this.IndexInRangeParallel(
+                    (ulong)lastBlockRecorded.BlockNumber,
+                    this.LatestBlockNumber,
+                    (ulong)lastBlockRecorded.BlockNumber - this.LatestBlockNumber > 100 ? 10 : 1);
 
                 Thread.Sleep(1000 * 12); // 12 seconds before next indexing
             }
@@ -63,7 +66,6 @@ namespace Badaboom_indexer
             if (startBlock >= endBlock) throw new ArgumentException("Start block cannot be bigger then end block");
 
             ConsoleColor.Cyan.WriteLine($"Blocks [{startBlock}] - [{endBlock}]");
-
 
 
             for (ulong i = startBlock; i < endBlock; i++)
@@ -104,8 +106,9 @@ namespace Badaboom_indexer
                                     {
                                         ContractAddress = tx.RawTransaction.ContractAddress,
                                         MethodId = tx.RawTransaction.MethodId,
-                                        From = tx.RawTransaction.From
-                                    });
+                                        From = tx.RawTransaction.From,
+                                        Value = tx.RawTransaction.Value
+                                    }) ;
 
                             ConsoleColor.Gray.WriteLine($"Unnable to get trace of transaction {tx.Hash}, skiping internal calls");
 
@@ -128,10 +131,11 @@ namespace Badaboom_indexer
                                 await cRepo.AddNewCallAsync(
                                     new Call
                                     {
-                                        From = trace.Action.From,
-                                        ContractAddress = trace.Action.To,
+                                        From = trace.Action.From ?? "",
+                                        ContractAddress = trace.Action.To ?? "",
                                         MethodId = _getMethodIdFromInput(trace.Action.Input),
-                                        TransactionId = txInserted.Id
+                                        TransactionId = txInserted.Id,
+                                        Value = trace.Action.Value ?? "" 
                                     });
                             }
                         }
@@ -176,9 +180,10 @@ namespace Badaboom_indexer
                     Hash = t.TransactionHash,
                     RawTransaction = new RawTransaction
                     {
-                        From = t.From,
-                        ContractAddress = t.To,
+                        From = t.From ?? "",
+                        ContractAddress = t.To ?? "",
                         MethodId = _getMethodIdFromInput(input),
+                        Value = t.Value?.ToString() ?? ""
                     }
                 };
             });

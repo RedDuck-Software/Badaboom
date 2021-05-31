@@ -1,4 +1,4 @@
-CREATE UNIQUE CLUSTERED INDEX IX_Calls_ContractAddress_Method
+CREATE NONCLUSTERED INDEX IX_Calls_ContractAddress_Method
     ON [dbo].[Calls](ContractAddress, MethodId);
 
 CREATE NONCLUSTERED INDEX IX_Calls_ContractAddress_Method_Error

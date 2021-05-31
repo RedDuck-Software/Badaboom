@@ -50,14 +50,17 @@ namespace Database.Respositories
 
         public async Task AddNewCallAsync(Call call)
         {
-            var sql = "insert into Calls(TransactionId,Error,From,ContractAddress,MethodId)" +
-                $"values(@TransactionId,@Error,@From,@ContractAddress,@MethodId)";
+            var sql = "insert into Calls(TransactionId,[Error],[From],ContractAddress,[Value],MethodId)" +
+                $"values(@TransactionId,@Error,@From,@ContractAddress,@Value,@MethodId)";
 
             try
             {
                 await SqlConnection.ExecuteAsync(sql, call);
             }
-            catch (SqlException) { }
+            catch (SqlException ex) 
+            {
+
+            }
         }
 
 

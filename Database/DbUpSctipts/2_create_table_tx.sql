@@ -6,7 +6,7 @@ create table [Transactions](
 
 create table [Calls] (
 	CallId INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-	TransactionId INT NOT NULL UNIQUE FOREIGN KEY REFERENCES Transactions(TransactionId),
+	TransactionId INT NOT NULL FOREIGN KEY REFERENCES Transactions(TransactionId),
 
 	Error NVARCHAR(500) null, 
 
