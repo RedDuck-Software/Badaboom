@@ -21,11 +21,11 @@ namespace Badaboom_indexer
 
             var indexer = new Indexer(parity);
 
-            var startBlock = args.Length > 1 ? ulong.Parse(args[1]) : 0;
+            var startBlock = args.Length > 1 ? long.Parse(args[1]) : 0;
 
-            var endBlock = args.Length > 2 ? ulong.Parse(args[2]) : indexer.LatestBlockNumber;
+            var endBlock = args.Length > 2 ? long.Parse(args[2]) : (long)indexer.LatestBlockNumber;
 
-            await indexer.IndexInRangeParallel(startBlock, endBlock, 4);
+            indexer.IndexInRange(startBlock, endBlock);
 
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
 
