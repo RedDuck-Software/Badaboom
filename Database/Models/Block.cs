@@ -1,7 +1,7 @@
 ﻿
 namespace Database.Models
 {
-    public class FailedBlock
+    public class Block
     {
         public long BlockNumber { get; set; }
     }

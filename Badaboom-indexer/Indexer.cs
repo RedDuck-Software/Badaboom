@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Badaboom_indexer.Extensions;
 using Badaboom_indexer.Models;
@@ -18,20 +19,11 @@ namespace Badaboom_indexer
     {
         private Web3Parity _web3;
 
-        public ulong LatestBlockNumber { get; private set; }
+        public ulong LatestBlockNumber => _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync().Result.ToUlong();
 
-
-        public static async Task<Indexer> CreateInstance(Web3Parity web3)
-        {
-            ulong lastBlockNumber = (await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
-
-            return new Indexer(web3, lastBlockNumber);
-        }
-
-        private Indexer(Web3Parity web3, ulong lastBlockNumber)
+        public Indexer(Web3Parity web3)
         {
             _web3 = web3;
-            LatestBlockNumber = lastBlockNumber;
         }
 
         public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, int tasksCount = 1)
@@ -42,8 +34,8 @@ namespace Badaboom_indexer
 
             ConsoleColor.Magenta.WriteLine("Indexing proccess started!\n");
 
-            for (int i = 0; i < tasksCount; i++)
-                tasks.Add(this.IndexInRange(startBlock + step * (ulong)i, startBlock + step * (ulong)(i + 1)));
+            for (int i = 0; i < tasksCount; i++) { }
+            tasks.Add(this.IndexInRange(startBlock + step * (ulong)i, startBlock + step * (ulong)(i + 1)));
 
             if (step * (ulong)tasksCount + startBlock < endBlock)
                 tasks.Add(this.IndexInRange(startBlock + step * (ulong)(tasksCount), endBlock));
@@ -51,18 +43,34 @@ namespace Badaboom_indexer
             await Task.WhenAll(tasks);
         }
 
+        public async Task StartMonitorNewBlocks()
+        {
+            while (true)
+            {
+                Block lastBlockRecorded;
+
+                using (var bRepo = new BlocksRepository())
+                    lastBlockRecorded = await bRepo.GetLastSuccessfulBlockAsync() ?? new() { BlockNumber = 0 };
+
+                await this.IndexInRangeParallel((ulong)lastBlockRecorded.BlockNumber, this.LatestBlockNumber, 10);
+
+                Thread.Sleep(1000 * 12); // 12 seconds before next indexing
+            }
+        }
+
         public async Task IndexInRange(ulong startBlock, ulong endBlock)
         {
-            if (startBlock >= endBlock) throw new ArgumentException("start block cannot be bigger then end block");
+            if (startBlock >= endBlock) throw new ArgumentException("Start block cannot be bigger then end block");
 
             ConsoleColor.Cyan.WriteLine($"Blocks [{startBlock}] - [{endBlock}]");
+
 
 
             for (ulong i = startBlock; i < endBlock; i++)
             {
                 try
                 {
-                    var txs = await GetBlockTransactions(i);
+                    var txs = await _getBlockTransactions(i);
 
                     if (txs.Count() == 0)
                     {
@@ -81,9 +89,9 @@ namespace Badaboom_indexer
 
                         if (txInserted is null)
                         {
-                            ConsoleColor.DarkYellow.WriteLine($"Tx {tx.Hash} is already in DB");
+                            ConsoleColor.DarkYellow.WriteLine($"Tx {tx.Hash} is already indexed");
                             continue;
-                        } 
+                        }
 
                         var parityTraceRaw = (await _web3.Trace.TraceTransaction.SendRequestAsync(tx.Hash));
 
@@ -92,9 +100,9 @@ namespace Badaboom_indexer
                         {
                             using (var cRepo = new TransactionRepository())
                                 await cRepo.AddNewCallAsync(
-                                    new Call() 
-                                    { 
-                                        ContractAddress = tx.RawTransaction.ContractAddress, 
+                                    new Call()
+                                    {
+                                        ContractAddress = tx.RawTransaction.ContractAddress,
                                         MethodId = tx.RawTransaction.MethodId,
                                         From = tx.RawTransaction.From
                                     });
@@ -119,7 +127,7 @@ namespace Badaboom_indexer
                             {
                                 await cRepo.AddNewCallAsync(
                                     new Call
-                                    { 
+                                    {
                                         From = trace.Action.From,
                                         ContractAddress = trace.Action.To,
                                         MethodId = _getMethodIdFromInput(trace.Action.Input),
@@ -130,12 +138,23 @@ namespace Badaboom_indexer
 
                         ConsoleColor.Blue.WriteLine(tx.Hash);
                     }
+
+
+                    using (var bRepo = new BlocksRepository())
+                    {
+                        await bRepo.AddNewSuccessBlockAsync(new Block
+                        {
+                            BlockNumber = (long)i
+                        });
+                    }
+
+                    ConsoleColor.Green.WriteLine($"Block {i} indexed");
                 }
                 catch (Exception ex)
                 {
-                    using (var repo = new FailedBlocksRepository())
+                    using (var repo = new BlocksRepository())
                     {
-                        await repo.AddNewFailedBlockAsync(new FailedBlock { BlockNumber = (long)i });
+                        await repo.AddNewFailedBlockAsync(new Block { BlockNumber = (long)i });
                     }
 
                     ConsoleColor.Red.WriteLine($"GetBlockTransactions() Failed on block {i}");
@@ -143,7 +162,7 @@ namespace Badaboom_indexer
             }
         }
 
-        private async Task<IEnumerable<Transaction>> GetBlockTransactions(ulong blockNubmer)
+        private async Task<IEnumerable<Transaction>> _getBlockTransactions(ulong blockNubmer)
         {
             var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(blockNubmer.ToHexBigInteger());
 
@@ -164,6 +183,14 @@ namespace Badaboom_indexer
                 };
             });
         }
+
+        /*
+                private int _getOptimalTasksCountForRange(uint range)
+                {
+                    if (range >= 0 && range <= 100) return 1;
+                    if(range > 100 && range <= 1000) return
+
+                }*/
 
         private string _getMethodIdFromInput(string value)
         {
