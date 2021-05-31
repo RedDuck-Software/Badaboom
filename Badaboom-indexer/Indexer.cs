@@ -19,6 +19,8 @@ namespace Badaboom_indexer
     {
         private Web3Parity _web3;
 
+        // consider interlocked increment
+        // TODO: so, this property will be making request every time it is accessed. 1) not obvious to the user of the property 2) could be done in a more effective way
         public ulong LatestBlockNumber => _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync().Result.ToUlong();
 
         public Indexer(Web3Parity web3)
@@ -28,7 +30,7 @@ namespace Badaboom_indexer
 
         public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, int tasksCount = 1)
         {
-            List<Task> tasks = new List<Task>();
+            List<Task> tasks = new();
 
             ulong step = (endBlock - startBlock) / (ulong)tasksCount;
 
@@ -57,7 +59,7 @@ namespace Badaboom_indexer
                     this.LatestBlockNumber,
                     (ulong)lastBlockRecorded.BlockNumber - this.LatestBlockNumber > 100 ? 10 : 1);
 
-                Thread.Sleep(1000 * 12); // 12 seconds before next indexing
+                await Task.Delay(TimeSpan.FromSeconds(12));
             }
         }
 
@@ -67,16 +69,15 @@ namespace Badaboom_indexer
 
             ConsoleColor.Cyan.WriteLine($"Blocks [{startBlock}] - [{endBlock}]");
 
-
             for (ulong i = startBlock; i < endBlock; i++)
             {
                 try
                 {
                     var txs = await _getBlockTransactions(i);
 
-                    if (txs.Count() == 0)
+                    if (!txs.Any())
                     {
-                        ConsoleColor.Yellow.WriteLine($"0 transactions in block {i}. Skipping");
+                        ConsoleColor.Yellow.WriteLine($"no transactions in block {i}. Skipping");
                         continue;
                     }
 
@@ -97,7 +98,6 @@ namespace Badaboom_indexer
 
                         var parityTraceRaw = (await _web3.Trace.TraceTransaction.SendRequestAsync(tx.Hash));
 
-
                         if (parityTraceRaw is null)
                         {
                             using (var cRepo = new TransactionRepository())
@@ -117,7 +117,6 @@ namespace Badaboom_indexer
 
                         var txParityTraces = parityTraceRaw.ToObject<IEnumerable<ParityTrace>>();
 
-
                         foreach (var trace in txParityTraces)
                         {
                             if (!(trace.Type == "create" || trace.Type == "call"))
@@ -126,16 +125,19 @@ namespace Badaboom_indexer
                                 continue;
                             }
 
+                            ConsoleColor.DarkBlue.WriteLine($"\t{trace.Type}");
+
                             using (var cRepo = new TransactionRepository())
                             {
                                 await cRepo.AddNewCallAsync(
                                     new Call
                                     {
-                                        From = trace.Action.From ?? "",
-                                        ContractAddress = trace.Action.To ?? "",
+                                        From = trace.Action.From,
+                                        ContractAddress = trace.Action.To,
                                         MethodId = _getMethodIdFromInput(trace.Action.Input),
                                         TransactionId = txInserted.Id,
-                                        Value = trace.Action.Value ?? "" 
+                                        Value = trace.Action.Value,
+                                        Type = trace.Type
                                     });
                             }
                         }
@@ -161,7 +163,7 @@ namespace Badaboom_indexer
                         await repo.AddNewFailedBlockAsync(new Block { BlockNumber = (long)i });
                     }
 
-                    ConsoleColor.Red.WriteLine($"GetBlockTransactions() Failed on block {i}");
+                    ConsoleColor.Red.WriteLine($"GetBlockTransactions() Failed on block {i}. Ex: {ex}");
                 }
             }
         }
@@ -180,10 +182,10 @@ namespace Badaboom_indexer
                     Hash = t.TransactionHash,
                     RawTransaction = new RawTransaction
                     {
-                        From = t.From ?? "",
-                        ContractAddress = t.To ?? "",
+                        From = t.From,
+                        ContractAddress = t.To, // todo: research {meaning of contractAddress; empty to address}
                         MethodId = _getMethodIdFromInput(input),
-                        Value = t.Value?.ToString() ?? ""
+                        Value = t.Value?.ToString()
                     }
                 };
             });

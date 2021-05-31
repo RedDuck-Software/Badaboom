@@ -22,5 +22,7 @@ namespace Database.Models
         public string MethodId { get; set;  } 
 
         public Transaction Transaction { get; set; }
+
+        public string Type { get; set; }
     }
 }

@@ -47,11 +47,10 @@ namespace Database.Respositories
         }
 
 
-
         public async Task AddNewCallAsync(Call call)
         {
-            var sql = "insert into Calls(TransactionId,[Error],[From],ContractAddress,[Value],MethodId)" +
-                $"values(@TransactionId,@Error,@From,@ContractAddress,@Value,@MethodId)";
+            var sql = "insert into Calls(TransactionId,[Error],[Type],[From],ContractAddress,[Value],MethodId)" +
+                $"values(@TransactionId,@Error,@Type,@From,@ContractAddress,@Value,@MethodId)";
 
             try
             {
