@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Badaboom_indexer.Extensions;
 using Badaboom_indexer.Models;
@@ -11,8 +9,6 @@ using Database.Models;
 using Database.Respositories;
 using Nethereum.Hex.HexTypes;
 using Nethereum.Parity;
-using Nethereum.Web3;
-using Newtonsoft.Json;
 
 namespace Badaboom_indexer
 {
