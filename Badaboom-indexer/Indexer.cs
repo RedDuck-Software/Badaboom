@@ -27,21 +27,21 @@ namespace Badaboom_indexer
 
         public async Task<ulong> GetLatestBlockNumber() => (await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
 
-        public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, int tasksCount = 1)
+        public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, ulong step = 20)
         {
-            List<Task> tasks = new();
+            if (startBlock >= endBlock) throw new ArgumentException("Start block cannot be bigger then end block");
 
-            ulong step = (endBlock - startBlock) / (ulong)tasksCount;
+            ConsoleColor.Magenta.WriteLine($"Indexing proccess started. Step - 20\n");
 
-            ConsoleColor.Magenta.WriteLine($"Indexing proccess started with {tasksCount} tasks\n");
+            var movements = (endBlock - startBlock) / step;
 
-            for (int i = 0; i < tasksCount; i++)
-                tasks.Add(this.IndexInRange(startBlock + step * (ulong)i, startBlock + step * (ulong)(i + 1)));
+            for (ulong i = 0; i < movements; i += step)
+                await this.IndexInRange(i, i + step);
 
-            if (step * (ulong)tasksCount + startBlock < endBlock)
-                tasks.Add(this.IndexInRange(startBlock + step * (ulong)(tasksCount), endBlock));
+            var multRes = startBlock + step * movements;
 
-            await Task.WhenAll(tasks);
+            if (multRes < endBlock)
+                await this.IndexInRange(multRes, endBlock);
         }
 
 
@@ -61,7 +61,7 @@ namespace Badaboom_indexer
                 await this.IndexInRangeParallel(
                     (ulong)lastBlockRecorded.BlockNumber,
                     await this.GetLatestBlockNumber(),
-                    (ulong)lastBlockRecorded.BlockNumber - await this.GetLatestBlockNumber() > 100 ? 10 : 1);
+                    20);
 
                 await Task.Delay(TimeSpan.FromSeconds(12));
             }
@@ -69,14 +69,14 @@ namespace Badaboom_indexer
 
         public async Task IndexInRange(ulong startBlock, ulong endBlock)
         {
-            if (startBlock >= endBlock) throw new ArgumentException("Start block cannot be bigger then end block");
-
             ConsoleColor.Cyan.WriteLine($"Blocks [{startBlock}] - [{endBlock}]");
 
+            List<Task> tasks = new();
+
             for (ulong i = startBlock; i < endBlock; i++)
-            {
-                await IndexBlock(i);
-            }
+                tasks.Add(IndexBlock(i));
+
+            await Task.WhenAll(tasks);
         }
 
         private async Task IndexBlock(ulong blockNubmer)
