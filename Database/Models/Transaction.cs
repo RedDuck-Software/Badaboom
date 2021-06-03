@@ -5,27 +5,27 @@ namespace Database.Models
 {
     public class Transaction
     {
-		public int Id { get; set; }
-		
-		public long BlockId { get; set; }
+        public int Id { get; set; }
 
-		public string Hash { get; set; }
+        public long BlockId { get; set; }
 
-		public DateTime Time { get; set; }
+        public string Hash { get; set; }
 
-		public IEnumerable<Call> Calls { get; set; }
+        public DateTime Time { get; set; }
 
-		public RawTransaction RawTransaction { get; set; }
-	}
+        public IEnumerable<Call> Calls { get; set; }
 
-	public class RawTransaction
+        public RawTransaction RawTransaction { get; set; }
+    }
+
+    public class RawTransaction
     {
-		public string From { get; set; }
+        public string From { get; set; }
 
-		public string ContractAddress { get; set; }
+        public string ContractAddress { get; set; }
 
-		public string MethodId { get; set; }
+        public string MethodId { get; set; }
 
-		public string Value { get; set; }
+        public string Value { get; set; }
     }
 }

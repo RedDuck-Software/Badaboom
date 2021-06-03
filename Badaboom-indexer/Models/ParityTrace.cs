@@ -15,7 +15,7 @@ namespace Badaboom_indexer.Models
     }
 
     public class ParityTraceAction
-    { 
+    {
         [JsonProperty("callType")]
         public string CallType { get; set; }
 

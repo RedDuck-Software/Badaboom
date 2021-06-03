@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 namespace Database.Respositories
 {
     public abstract class RepositoryBase : IDisposable
-    { 
+    {
 
         public RepositoryBase(string connectionString)
         {
@@ -29,7 +29,7 @@ namespace Database.Respositories
             if (disposing)
             {
                 SqlConnection.Dispose();
-            } 
+            }
 
             _isDisposed = false;
         }

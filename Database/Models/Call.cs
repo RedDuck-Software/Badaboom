@@ -1,16 +1,14 @@
-﻿
-
-namespace Database.Models
+﻿namespace Database.Models
 {
     public class Call
     {
-		public int CallId { get; set; }
+        public int CallId { get; set; }
 
         public int TransactionId { get; set; }
 
 
         public string Error { get; set; }
-        
+
 
         public string From { get; set; }
 
@@ -19,7 +17,7 @@ namespace Database.Models
         public string Value { get; set; }
 
 
-        public string MethodId { get; set;  } 
+        public string MethodId { get; set; }
 
         public Transaction Transaction { get; set; }
 

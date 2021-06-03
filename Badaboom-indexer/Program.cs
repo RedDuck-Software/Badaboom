@@ -30,7 +30,7 @@ namespace Badaboom_indexer
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
 
             ConsoleColor.DarkMagenta.WriteLine("\n\nStarting getting new blocks...\n\n");
-            
+
             await indexer.StartMonitorNewBlocks();
         }
     }
