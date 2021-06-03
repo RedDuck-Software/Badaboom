@@ -12,3 +12,6 @@ CREATE NONCLUSTERED INDEX IX_Calls_TransactionId
 
 CREATE NONCLUSTERED INDEX IX_Transactions_Hash
     ON [dbo].[Transactions]([Hash]);
+
+CREATE NONCLUSTERED INDEX IX_Block_Status
+    ON [dbo].[Blocks]([IndexingStatus]);

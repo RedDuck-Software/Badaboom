@@ -1,5 +1,8 @@
 create table [Transactions](
 	TransactionId INT NOT NULL IDENTITY(1,1) PRIMARY KEY , 
+
+	BlockId BIGINT NOT NULL FOREIGN KEY REFERENCES Blocks(BlockNumber),
+
 	Hash NVARCHAR(66) NOT NULL UNIQUE,	
 	Time DATETIME NULL,
 );

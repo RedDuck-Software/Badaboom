@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -71,104 +72,151 @@ namespace Badaboom_indexer
 
             for (ulong i = startBlock; i < endBlock; i++)
             {
-                try
-                {
-                    var txs = await _getBlockTransactions(i);
-
-                    if (!txs.Any())
-                    {
-                        ConsoleColor.Yellow.WriteLine($"no transactions in block {i}. Skipping");
-                        continue;
-                    }
-
-                    foreach (var tx in txs)
-                    {
-                        Transaction txInserted;
-
-                        using (var repo = new TransactionRepository())
-                        {
-                            txInserted = await repo.AddNewTransactionAsync(tx);
-                        }
-
-                        if (txInserted is null)
-                        {
-                            ConsoleColor.DarkYellow.WriteLine($"Tx {tx.Hash} is already indexed");
-                            continue;
-                        }
-
-                        var parityTraceRaw = (await _web3.Trace.TraceTransaction.SendRequestAsync(tx.Hash));
-
-                        if (parityTraceRaw is null)
-                        {
-                            using (var cRepo = new TransactionRepository())
-                                await cRepo.AddNewCallAsync(
-                                    new Call()
-                                    {
-                                        ContractAddress = tx.RawTransaction.ContractAddress,
-                                        MethodId = tx.RawTransaction.MethodId,
-                                        From = tx.RawTransaction.From,
-                                        Value = tx.RawTransaction.Value
-                                    }) ;
-
-                            ConsoleColor.Gray.WriteLine($"Unnable to get trace of transaction {tx.Hash}, skiping internal calls");
-
-                            continue;
-                        }
-
-                        var txParityTraces = parityTraceRaw.ToObject<IEnumerable<ParityTrace>>();
-
-                        foreach (var trace in txParityTraces)
-                        {
-                            if (!(trace.Type == "create" || trace.Type == "call"))
-                            {
-                                ConsoleColor.DarkBlue.WriteLine($"Transactions with callType is not {trace.Type} included");
-                                continue;
-                            }
-
-                            ConsoleColor.DarkBlue.WriteLine($"\t{trace.Type}");
-
-                            using (var cRepo = new TransactionRepository())
-                            {
-                                await cRepo.AddNewCallAsync(
-                                    new Call
-                                    {
-                                        From = trace.Action.From,
-                                        ContractAddress = trace.Action.To,
-                                        MethodId = _getMethodIdFromInput(trace.Action.Input),
-                                        TransactionId = txInserted.Id,
-                                        Value = trace.Action.Value,
-                                        Type = trace.Type
-                                    });
-                            }
-                        }
-
-                        ConsoleColor.Blue.WriteLine(tx.Hash);
-                    }
-
-
-                    using (var bRepo = new BlocksRepository())
-                    {
-                        await bRepo.AddNewSuccessBlockAsync(new Block
-                        {
-                            BlockNumber = (long)i
-                        });
-                    }
-
-                    ConsoleColor.Green.WriteLine($"Block {i} indexed");
-                }
-                catch (Exception ex)
-                {
-                    using (var repo = new BlocksRepository())
-                    {
-                        await repo.AddNewFailedBlockAsync(new Block { BlockNumber = (long)i });
-                    }
-
-                    ConsoleColor.Red.WriteLine($"GetBlockTransactions() Failed on block {i}. Ex: {ex}");
-                }
+                await IndexBlock(i);
             }
         }
 
-        private async Task<IEnumerable<Transaction>> _getBlockTransactions(ulong blockNubmer)
+        private async Task IndexBlock(ulong blockNubmer)
+        {
+            if (await this.ContainsSuccessfulBlock(new Block { BlockNumber = (long)blockNubmer }))
+            {
+                ConsoleColor.Yellow.WriteLine($"Block {blockNubmer} is already indexed. Skipping");
+                return;
+            }
+
+            try
+            {
+
+            }
+            catch (SqlException)
+            {
+
+                throw;
+            }
+
+            try
+            {
+                var txs = await GetBlockTransactions(blockNubmer);
+
+                if (!txs.Any())
+                {
+                    ConsoleColor.Yellow.WriteLine($"no transactions in block {blockNubmer}. Skipping");
+                    return;
+                }
+
+                foreach (var tx in txs)
+                {
+                    await IndexTransaction(tx);
+                }
+
+                using var bRepo = new BlocksRepository();
+                await bRepo.AddNewSuccessBlockAsync(new Block { BlockNumber = (long)blockNubmer });
+
+                ConsoleColor.Green.WriteLine($"Block {blockNubmer} indexed");
+            }
+            catch (Exception ex)
+            {
+                using var repo = new BlocksRepository();
+                await repo.AddNewFailedBlockAsync(new Block { BlockNumber = (long)blockNubmer });
+
+                ConsoleColor.Red.WriteLine($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex}");
+            }
+        }
+
+        private async Task IndexTransaction(Transaction tx)
+        {
+            Transaction txInserted;
+
+            try
+            {
+                using var repo = new TransactionRepository();
+                txInserted = await repo.AddNewTransactionAsync(tx);
+            }
+            catch (SqlException ex)
+            {
+                ConsoleColor.DarkYellow.WriteLine($"SqlException on {tx.Hash}. ExMessage: {ex.Message}");
+                return;
+            }
+
+            var parityTraceRaw = (await _web3.Trace.TraceTransaction.SendRequestAsync(tx.Hash));
+
+            if (parityTraceRaw is null)
+            {
+                try
+                {
+                    await this.AddNewCallAsync(
+                        new Call()
+                        {
+                            TransactionId = txInserted.Id,
+                            ContractAddress = tx.RawTransaction.ContractAddress,
+                            MethodId = tx.RawTransaction.MethodId,
+                            From = tx.RawTransaction.From,
+                            Value = tx.RawTransaction.Value
+                        });
+
+                    ConsoleColor.Gray.WriteLine($"Unnable to get trace of transaction {tx.Hash}, skiping internal calls");
+                }
+                catch (SqlException ex)
+                {
+                    ConsoleColor.Red.WriteLine($"SqlException occured when tried to add Tx {tx.Hash}. ExMessage: {ex.Message}");
+                }
+
+                return;
+            }
+
+            var txParityTraces = parityTraceRaw.ToObject<IEnumerable<ParityTrace>>();
+
+            foreach (var trace in txParityTraces)
+            {
+                await IndexCall(trace, txInserted);
+            }
+
+            ConsoleColor.Green.WriteLine(tx.Hash);
+        }
+
+        private async Task IndexCall(ParityTrace trace, Transaction tx)
+        {
+            if (!(trace.Type == "create" || trace.Type == "call"))
+            {
+                ConsoleColor.DarkBlue.WriteLine($"Transactions with callType {trace.Type} is not included");
+                return;
+            }
+
+            ConsoleColor.DarkBlue.WriteLine($"\t{trace.Type}");
+
+            try
+            {
+                await this.AddNewCallAsync(
+                    new Call
+                    {
+                        From = trace.Action.From,
+                        ContractAddress = trace.Action.To,
+                        MethodId = _getMethodIdFromInput(trace.Action.Input),
+                        TransactionId = tx.Id,
+                        Value = trace.Action.Value,
+                        Type = trace.Type
+                    });
+            }
+            catch (SqlException ex)
+            {
+                ConsoleColor.Red.WriteLine($"SqlException occured when tried to add Tx {tx.Hash}. ExMessage: {ex.Message}");
+            }
+        }
+
+
+        private async Task<bool> ContainsSuccessfulBlock(Block block)
+        {
+            using var bRepo = new BlocksRepository();
+            return await bRepo.ContainsSuccessBlockAsync(block);
+        }
+
+        private async Task AddNewCallAsync(Call call)
+        {
+            using var cRepo = new TransactionRepository();
+            await cRepo.AddNewCallAsync(call);
+        }
+
+        private async Task<IEnumerable<Transaction>> GetBlockTransactions(ulong blockNubmer)
         {
             var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(blockNubmer.ToHexBigInteger());
 
@@ -190,14 +238,6 @@ namespace Badaboom_indexer
                 };
             });
         }
-
-        /*
-                private int _getOptimalTasksCountForRange(uint range)
-                {
-                    if (range >= 0 && range <= 100) return 1;
-                    if(range > 100 && range <= 1000) return
-
-                }*/
 
         private string _getMethodIdFromInput(string value)
         {

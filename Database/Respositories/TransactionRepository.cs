@@ -32,18 +32,12 @@ namespace Database.Respositories
             var sql = "insert into Transactions(Hash,Time)" +
                 $"values (@Hash,@Time) SELECT CAST(SCOPE_IDENTITY() AS INT)  ";
 
-            try
-            {
-                var id = await SqlConnection.QueryAsync<int>(sql, tx);
 
-                tx.Id = id.Single();
+            var id = await SqlConnection.QueryAsync<int>(sql, tx);
 
-                return tx;
-            }
-            catch (SqlException)
-            {
-                return null;
-            }
+            tx.Id = id.Single();
+
+            return tx;
         }
 
 
@@ -52,14 +46,9 @@ namespace Database.Respositories
             var sql = "insert into Calls(TransactionId,[Error],[Type],[From],ContractAddress,[Value],MethodId)" +
                 $"values(@TransactionId,@Error,@Type,@From,@ContractAddress,@Value,@MethodId)";
 
-            try
-            {
-                await SqlConnection.ExecuteAsync(sql, call);
-            }
-            catch (SqlException ex) 
-            {
 
-            }
+            await SqlConnection.ExecuteAsync(sql, call);
+
         }
 
 

@@ -15,6 +15,12 @@ namespace Database.Respositories
         public BlocksRepository() : base(ConnectionStrings.DefaultConnection) { }
 
 
+
+
+        public async Task<bool> ContainsSuccessBlockAsync(Block block)
+            => await SqlConnection.ExecuteScalarAsync<bool>("select count(1) from SuccessfulBlocks where BlockNumber=@BlockNumber", block);
+
+
         public async Task<Block> GetLastSuccessfulBlockAsync()
         {
             var sql = "SELECT TOP 1 * FROM SuccessfulBlocks ORDER BY BlockNumber DESC";

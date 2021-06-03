@@ -17,8 +17,6 @@ namespace Badaboom_indexer.Models
 
         [JsonProperty("type")]
         public string Type { get; set; }
-
-        
     }
 
     public class ParityTraceAction
