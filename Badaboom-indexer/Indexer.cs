@@ -44,6 +44,11 @@ namespace Badaboom_indexer
             await Task.WhenAll(tasks);
         }
 
+
+        /// <summary>
+        /// Starts monitor for new blocks. From latest block recorded in DB to Latest Block available in the Node
+        /// </summary>
+        /// <returns></returns>
         public async Task StartMonitorNewBlocks()
         {
             while (true)
@@ -94,12 +99,13 @@ namespace Badaboom_indexer
                 if (!txs.Any())
                 {
                     ConsoleColor.Yellow.WriteLine($"no transactions in block {blockNubmer}. Skipping");
-                    return;
                 }
-
-                foreach (var tx in txs)
+                else
                 {
-                    await IndexTransaction(tx);
+                    foreach (var tx in txs)
+                    {
+                        await IndexTransaction(tx);
+                    }
                 }
 
                 using (var bRepo = new BlocksRepository())

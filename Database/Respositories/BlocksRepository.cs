@@ -59,10 +59,9 @@ namespace Database.Respositories
 
         public async Task ChangeBlockStatusTo(Block block, BlockStatus status)
         {
-            var sql = "delete from FailedBlocks " +
-                "where BlockNumber = @BlockNumber and" +
-                $"IndexingStatus='{status}'";
-             
+
+            var sql =
+                $"update Blocks set IndexingStatus='{status}' where BlockNumber=@BlockNumber";
             await SqlConnection.ExecuteAsync(sql, block);
         }
     }

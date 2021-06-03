@@ -29,8 +29,8 @@ namespace Database.Respositories
 
         public async Task<Transaction> AddNewTransactionAsync(Transaction tx)
         {
-            var sql = "insert into Transactions(Hash,Time)" +
-                $"values (@Hash,@Time) SELECT CAST(SCOPE_IDENTITY() AS INT)  ";
+            var sql = "insert into Transactions(BlockId,Hash,Time)" +
+                $"values (@BlockId,@Hash,@Time) SELECT CAST(SCOPE_IDENTITY() AS INT)";
 
 
             var id = await SqlConnection.QueryAsync<int>(sql, tx);

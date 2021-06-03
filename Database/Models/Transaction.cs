@@ -6,6 +6,8 @@ namespace Database.Models
     public class Transaction
     {
 		public int Id { get; set; }
+		
+		public long BlockId { get; set; }
 
 		public string Hash { get; set; }
 
