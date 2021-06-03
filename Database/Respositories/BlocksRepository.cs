@@ -38,11 +38,8 @@ namespace Database.Respositories
             var sql = "insert into FailedBlocks(BlockNumber) " +
                 "values (@BlockNumber)";
 
-            try
-            {
-                await SqlConnection.ExecuteAsync(sql, block);
-            }
-            catch (SqlException) { }
+
+            await SqlConnection.ExecuteAsync(sql, block);
         }
 
 
@@ -51,11 +48,7 @@ namespace Database.Respositories
             var sql = "insert into SuccessfulBlocks(BlockNumber) " +
                 "values (@BlockNumber)";
 
-            try
-            {
-                await SqlConnection.ExecuteAsync(sql, block);
-            }
-            catch (SqlException) { }
+            await SqlConnection.ExecuteAsync(sql, block);
         }
 
         public async Task<IEnumerable<Block>> GetAllSuccessfulBlocksAsync()
@@ -72,11 +65,7 @@ namespace Database.Respositories
             var sql = "delete from FailedBlocks " +
                 "where BlockNumber = @BlockNumber";
 
-            try
-            {
-                await SqlConnection.ExecuteAsync(sql, block);
-            }
-            catch (SqlException) { }
+            await SqlConnection.ExecuteAsync(sql, block);
         }
 
     }
