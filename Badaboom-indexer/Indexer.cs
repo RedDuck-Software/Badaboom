@@ -36,7 +36,7 @@ namespace Badaboom_indexer
             var movements = (endBlock - startBlock) / step;
 
             for (ulong i = 0; i < movements; i += step)
-                await this.IndexInRange(i, i + step);
+                await this.IndexInRange(i + startBlock, i + step + startBlock);
 
             var multRes = startBlock + step * movements;
 
