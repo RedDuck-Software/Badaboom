@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 namespace Badaboom_indexer.Models
 {
-
-
     public class ParityTrace
     {
         [JsonProperty("action")]
