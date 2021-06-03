@@ -4,6 +4,5 @@
     {
         public static string DefaultConnection =>
             "server=(localdb)\\MSSQLLocalDB;Initial Catalog=badaboomDb;Integrated Security=True;MultipleActiveResultSets=True;";
-            //ConfigurationManager.ConnectionStrings["defaultConnection"].ConnectionString;
     }
 }
