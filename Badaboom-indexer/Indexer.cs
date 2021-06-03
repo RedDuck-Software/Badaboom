@@ -20,14 +20,12 @@ namespace Badaboom_indexer
     {
         private Web3Parity _web3;
 
-        // consider interlocked increment
-        // TODO: so, this property will be making request every time it is accessed. 1) not obvious to the user of the property 2) could be done in a more effective way
-        public ulong LatestBlockNumber => _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync().Result.ToUlong();
-
         public Indexer(Web3Parity web3)
         {
             _web3 = web3;
         }
+
+        public async Task<ulong> GetLatestBlockNumber() => (await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
 
         public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, int tasksCount = 1)
         {
@@ -53,12 +51,12 @@ namespace Badaboom_indexer
                 Block lastBlockRecorded;
 
                 using (var bRepo = new BlocksRepository())
-                    lastBlockRecorded = await bRepo.GetLastSuccessfulBlockAsync() ?? new() { BlockNumber = 0 };
+                    lastBlockRecorded = await bRepo.GetLastIndexedBlockAsync() ?? new() { BlockNumber = 0 };
 
                 await this.IndexInRangeParallel(
                     (ulong)lastBlockRecorded.BlockNumber,
-                    this.LatestBlockNumber,
-                    (ulong)lastBlockRecorded.BlockNumber - this.LatestBlockNumber > 100 ? 10 : 1);
+                    await this.GetLatestBlockNumber(),
+                    (ulong)lastBlockRecorded.BlockNumber - await this.GetLatestBlockNumber() > 100 ? 10 : 1);
 
                 await Task.Delay(TimeSpan.FromSeconds(12));
             }
@@ -84,18 +82,13 @@ namespace Badaboom_indexer
                 return;
             }
 
-            try
-            {
-
-            }
-            catch (SqlException)
-            {
-
-                throw;
-            }
 
             try
             {
+                using (var bRepo = new BlocksRepository())
+                    await bRepo.AddNewBlockAsync(new Block { BlockNumber = (long)blockNubmer }, BlocksRepository.BlockStatus.INDEXING);
+
+
                 var txs = await GetBlockTransactions(blockNubmer);
 
                 if (!txs.Any())
@@ -109,15 +102,22 @@ namespace Badaboom_indexer
                     await IndexTransaction(tx);
                 }
 
-                using var bRepo = new BlocksRepository();
-                await bRepo.AddNewSuccessBlockAsync(new Block { BlockNumber = (long)blockNubmer });
+                using (var bRepo = new BlocksRepository())
+                    await bRepo.ChangeBlockStatusTo(new Block { BlockNumber = (long)blockNubmer }, BlocksRepository.BlockStatus.INDEXED);
 
                 ConsoleColor.Green.WriteLine($"Block {blockNubmer} indexed");
             }
             catch (Exception ex)
             {
-                using var repo = new BlocksRepository();
-                await repo.AddNewFailedBlockAsync(new Block { BlockNumber = (long)blockNubmer });
+                using (var repo = new BlocksRepository())
+                {
+                    var block = new Block { BlockNumber = (long)blockNubmer };
+
+                    if (await ContainsSuccessfulBlock(block))
+                        await repo.ChangeBlockStatusTo(block, BlocksRepository.BlockStatus.FAILED);
+                    else
+                        await repo.AddNewBlockAsync(block, BlocksRepository.BlockStatus.FAILED);
+                }
 
                 ConsoleColor.Red.WriteLine($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex}");
             }
@@ -189,17 +189,20 @@ namespace Badaboom_indexer
                 await this.AddNewCallAsync(
                     new Call
                     {
-                        From = trace.Action.From,
-                        ContractAddress = trace.Action.To,
-                        MethodId = _getMethodIdFromInput(trace.Action.Input),
+                        From = trace?.Action?.From,
+                        ContractAddress = trace?.Action?.To,
+                        MethodId = _getMethodIdFromInput(trace?.Action?.Input),
                         TransactionId = tx.Id,
-                        Value = trace.Action.Value,
+                        Value = trace?.Action?.Value,
                         Type = trace.Type
                     });
             }
             catch (SqlException ex)
             {
-                ConsoleColor.Red.WriteLine($"SqlException occured when tried to add Tx {tx.Hash}. ExMessage: {ex.Message}");
+                ConsoleColor.Red.WriteLine(
+                    $"SqlException occured when tried to add call {trace.Action.From} - from, {trace?.Action?.To} - to ." +
+                    $"TxHash: {tx.Hash}. " +
+                    $"ExMessage: {ex.Message}");
             }
         }
 
@@ -207,7 +210,7 @@ namespace Badaboom_indexer
         private async Task<bool> ContainsSuccessfulBlock(Block block)
         {
             using var bRepo = new BlocksRepository();
-            return await bRepo.ContainsSuccessBlockAsync(block);
+            return await bRepo.ContainsBlockAsync(block);
         }
 
         private async Task AddNewCallAsync(Call call)
