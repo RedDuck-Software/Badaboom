@@ -4,24 +4,24 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Badaboom_indexer.Extensions;
-using Badaboom_indexer.Models;
 using Database.Models;
 using Database.Respositories;
 using Nethereum.Hex.HexTypes;
-using Nethereum.Parity;
+using Nethereum.Web3;
+using Web3Tracer.Tracers;
 
 namespace Badaboom_indexer
 {
     public class Indexer
     {
-        private Web3Parity _web3;
+        public Web3 Web3 => _web3Tracer.Web3 ;
 
-        public Indexer(Web3Parity web3)
+        public Indexer(IWeb3Tracer web3Tracer)
         {
-            _web3 = web3;
+            _web3Tracer = web3Tracer;
         }
 
-        public async Task<ulong> GetLatestBlockNumber() => (await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
+        public async Task<ulong> GetLatestBlockNumber() => (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
 
         public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, ulong step = 20)
         {
@@ -140,9 +140,9 @@ namespace Badaboom_indexer
                 return;
             }
 
-            var parityTraceRaw = (await _web3.Trace.TraceTransaction.SendRequestAsync(tx.Hash));
+            var trace = await _web3Tracer.GetTracesForTransaction(tx.Hash);
 
-            if (parityTraceRaw is null)
+            if (trace is null)
             {
                 try
                 {
@@ -166,43 +166,41 @@ namespace Badaboom_indexer
                 return;
             }
 
-            var txParityTraces = parityTraceRaw.ToObject<IEnumerable<ParityTrace>>();
-
-            foreach (var trace in txParityTraces)
+            foreach (var t in trace)
             {
-                await IndexCall(trace, txInserted);
+                await IndexCall(t, txInserted);
             }
 
             ConsoleColor.Green.WriteLine(tx.Hash);
         }
 
-        private async Task IndexCall(ParityTrace trace, Transaction tx)
+        private async Task IndexCall(Web3Tracer.Models.TraceResult trace, Transaction tx)
         {
-            if (!(trace.Type == "create" || trace.Type == "call"))
+            if (!(trace.CallType == "create" || trace.CallType == "call"))
             {
-                ConsoleColor.DarkBlue.WriteLine($"Transactions with callType {trace.Type} is not included");
+                ConsoleColor.DarkBlue.WriteLine($"Transactions with callType {trace.CallType} is not included");
                 return;
             }
 
-            ConsoleColor.DarkBlue.WriteLine($"\t{trace.Type}");
+            ConsoleColor.DarkBlue.WriteLine($"\t{trace.CallType}");
 
             try
             {
                 await this.AddNewCallAsync(
                     new Call
                     {
-                        From = trace?.Action?.From,
-                        ContractAddress = trace?.Action?.To,
-                        MethodId = _getMethodIdFromInput(trace?.Action?.Input),
+                        From = trace.From,
+                        ContractAddress = trace.To,
+                        MethodId = _getMethodIdFromInput(trace.Input),
                         TransactionId = tx.Id,
-                        Value = trace?.Action?.Value,
-                        Type = trace.Type
+                        Value = trace.Value,
+                        Type = trace.CallType
                     });
             }
             catch (SqlException ex)
             {
                 ConsoleColor.Red.WriteLine(
-                    $"SqlException occured when tried to add call {trace.Action.From} - from, {trace?.Action?.To} - to ." +
+                    $"SqlException occured when tried to add call {trace.From} - from, {trace.To} - to ." +
                     $"TxHash: {tx.Hash}. " +
                     $"ExMessage: {ex.Message}");
             }
@@ -223,7 +221,7 @@ namespace Badaboom_indexer
 
         private async Task<IEnumerable<Transaction>> GetBlockTransactions(ulong blockNubmer)
         {
-            var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(blockNubmer.ToHexBigInteger());
+            var block = await Web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(blockNubmer.ToHexBigInteger());
 
             return block.Transactions.Select(t =>
             {
@@ -249,5 +247,7 @@ namespace Badaboom_indexer
             if (value is null) return String.Empty;
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
         }
+
+        private readonly IWeb3Tracer _web3Tracer;
     }
 }

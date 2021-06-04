@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Badaboom_indexer.Extensions;
 using System;
+using Web3Tracer.Tracers.Parity;
 
 namespace Badaboom_indexer
 {
@@ -17,9 +18,11 @@ namespace Badaboom_indexer
         /// <returns></returns>
         static async Task Main(string[] args)
         {
-            var parity = new Web3Parity(args[0]);
+            var web3 = new Web3Parity(args[0]);
 
-            var indexer = new Indexer(parity);
+            var tracer = new GethWeb3Tracer(web3);
+
+            var indexer = new Indexer(tracer);
 
             var startBlock = args.Length > 1 ? ulong.Parse(args[1]) : 0;
 

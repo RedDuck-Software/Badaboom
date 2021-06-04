@@ -1,20 +1,11 @@
 ﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Badaboom_indexer.Models
+namespace Web3Tracer.Tracers.Parity.Models
 {
-    public class ParityTrace
-    {
-        [JsonProperty("action")]
-        public ParityTraceAction Action { get; set; }
-
-        [JsonProperty("error")]
-        public string Error { get; set; }
-
-        [JsonProperty("type")]
-        public string Type { get; set; }
-    }
-
-    public class ParityTraceAction
+    internal class ParityTraceAction
     {
         [JsonProperty("callType")]
         public string CallType { get; set; }
@@ -35,3 +26,4 @@ namespace Badaboom_indexer.Models
         public string Value { get; set; }
     }
 }
+
