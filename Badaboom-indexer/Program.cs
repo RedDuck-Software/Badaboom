@@ -1,8 +1,9 @@
-﻿using Nethereum.Parity;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Badaboom_indexer.Extensions;
 using System;
-using Web3Tracer.Tracers.Parity;
+using Web3Tracer.Tracers.Geth;
+using Nethereum.Web3;
+using Nethereum.Geth;
 
 namespace Badaboom_indexer
 {
@@ -18,7 +19,7 @@ namespace Badaboom_indexer
         /// <returns></returns>
         static async Task Main(string[] args)
         {
-            var web3 = new Web3Parity(args[0]);
+            var web3 = new Web3Geth(args[0]);
 
             var tracer = new GethWeb3Tracer(web3);
 

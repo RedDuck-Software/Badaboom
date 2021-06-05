@@ -150,7 +150,7 @@ namespace Badaboom_indexer
                         new Call()
                         {
                             TransactionId = txInserted.Id,
-                            ContractAddress = tx.RawTransaction.ContractAddress,
+                            ContractAddress = tx.RawTransaction.To,
                             MethodId = tx.RawTransaction.MethodId,
                             From = tx.RawTransaction.From,
                             Value = tx.RawTransaction.Value
@@ -231,12 +231,14 @@ namespace Badaboom_indexer
                 {
                     Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.ToUlong()).UtcDateTime,
                     Hash = t.TransactionHash,
+                    BlockId = (long)blockNubmer,
                     RawTransaction = new RawTransaction
                     {
                         From = t.From,
-                        ContractAddress = t.To, // todo: research {meaning of contractAddress; empty to address}
+                        To = t.To, // todo: research {meaning of contractAddress; empty to address}
                         MethodId = _getMethodIdFromInput(input),
                         Value = t.Value?.ToString()
+                        
                     }
                 };
             });

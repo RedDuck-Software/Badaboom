@@ -3,6 +3,6 @@
     public static class ConnectionStrings
     {
         public static string DefaultConnection =>
-            "server=(localdb)\\MSSQLLocalDB;Initial Catalog=badaboomDb;Integrated Security=True;MultipleActiveResultSets=True;";
+            "server=(Localdb)\\MSSQLLocalDB;Initial Catalog=badaboomDb;Integrated Security=True;MultipleActiveResultSets=True;";
     }
 }
