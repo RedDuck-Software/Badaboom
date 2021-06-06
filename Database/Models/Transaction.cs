@@ -28,8 +28,10 @@ namespace Database.Models
 
         public string Value { get; set; }
 
-        Input = input,
-                        Gas = t.Gas,
-                        GasPrice t.GasPrice.ToUlong()
+        public string Input { get; set; }
+
+        public ulong Gas { get; set; }
+
+        public ulong GasPrice { get; set; }
     }
 }
