@@ -17,13 +17,13 @@ namespace Database.Respositories
         public async Task<IEnumerable<Transaction>> GetTransactionsByAddressAndMethod(string address, string methodId)
         {
             var sql =
-                "select t.TransactionId, t.Hash, t.Time, c.CallId,c.TransactionId, c.ContractAddress, c.MethodId  from Transactions t" +
+                "select t.TransactionId, t.Hash, t.Time, c.CallId,c.TransactionId, c.To, c.MethodId  from Transactions t" +
                 "Inner join Calls c on c.TransactionId = t.TransactionId" +
-                "where c.ContractAddress = @ContractAddress and " +
+                "where c.To = @To and " +
                 "c.MethodId = @MethodId";
 
 
-            return await SqlConnection.QueryAsync<Transaction>(sql, new { ContractAddress = address, MethodId = methodId });
+            return await SqlConnection.QueryAsync<Transaction>(sql, new { To = address, MethodId = methodId });
         }
 
 
@@ -43,8 +43,8 @@ namespace Database.Respositories
 
         public async Task AddNewCallAsync(Call call)
         {
-            var sql = "insert into Calls(TransactionId,[Error],[Type],[From],ContractAddress,[Value],MethodId)" +
-                $"values(@TransactionId,@Error,@Type,@From,@ContractAddress,@Value,@MethodId)";
+            var sql = "insert into Calls(TransactionId,[Error],[Type],[From],[To],[Value],[MethodId])" +
+                $"values(@TransactionId,@Error,@Type,@From,@To,@Value,@MethodId)";
 
 
             await SqlConnection.ExecuteAsync(sql, call);
@@ -56,10 +56,10 @@ namespace Database.Respositories
         {
             var sql =
                 "select * from Calls " +
-                "where ContractAddress = @ContractAddress and " +
+                "where ContractAddress = @To and " +
                 "MethodId = @MethodId";
 
-            return await SqlConnection.QueryAsync<Call>(sql, new { ContractAddress = address, MethodId = methodId });
+            return await SqlConnection.QueryAsync<Call>(sql, new { To = address, MethodId = methodId });
         }
     }
 }

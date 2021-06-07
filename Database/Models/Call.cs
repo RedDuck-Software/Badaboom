@@ -12,7 +12,7 @@
 
         public string From { get; set; }
 
-        public string ContractAddress { get; set; }
+        public string To { get; set; }
 
         public string Value { get; set; }
 

@@ -150,7 +150,7 @@ namespace Badaboom_indexer
                         new Call()
                         {
                             TransactionId = txInserted.Id,
-                            ContractAddress = tx.RawTransaction.To,
+                            To = tx.RawTransaction.To,
                             MethodId = tx.RawTransaction.MethodId,
                             From = tx.RawTransaction.From,
                             Value = tx.RawTransaction.Value
@@ -190,7 +190,7 @@ namespace Badaboom_indexer
                     new Call
                     {
                         From = trace.From,
-                        ContractAddress = trace.To,
+                        To = trace.To,
                         MethodId = _getMethodIdFromInput(trace.Input),
                         TransactionId = tx.Id,
                         Value = trace.Value,
@@ -238,9 +238,6 @@ namespace Badaboom_indexer
                         To = t.To, // todo: research {meaning of contractAddress; empty to address}
                         MethodId = _getMethodIdFromInput(input),
                         Value = t.Value?.ToString(),
-                        Input = input,
-                        Gas = t.Gas.ToUlong(),
-                        GasPrice = t.GasPrice.ToUlong()
                     }
                 };
             });
