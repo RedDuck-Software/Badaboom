@@ -14,7 +14,7 @@ namespace Badaboom_indexer
 {
     public class Indexer
     {
-        public Web3 Web3 => _web3Tracer.Web3 ;
+        public Web3 Web3 => _web3Tracer.Web3;
 
         public Indexer(IWeb3Tracer web3Tracer, string dbConnectionString)
         {
@@ -100,9 +100,7 @@ namespace Badaboom_indexer
                 else
                 {
                     foreach (var tx in txs)
-                    {
                         await IndexTransaction(tx);
-                    }
                 }
 
                 using (var bRepo = new BlocksRepository(_connectionString))
@@ -112,15 +110,20 @@ namespace Badaboom_indexer
             }
             catch (Exception ex)
             {
+                var block = new Block { BlockNumber = (long)blockNubmer };
+
                 using (var repo = new BlocksRepository(_connectionString))
                 {
-                    var block = new Block { BlockNumber = (long)blockNubmer };
 
                     if (await ContainsSuccessfulBlock(block))
                         await repo.ChangeBlockStatusTo(block, BlocksRepository.BlockStatus.FAILED);
                     else
                         await repo.AddNewBlockAsync(block, BlocksRepository.BlockStatus.FAILED);
                 }
+
+                using (var repo = new TransactionRepository(_connectionString))
+                    await repo.RemoveBlockTransftions(block);
+
 
                 ConsoleColor.Red.WriteLine($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex}");
             }
@@ -141,7 +144,20 @@ namespace Badaboom_indexer
                 return;
             }
 
-            var trace = await _web3Tracer.GetTracesForTransaction(tx.Hash);
+            IEnumerable<Web3Tracer.Models.TraceResult> trace;
+            
+            try
+            {
+                trace = await _web3Tracer.GetTracesForTransaction(tx.Hash);
+            }
+            catch (Exception ex)
+            {
+                ConsoleColor.Red.WriteLine($"Unnable to get trace of {tx.Hash}. Skipping internal calls. Ex message: {ex.Message}");
+                
+                trace = null;
+            }
+
+
 
             if (trace is null)
             {
@@ -156,8 +172,6 @@ namespace Badaboom_indexer
                             From = tx.RawTransaction.From,
                             Value = tx.RawTransaction.Value
                         });
-
-                    ConsoleColor.Gray.WriteLine($"Unnable to get trace of transaction {tx.Hash}, skiping internal calls");
                 }
                 catch (SqlException ex)
                 {
@@ -177,7 +191,7 @@ namespace Badaboom_indexer
 
         private async Task IndexCall(Web3Tracer.Models.TraceResult trace, Transaction tx)
         {
-            if (!(trace.CallType == "create" || trace.CallType == "call"))
+            if (!(trace.CallType?.ToLower() == "create" || trace.CallType?.ToLower() == "call"))
             {
                 ConsoleColor.DarkBlue.WriteLine($"Transactions with callType {trace.CallType} is not included");
                 return;
