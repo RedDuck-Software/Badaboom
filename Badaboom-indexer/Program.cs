@@ -4,6 +4,7 @@ using System;
 using Web3Tracer.Tracers.Geth;
 using Nethereum.Web3;
 using Nethereum.Geth;
+using Database;
 
 namespace Badaboom_indexer
 {
@@ -23,7 +24,7 @@ namespace Badaboom_indexer
 
             var tracer = new GethWeb3Tracer(web3);
 
-            var indexer = new Indexer(tracer);
+            var indexer = new Indexer(tracer, ConnectionStrings.GetDefaultConnectionToDatabase(ConnectionStrings.BscDbName));
 
             var startBlock = args.Length > 1 ? ulong.Parse(args[1]) : 0;
 

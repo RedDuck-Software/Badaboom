@@ -11,8 +11,6 @@ namespace Database.Respositories
     {
         public TransactionRepository(string connectionString) : base(connectionString) { }
 
-        public TransactionRepository() : base(ConnectionStrings.DefaultConnection) { }
-
 
         public async Task<IEnumerable<Transaction>> GetTransactionsByAddressAndMethod(string address, string methodId)
         {

@@ -16,9 +16,10 @@ namespace Badaboom_indexer
     {
         public Web3 Web3 => _web3Tracer.Web3 ;
 
-        public Indexer(IWeb3Tracer web3Tracer)
+        public Indexer(IWeb3Tracer web3Tracer, string dbConnectionString)
         {
             _web3Tracer = web3Tracer;
+            _connectionString = dbConnectionString;
         }
 
         public async Task<ulong> GetLatestBlockNumber() => (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
@@ -51,7 +52,7 @@ namespace Badaboom_indexer
             {
                 Block lastBlockRecorded;
 
-                using (var bRepo = new BlocksRepository())
+                using (var bRepo = new BlocksRepository(_connectionString))
                     lastBlockRecorded = await bRepo.GetLastIndexedBlockAsync() ?? new() { BlockNumber = 0 };
 
                 await this.IndexInRangeParallel(
@@ -86,7 +87,7 @@ namespace Badaboom_indexer
 
             try
             {
-                using (var bRepo = new BlocksRepository())
+                using (var bRepo = new BlocksRepository(_connectionString))
                     await bRepo.AddNewBlockAsync(new Block { BlockNumber = (long)blockNubmer }, BlocksRepository.BlockStatus.INDEXING);
 
 
@@ -104,14 +105,14 @@ namespace Badaboom_indexer
                     }
                 }
 
-                using (var bRepo = new BlocksRepository())
+                using (var bRepo = new BlocksRepository(_connectionString))
                     await bRepo.ChangeBlockStatusTo(new Block { BlockNumber = (long)blockNubmer }, BlocksRepository.BlockStatus.INDEXED);
 
                 ConsoleColor.Green.WriteLine($"Block {blockNubmer} indexed");
             }
             catch (Exception ex)
             {
-                using (var repo = new BlocksRepository())
+                using (var repo = new BlocksRepository(_connectionString))
                 {
                     var block = new Block { BlockNumber = (long)blockNubmer };
 
@@ -131,7 +132,7 @@ namespace Badaboom_indexer
 
             try
             {
-                using var repo = new TransactionRepository();
+                using var repo = new TransactionRepository(_connectionString);
                 txInserted = await repo.AddNewTransactionAsync(tx);
             }
             catch (SqlException ex)
@@ -209,13 +210,13 @@ namespace Badaboom_indexer
 
         private async Task<bool> ContainsSuccessfulBlock(Block block)
         {
-            using var bRepo = new BlocksRepository();
+            using var bRepo = new BlocksRepository(_connectionString);
             return await bRepo.ContainsBlockAsync(block);
         }
 
         private async Task AddNewCallAsync(Call call)
         {
-            using var cRepo = new TransactionRepository();
+            using var cRepo = new TransactionRepository(_connectionString);
             await cRepo.AddNewCallAsync(call);
         }
 
@@ -253,5 +254,7 @@ namespace Badaboom_indexer
         }
 
         private readonly IWeb3Tracer _web3Tracer;
+
+        private readonly string _connectionString;
     }
 }

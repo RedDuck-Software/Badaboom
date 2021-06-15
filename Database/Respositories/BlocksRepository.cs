@@ -12,7 +12,6 @@ namespace Database.Respositories
         public enum BlockStatus { FAILED, INDEXED, INDEXING }
 
         public BlocksRepository(string connectionString) : base(connectionString) { }
-        public BlocksRepository() : base(ConnectionStrings.DefaultConnection) { }
 
         public async Task<bool> ContainsBlockAsync(Block block)
             => await SqlConnection.ExecuteScalarAsync<bool>("select count(1) from Blocks where BlockNumber=@BlockNumber", block);

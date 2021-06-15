@@ -2,7 +2,11 @@
 {
     public static class ConnectionStrings
     {
-        public static string DefaultConnection =>
-            "server=(Localdb)\\MSSQLLocalDB;Initial Catalog=badaboomDb;Integrated Security=True;MultipleActiveResultSets=True;";
+        public static string GetDefaultConnectionToDatabase(string dbName) =>
+            $@"server=(LocalDb)\MSSQLLocalDB;Initial Catalog={dbName};Integrated Security=True;MultipleActiveResultSets=True;";
+
+        public static readonly string BscDbName = "bscBadaboomDb";
+     
+        public static readonly string EthDbName = "ethBadaboomDb";
     }
 }
