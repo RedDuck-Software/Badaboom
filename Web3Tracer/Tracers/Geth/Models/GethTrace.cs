@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace Web3Tracer.Tracers.Geth.Models
 {

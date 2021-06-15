@@ -1,8 +1,5 @@
 ﻿using Nethereum.Geth.RPC.Debug.DTOs;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Web3Tracer.Tracers.Geth.Models
 {
