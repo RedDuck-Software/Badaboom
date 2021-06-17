@@ -73,7 +73,7 @@ namespace IndexerCore
         /// Starts monitor for new blocks. From latest block recorded in DB to Latest Block available in the Node
         /// </summary>
         /// <returns></returns>
-        public async Task StartMonitorNewBlocks()
+        public async Task StartMonitorNewBlocks(double secondsToSleepBeforeIterations)
         {
             while (true)
             {
@@ -87,7 +87,7 @@ namespace IndexerCore
                     await this.GetLatestBlockNumber(),
                     20);
 
-                await Task.Delay(TimeSpan.FromSeconds(12));
+                await Task.Delay(TimeSpan.FromSeconds(secondsToSleepBeforeIterations));
             }
         }
 

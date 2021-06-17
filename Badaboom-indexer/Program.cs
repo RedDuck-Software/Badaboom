@@ -54,7 +54,7 @@ namespace BadaboomIndexer
 
 
             // Run new block monitoring
-            await indexer.StartMonitorNewBlocks();
+            await indexer.StartMonitorNewBlocks(1);
         }
     }
 }
