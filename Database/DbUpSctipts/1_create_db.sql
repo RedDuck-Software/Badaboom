@@ -1,1 +1,2 @@
-create database badaboomDb;
+create database bscBadaboomDb;
+create database ethBadaboomDb;

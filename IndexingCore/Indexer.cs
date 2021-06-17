@@ -191,7 +191,13 @@ namespace IndexerCore
 
         private async Task IndexCall(Web3Tracer.Models.TraceResult trace, Transaction tx)
         {
-            if (!(trace.CallType?.ToLower() == "create" || trace.CallType?.ToLower() == "call"))
+            if (
+                !( trace.CallType?.ToLower() == "create" 
+                || trace.CallType?.ToLower() == "call"
+                || trace.CallType?.ToLower() == "delegatecall"
+                || trace.CallType?.ToLower() == "staticecall"
+                || trace.CallType?.ToLower() == "callcode"
+            ))
             {
                 ConsoleColor.DarkBlue.WriteLine($"Transactions with callType {trace.CallType} is not included");
                 return;
