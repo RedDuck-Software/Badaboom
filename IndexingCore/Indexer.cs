@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
-using Badaboom_indexer.Extensions;
 using Database.Models;
+using IndexerCore.Extensions;
 using Database.Respositories;
 using Nethereum.Hex.HexTypes;
 using Nethereum.Web3;
 using Web3Tracer.Tracers;
 
-namespace Badaboom_indexer
+namespace IndexerCore
 {
     public class Indexer
     {

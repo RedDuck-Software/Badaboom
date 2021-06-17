@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Badaboom_indexer.Extensions
+namespace IndexerCore.Extensions
 {
-    static class ConsoleExtension
+    static public class ConsoleExtension
     {
         public static void WriteLine(this ConsoleColor color, string text)
         {

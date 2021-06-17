@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Monitor": {
+      "commandName": "Project",
+      "commandLineArgs": "http://localhost:8545"
+    }
+  }
+}

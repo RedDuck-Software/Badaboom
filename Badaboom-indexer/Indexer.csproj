@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Database\Database.csproj" />
+    <ProjectReference Include="..\IndexingCore\IndexingCore.csproj" />
     <ProjectReference Include="..\Web3Tracer\Web3Tracer.csproj" />
   </ItemGroup>
 

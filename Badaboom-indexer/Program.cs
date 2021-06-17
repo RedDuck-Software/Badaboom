@@ -1,12 +1,13 @@
 ﻿using System.Threading.Tasks;
-using Badaboom_indexer.Extensions;
 using System;
 using Web3Tracer.Tracers.Geth;
 using Nethereum.Web3;
 using Nethereum.Geth;
 using Database;
+using IndexerCore;
+using IndexerCore.Extensions;
 
-namespace Badaboom_indexer
+namespace BadaboomIndexer
 {
     class Program
     {
