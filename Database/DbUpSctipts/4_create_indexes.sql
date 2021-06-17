@@ -1,11 +1,11 @@
 CREATE NONCLUSTERED INDEX IX_Calls_ContractAddress_Method
-    ON [dbo].[Calls](ContractAddress, MethodId);
+    ON [dbo].[Calls]([To], MethodId);
 
 CREATE NONCLUSTERED INDEX IX_Calls_ContractAddress_Method_Error
-    ON [dbo].[Calls](ContractAddress, MethodId, Error);
+    ON [dbo].[Calls]([To], MethodId, Error);
 
 CREATE NONCLUSTERED INDEX IX_Calls_ContractAddress
-    ON [dbo].[Calls](ContractAddress);
+    ON [dbo].[Calls]([To]);
 
 CREATE NONCLUSTERED INDEX IX_Calls_TransactionId
     ON [dbo].[Calls](TransactionId);

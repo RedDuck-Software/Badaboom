@@ -32,7 +32,7 @@ namespace IndexerCore
 
             var movements = (endBlock - startBlock) / step;
 
-            for (ulong i = 0; i < movements; i += step)
+            for (ulong i = 0, j = 0; j < movements; i += step, j++)
                 await this.IndexInRange(i + startBlock, i + step + startBlock);
 
             var multRes = startBlock + step * movements;
@@ -66,7 +66,7 @@ namespace IndexerCore
 
         public async Task IndexInRange(ulong startBlock, ulong endBlock)
         {
-            ConsoleColor.Cyan.WriteLine($"Blocks [{startBlock}] - [{endBlock}]");
+            ConsoleColor.Cyan.WriteLine($"========= Blocks [{startBlock} , {endBlock}] =========");
 
             List<Task> tasks = new();
 
@@ -167,10 +167,9 @@ namespace IndexerCore
                         new Call()
                         {
                             TransactionId = txInserted.Id,
-                            ContractAddress = tx.RawTransaction.To,
+                            To = tx.RawTransaction.To,
                             MethodId = tx.RawTransaction.MethodId,
-                            From = tx.RawTransaction.From,
-                            Value = tx.RawTransaction.Value
+                            From = tx.RawTransaction.From
                         });
                 }
                 catch (SqlException ex)
@@ -211,11 +210,11 @@ namespace IndexerCore
                     new Call
                     {
                         From = trace.From,
-                        ContractAddress = trace.To,
+                        To = trace.To,
                         MethodId = _getMethodIdFromInput(trace.Input),
                         TransactionId = tx.Id,
-                        Value = trace.Value,
-                        Type = trace.CallType
+                        Type = trace.CallType,
+                        Time = trace.Time
                     });
             }
             catch (SqlException ex)

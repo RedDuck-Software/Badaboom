@@ -37,7 +37,8 @@ namespace Web3Tracer.Extensions
                 Input = call.Input,
                 To = call.To,
                 Value = call.Value,
-                Output = call.Output
+                Output = call.Output,
+                Time = call.Time
             };
         }
     }

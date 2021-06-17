@@ -12,12 +12,13 @@
 
         public string From { get; set; }
 
-        public string ContractAddress { get; set; }
-
-        public string Value { get; set; }
+        public string To { get; set; }
 
 
         public string MethodId { get; set; }
+
+        public string Time { get; set; }
+
 
         public Transaction Transaction { get; set; }
 
