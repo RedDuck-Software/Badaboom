@@ -24,6 +24,33 @@ namespace IndexerCore
 
         public async Task<ulong> GetLatestBlockNumber() => (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
 
+        public async Task IndexFailedAndPendingBlocks()
+        {
+            using (var bRepo = new BlocksRepository(_connectionString))
+            {
+                var failedBlocks = await bRepo.GetAllFailedBlocksAsync();
+
+                if (failedBlocks is null) failedBlocks = new List<Block>();
+
+                var pendingBlocks = await bRepo.GetAllPendingBlocksAsync();
+
+                if (pendingBlocks is null) pendingBlocks = new List<Block>();
+
+                var blocks = failedBlocks.Concat(pendingBlocks);
+
+                ConsoleColor.Green.WriteLine($"Indexing {failedBlocks.Count()} failed blocks and {pendingBlocks.Count()} locked in pending blocks\n\n");
+
+
+                foreach (var block in blocks)
+                {
+                    await bRepo.RemoveBlockAsync(block);
+                    await IndexBlock((ulong)block.BlockNumber);
+                }
+            }
+
+            ConsoleColor.Magenta.WriteLine("Indexing completed");
+        }
+
         public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, ulong step = 20)
         {
             if (startBlock >= endBlock) throw new ArgumentException("Start block cannot be bigger then end block");
@@ -78,7 +105,7 @@ namespace IndexerCore
 
         private async Task IndexBlock(ulong blockNubmer)
         {
-            if (await this.ContainsSuccessfulBlock(new Block { BlockNumber = (long)blockNubmer }))
+            if (await this.ContainsSuccessfulBlock(new Block { BlockNumber = (long)blockNubmer, IndexingStatus = "INDEXED" }))
             {
                 ConsoleColor.Yellow.WriteLine($"Block {blockNubmer} is already indexed. Skipping");
                 return;
@@ -145,7 +172,7 @@ namespace IndexerCore
             }
 
             IEnumerable<Web3Tracer.Models.TraceResult> trace;
-            
+
             try
             {
                 trace = await _web3Tracer.GetTracesForTransaction(tx.Hash);
@@ -153,7 +180,7 @@ namespace IndexerCore
             catch (Exception ex)
             {
                 ConsoleColor.Red.WriteLine($"Unnable to get trace of {tx.Hash}. Skipping internal calls. Ex message: {ex.Message}");
-                
+
                 trace = null;
             }
 
@@ -191,7 +218,7 @@ namespace IndexerCore
         private async Task IndexCall(Web3Tracer.Models.TraceResult trace, Transaction tx)
         {
             if (
-                !( trace.CallType?.ToLower() == "create" 
+                !(trace.CallType?.ToLower() == "create"
                 || trace.CallType?.ToLower() == "call"
                 || trace.CallType?.ToLower() == "delegatecall"
                 || trace.CallType?.ToLower() == "staticecall"

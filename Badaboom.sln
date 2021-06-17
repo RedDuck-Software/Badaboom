@@ -12,9 +12,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database", "Database\Databa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web3Tracer", "Web3Tracer\Web3Tracer.csproj", "{CA5EBA01-961B-44F3-8A7A-7336C1CC5C08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monitor", "Monitor\Monitor.csproj", "{4CB1DD0D-0CED-400C-A1C5-813B7DCB07DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Monitor", "Monitor\Monitor.csproj", "{4CB1DD0D-0CED-400C-A1C5-813B7DCB07DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndexingCore", "IndexingCore\IndexingCore.csproj", "{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IndexingCore", "IndexingCore\IndexingCore.csproj", "{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FailedBlocksIndexer", "FailedBlocksIndexer\FailedBlocksIndexer.csproj", "{58A881BB-FD17-4389-B088-4DA3F11B2366}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +44,10 @@ Global
 		{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58A881BB-FD17-4389-B088-4DA3F11B2366}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58A881BB-FD17-4389-B088-4DA3F11B2366}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58A881BB-FD17-4389-B088-4DA3F11B2366}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58A881BB-FD17-4389-B088-4DA3F11B2366}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

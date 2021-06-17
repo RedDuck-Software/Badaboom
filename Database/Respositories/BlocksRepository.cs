@@ -14,7 +14,7 @@ namespace Database.Respositories
         public BlocksRepository(string connectionString) : base(connectionString) { }
 
         public async Task<bool> ContainsBlockAsync(Block block)
-            => await SqlConnection.ExecuteScalarAsync<bool>("select count(1) from Blocks where BlockNumber=@BlockNumber", block);
+            => await SqlConnection.ExecuteScalarAsync<bool>("select count(1) from Blocks where BlockNumber=@BlockNumber and IndexingStatus=@IndexingStatus", block);
 
 
         public async Task<Block> GetLastIndexedBlockAsync()
@@ -25,25 +25,26 @@ namespace Database.Respositories
             return res.Count() == 0 ? null : res.First();
         }
 
+        public async Task<IEnumerable<Block>> GetAllSuccessfulBlocksAsync()
+            => await this.GetAllBlocksWithStatus("INDEXED");
 
         public async Task<IEnumerable<Block>> GetAllFailedBlocksAsync()
+            => await this.GetAllBlocksWithStatus("FAILED");
+
+        public async Task<IEnumerable<Block>> GetAllPendingBlocksAsync()
+            => await this.GetAllBlocksWithStatus("INDEXING");
+
+
+        public async Task RemoveBlockAsync(Block block)
         {
             var sql =
-                "select * from Blocks WHERE IndexingStatus='FAILED'";
+               "delete from Blocks where BlockId=@BlockNumber";
+            
+            using (var tRepo = new TransactionRepository(SqlConnection.ConnectionString))
+                await tRepo.RemoveBlockTransftions(block);
 
-            return await SqlConnection.QueryAsync<Block>(sql);
+            await SqlConnection.ExecuteAsync(sql, block);
         }
-
-
-        public async Task<IEnumerable<Block>> GetAllSuccessfulBlocksAsync()
-        {
-            var sql =
-                "select * from Blocks where IndexingStatus='INDEXED'";
-
-            return await SqlConnection.QueryAsync<Block>(sql);
-        }
-
-
 
         public async Task AddNewBlockAsync(Block block, BlockStatus status)
         {
@@ -61,5 +62,15 @@ namespace Database.Respositories
                 $"update Blocks set IndexingStatus='{status}' where BlockNumber=@BlockNumber";
             await SqlConnection.ExecuteAsync(sql, block);
         }
+
+
+        private async Task<IEnumerable<Block>> GetAllBlocksWithStatus(string status)
+        {
+            var sql =
+               "select * from Blocks WHERE IndexingStatus=@Status";
+
+            return await SqlConnection.QueryAsync<Block>(sql, new { Status = status});
+        }
+
     }
 }
