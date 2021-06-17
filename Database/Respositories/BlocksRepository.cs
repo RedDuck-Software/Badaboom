@@ -14,7 +14,7 @@ namespace Database.Respositories
         public BlocksRepository(string connectionString) : base(connectionString) { }
 
         public async Task<bool> ContainsBlockAsync(Block block)
-            => await SqlConnection.ExecuteScalarAsync<bool>("select count(1) from Blocks where BlockNumber=@BlockNumber and IndexingStatus=@IndexingStatus", block);
+            => await SqlConnection.ExecuteScalarAsync<bool>("select count(1) from Blocks where BlockNumber=@BlockNumber", block);
 
 
         public async Task<Block> GetLastIndexedBlockAsync()

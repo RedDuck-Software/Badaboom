@@ -5,6 +5,8 @@ using Nethereum.Geth;
 using Database;
 using IndexerCore;
 using IndexerCore.Extensions;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace BadaboomIndexer
 {
@@ -25,13 +27,19 @@ namespace BadaboomIndexer
 
             var tracer = new GethWeb3Tracer(web3);
 
+            var _config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.FullName)
+                .AddJsonFile("appsettings.json", false)
+                .AddUserSecrets<Program>()
+                .Build();
+
+            var conn = new ConnectionStringsHelperService(_config);
+
             var indexer = new Indexer(
                 tracer,
-                ConnectionStrings.GetDefaultConnectionToDatabase(
-                    args[0] == "bsc" ? 
-                    ConnectionStrings.BscDbName : 
-                    ConnectionStrings.EthDbName
-                )
+                    args[0] == "bsc" ?
+                    conn.BscDbName :
+                    conn.EthDbName
             );
 
             var startBlock = args.Length > 2 ? ulong.Parse(args[2]) : 0;
@@ -46,7 +54,7 @@ namespace BadaboomIndexer
 
 
             // Run new block monitoring
-            await Monitor.Program.Main(args);
+            await indexer.StartMonitorNewBlocks();
         }
     }
 }

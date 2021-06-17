@@ -15,13 +15,11 @@ namespace FailedBlocksIndexer
             var tracer = new GethWeb3Tracer(web3);
 
             var indexer = new Indexer(
-                tracer,
-                ConnectionStrings.GetDefaultConnectionToDatabase(
-                    args[0] == "bsc" ?
-                    ConnectionStrings.BscDbName :
-                    ConnectionStrings.EthDbName
-                )
-            );
+                 tracer,
+                     args[0] == "bsc" ?
+                     ConnectionStrings.GetInstance().BscDbName :
+                     ConnectionStrings.GetInstance().EthDbName
+             );
 
             await indexer.IndexFailedAndPendingBlocks();
         }

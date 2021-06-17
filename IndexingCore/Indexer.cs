@@ -105,7 +105,7 @@ namespace IndexerCore
 
         private async Task IndexBlock(ulong blockNubmer)
         {
-            if (await this.ContainsSuccessfulBlock(new Block { BlockNumber = (long)blockNubmer, IndexingStatus = "INDEXED" }))
+            if (await this.ContainsBlock(new Block { BlockNumber = (long)blockNubmer}))
             {
                 ConsoleColor.Yellow.WriteLine($"Block {blockNubmer} is already indexed. Skipping");
                 return;
@@ -142,7 +142,7 @@ namespace IndexerCore
                 using (var repo = new BlocksRepository(_connectionString))
                 {
 
-                    if (await ContainsSuccessfulBlock(block))
+                    if (await ContainsBlock(block))
                         await repo.ChangeBlockStatusTo(block, BlocksRepository.BlockStatus.FAILED);
                     else
                         await repo.AddNewBlockAsync(block, BlocksRepository.BlockStatus.FAILED);
@@ -254,7 +254,7 @@ namespace IndexerCore
         }
 
 
-        private async Task<bool> ContainsSuccessfulBlock(Block block)
+        private async Task<bool> ContainsBlock(Block block)
         {
             using var bRepo = new BlocksRepository(_connectionString);
             return await bRepo.ContainsBlockAsync(block);
