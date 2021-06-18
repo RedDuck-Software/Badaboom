@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using Database;
 using IndexerCore;
+using Microsoft.Extensions.Configuration;
 using Nethereum.Geth;
 using Web3Tracer.Tracers.Geth;
 
@@ -14,14 +17,22 @@ namespace Monitor
 
             var tracer = new GethWeb3Tracer(web3);
 
-            var indexer = new Indexer(
-                 tracer,
-                     args[0] == "bsc" ?
-                     ConnectionStrings.GetInstance().BscDbName :
-                     ConnectionStrings.GetInstance().EthDbName
-             );
+            var _config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName)
+                .AddJsonFile("appsettings.json", false)
+                .AddUserSecrets<Program>()
+                .Build();
 
-            await indexer.StartMonitorNewBlocks();
+            var conn = new ConnectionStringsHelperService(_config);
+
+            var indexer = new Indexer(
+                tracer,
+                    args[0] == "bsc" ?
+                    conn.BscDbName :
+                    conn.EthDbName
+            );
+
+            await indexer.StartMonitorNewBlocks(2);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace BadaboomIndexer
             var tracer = new GethWeb3Tracer(web3);
 
             var _config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.FullName)
+                .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName)
                 .AddJsonFile("appsettings.json", false)
                 .AddUserSecrets<Program>()
                 .Build();
