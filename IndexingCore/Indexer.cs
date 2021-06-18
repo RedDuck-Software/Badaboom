@@ -285,9 +285,6 @@ namespace IndexerCore
                         To = t.To, // todo: research {meaning of contractAddress; empty to address}
                         MethodId = _getMethodIdFromInput(input),
                         Value = t.Value?.ToString(),
-                        Input = input,
-                        Gas = t.Gas.ToUlong(),
-                        GasPrice = t.GasPrice.ToUlong()
                     }
                 };
             });
