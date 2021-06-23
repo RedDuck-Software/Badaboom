@@ -16,6 +16,9 @@ namespace IndexerCore
     {
         public Web3 Web3 => _web3Tracer.Web3;
 
+        public IReadOnlyCollection<string> ValidCallTypes { get; } = new string[]
+                { "create", "call", "delegatecall", "staticcall" , "callcode" };
+
         public Indexer(IWeb3Tracer web3Tracer, string dbConnectionString)
         {
             _web3Tracer = web3Tracer;
@@ -105,7 +108,7 @@ namespace IndexerCore
 
         private async Task IndexBlock(ulong blockNubmer)
         {
-            if (await this.ContainsBlock(new Block { BlockNumber = (long)blockNubmer}))
+            if (await this.ContainsBlock(new Block { BlockNumber = (long)blockNubmer }))
             {
                 ConsoleColor.Yellow.WriteLine($"Block {blockNubmer} is already indexed. Skipping");
                 return;
@@ -160,16 +163,8 @@ namespace IndexerCore
         {
             Transaction txInserted;
 
-            try
-            {
-                using var repo = new TransactionRepository(_connectionString);
+            using (var repo = new TransactionRepository(_connectionString))
                 txInserted = await repo.AddNewTransactionAsync(tx);
-            }
-            catch (SqlException ex)
-            {
-                ConsoleColor.DarkYellow.WriteLine($"SqlException on {tx.Hash}. ExMessage: {ex.Message}");
-                return;
-            }
 
             IEnumerable<Web3Tracer.Models.TraceResult> trace;
 
@@ -185,45 +180,29 @@ namespace IndexerCore
             }
 
 
-
             if (trace is null)
             {
-                try
-                {
-                    await this.AddNewCallAsync(
-                        new Call()
-                        {
-                            TransactionId = txInserted.Id,
-                            To = tx.RawTransaction.To,
-                            MethodId = tx.RawTransaction.MethodId,
-                            From = tx.RawTransaction.From
-                        });
-                }
-                catch (SqlException ex)
-                {
-                    ConsoleColor.Red.WriteLine($"SqlException occured when tried to add Tx {tx.Hash}. ExMessage: {ex.Message}");
-                }
+                await this.AddNewCallAsync(
+                    new Call()
+                    {
+                        TransactionId = txInserted.Id,
+                        To = tx.RawTransaction.To,
+                        MethodId = tx.RawTransaction.MethodId,
+                        From = tx.RawTransaction.From
+                    });
 
                 return;
             }
 
             foreach (var t in trace)
-            {
                 await IndexCall(t, txInserted);
-            }
 
             ConsoleColor.Green.WriteLine(tx.Hash);
         }
 
         private async Task IndexCall(Web3Tracer.Models.TraceResult trace, Transaction tx)
         {
-            if (
-                !(trace.CallType?.ToLower() == "create"
-                || trace.CallType?.ToLower() == "call"
-                || trace.CallType?.ToLower() == "delegatecall"
-                || trace.CallType?.ToLower() == "staticecall"
-                || trace.CallType?.ToLower() == "callcode"
-            ))
+            if (!ValidCallTypes.Contains(trace.CallType?.ToLower() ?? "")) // if somehow callType is null - null argument exception will not be thrown
             {
                 ConsoleColor.DarkBlue.WriteLine($"Transactions with callType {trace.CallType} is not included");
                 return;
@@ -231,26 +210,17 @@ namespace IndexerCore
 
             ConsoleColor.DarkBlue.WriteLine($"\t{trace.CallType}");
 
-            try
-            {
-                await this.AddNewCallAsync(
-                    new Call
-                    {
-                        From = trace.From,
-                        To = trace.To,
-                        MethodId = _getMethodIdFromInput(trace.Input),
-                        TransactionId = tx.Id,
-                        Type = trace.CallType,
-                        Time = trace.Time
-                    });
-            }
-            catch (SqlException ex)
-            {
-                ConsoleColor.Red.WriteLine(
-                    $"SqlException occured when tried to add call {trace.From} - from, {trace.To} - to ." +
-                    $"TxHash: {tx.Hash}. " +
-                    $"ExMessage: {ex.Message}");
-            }
+
+            await this.AddNewCallAsync(
+                new Call
+                {
+                    From = trace.From,
+                    To = trace.To,
+                    MethodId = _getMethodIdFromInput(trace.Input),
+                    TransactionId = tx.Id,
+                    Type = trace.CallType,
+                    Time = trace.Time
+                });
         }
 
 

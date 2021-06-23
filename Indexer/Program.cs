@@ -16,8 +16,8 @@ namespace BadaboomIndexer
         /// <summary>
         /// First arg - string, possible values: bsc | eth . Responsible for chain selection
         /// Second args element must be web3 provider url
-        /// Third - startBlock number
-        /// Fourth - endBlock number
+        /// Third - startBlock number (optional parameter. Default value - 0)
+        /// Fourth - endBlock number (optional parameter. Default value - CurrentLastBlock)
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
