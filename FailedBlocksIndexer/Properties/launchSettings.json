@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "FailedBlocksIndexer": {
-      "commandName": "Project",
-      "commandLineArgs": "eth http://localhost:8545"
-    }
-  }
-}

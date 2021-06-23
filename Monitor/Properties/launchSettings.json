@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Monitor": {
-      "commandName": "Project",
-      "commandLineArgs": "eth http://localhost:8545"
-    }
-  }
-}

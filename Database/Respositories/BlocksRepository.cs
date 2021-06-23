@@ -56,8 +56,8 @@ namespace Database.Respositories
             string valueNamesForTxs = "[TransactionHash],[BlockId],[Time]";
             string valueNamesForCalls = "[TransactionHash],[Error],[Type],[From],[To],[MethodId]";
 
-            List<Transaction> txs = new();
-            List<Call> calls = new();
+            List<Transaction> txs = new List<Transaction>();
+            List<Call> calls = new List<Call>();
 
             foreach (var block in blocks)
                 txs = txs.Concat(block.Transactions).AsList();

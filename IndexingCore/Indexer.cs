@@ -119,7 +119,7 @@ namespace IndexerCore
                 Block lastBlockRecorded;
 
                 using (var bRepo = new BlocksRepository(_connectionString))
-                    lastBlockRecorded = await bRepo.GetLastIndexedBlockAsync() ?? new() { BlockNumber = 0 };
+                    lastBlockRecorded = await bRepo.GetLastIndexedBlockAsync() ?? new Block() { BlockNumber = 0 };
 
                 await this.IndexInRangeParallel(
                     (ulong)lastBlockRecorded.BlockNumber,
@@ -140,7 +140,7 @@ namespace IndexerCore
             {
                 Logger.LogInformation($"========= Blocks [{startBlock} , {endBlock}] =========");
 
-                List<Task> tasks = new();
+                List<Task> tasks = new List<Task>();
 
                 for (ulong i = startBlock; i < endBlock; i++)
                     tasks.Add(IndexBlock(i));

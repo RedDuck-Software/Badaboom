@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Badaboom_indexer</RootNamespace>
     <UserSecretsId>e1ec7460-d988-4daa-9dbe-d809d36efb49</UserSecretsId>
   </PropertyGroup>
