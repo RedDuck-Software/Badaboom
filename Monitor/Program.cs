@@ -26,7 +26,7 @@ namespace Monitor
             var conn = new ConnectionStringsHelperService(_config);
 
             var indexer = new Indexer(
-                tracer,
+                tracer,null,
                     args[0] == "bsc" ?
                     conn.BscDbName :
                     conn.EthDbName

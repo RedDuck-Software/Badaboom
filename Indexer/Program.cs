@@ -48,6 +48,7 @@ namespace BadaboomIndexer
 
             var indexer = new Indexer(
                 tracer,
+                null,
                     args[0] == "bsc" ?
                     conn.BscDbName :
                     conn.EthDbName,
