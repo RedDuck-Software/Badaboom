@@ -4,7 +4,7 @@
     {
         public int CallId { get; set; }
 
-        public int TransactionId { get; set; }
+        public string TransactionHash { get; set; }
 
 
         public string Error { get; set; }

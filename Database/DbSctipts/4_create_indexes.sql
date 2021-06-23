@@ -8,10 +8,10 @@ CREATE NONCLUSTERED INDEX IX_Calls_ContractAddress
     ON [dbo].[Calls]([To]);
 
 CREATE NONCLUSTERED INDEX IX_Calls_TransactionId
-    ON [dbo].[Calls](TransactionId);
+    ON [dbo].[Calls](TransactionHash);
 
 CREATE NONCLUSTERED INDEX IX_Transactions_Hash
-    ON [dbo].[Transactions]([Hash]);
+    ON [dbo].[Transactions]([TransactionHash]);
 
 CREATE NONCLUSTERED INDEX IX_Block_Status
     ON [dbo].[Blocks]([IndexingStatus]);

@@ -9,6 +9,7 @@ using Database.Respositories;
 using Nethereum.Hex.HexTypes;
 using Nethereum.Web3;
 using Web3Tracer.Tracers;
+using System.Collections.Concurrent;
 
 namespace IndexerCore
 {
@@ -19,10 +20,18 @@ namespace IndexerCore
         public IReadOnlyCollection<string> ValidCallTypes { get; } = new string[]
                 { "create", "call", "delegatecall", "staticcall" , "callcode" };
 
-        public Indexer(IWeb3Tracer web3Tracer, string dbConnectionString)
+        public ConcurrentQueue<Block> BlockQueue { get; set; }
+
+        public readonly int QueueSize;
+
+        public const int MAX_INSERT_ROWS = 1000;
+
+
+        public Indexer(IWeb3Tracer web3Tracer, string dbConnectionString, int queueSize = MAX_INSERT_ROWS)
         {
             _web3Tracer = web3Tracer;
             _connectionString = dbConnectionString;
+            QueueSize = queueSize;
         }
 
         public async Task<ulong> GetLatestBlockNumber() => (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
@@ -71,6 +80,34 @@ namespace IndexerCore
                 await this.IndexInRange(multRes, endBlock);
         }
 
+        public async Task CommitIndexedBlocks()
+        {
+            ConsoleColor.Green.WriteLine($"Commiting queued blocks. Current queue size is: { BlockQueue.Count}");
+
+            // split queue into chunks because of t-sql limitation in 1000 rows per one sql query
+            IEnumerable<IEnumerable<Block>> blockQueueChunked = ChunkBy(BlockQueue.ToList(), MAX_INSERT_ROWS);
+
+            using (var bRepo = new BlocksRepository(_connectionString))
+            {
+                using (var tRepo = new TransactionRepository(_connectionString))
+                {
+                    foreach (var chunk in blockQueueChunked)
+                    {
+                        await bRepo.AddNewBlocksAsync(chunk);
+
+                        foreach (var block in chunk)
+                        {
+                            await tRepo.AddNewTransactionsAsync(block.Transactions);
+
+                            foreach (var tx in block.Transactions)
+                                await tRepo.AddNewCallsAsync(tx.Calls);
+                        }
+                    }
+                }
+            }
+
+            BlockQueue.Clear();
+        }
 
         /// <summary>
         /// Starts monitor for new blocks. From latest block recorded in DB to Latest Block available in the Node
@@ -104,6 +141,11 @@ namespace IndexerCore
                 tasks.Add(IndexBlock(i));
 
             await Task.WhenAll(tasks);
+
+            if (BlockQueue.Count >= QueueSize)
+            {
+                await CommitIndexedBlocks();
+            }
         }
 
         private async Task IndexBlock(ulong blockNubmer)
@@ -115,12 +157,10 @@ namespace IndexerCore
             }
 
 
+            var currentBlock = new Block { BlockNumber = (long)blockNubmer, IndexingStatus = BlocksRepository.BlockStatus.INDEXING.ToString() };
+
             try
             {
-                using (var bRepo = new BlocksRepository(_connectionString))
-                    await bRepo.AddNewBlockAsync(new Block { BlockNumber = (long)blockNubmer }, BlocksRepository.BlockStatus.INDEXING);
-
-
                 var txs = await GetBlockTransactions(blockNubmer);
 
                 if (!txs.Any())
@@ -133,27 +173,18 @@ namespace IndexerCore
                         await IndexTransaction(tx);
                 }
 
-                using (var bRepo = new BlocksRepository(_connectionString))
-                    await bRepo.ChangeBlockStatusTo(new Block { BlockNumber = (long)blockNubmer }, BlocksRepository.BlockStatus.INDEXED);
+                currentBlock.IndexingStatus = BlocksRepository.BlockStatus.INDEXED.ToString();
+                currentBlock.Transactions = txs;
+                BlockQueue.Enqueue(currentBlock);
 
-                ConsoleColor.Green.WriteLine($"Block {blockNubmer} indexed");
+                ConsoleColor.Green.WriteLine($"Block {blockNubmer} added to InsertBlockQueue");
             }
             catch (Exception ex)
             {
-                var block = new Block { BlockNumber = (long)blockNubmer };
+                currentBlock.IndexingStatus = BlocksRepository.BlockStatus.FAILED.ToString();
+                currentBlock.Transactions = null;
 
-                using (var repo = new BlocksRepository(_connectionString))
-                {
-
-                    if (await ContainsBlock(block))
-                        await repo.ChangeBlockStatusTo(block, BlocksRepository.BlockStatus.FAILED);
-                    else
-                        await repo.AddNewBlockAsync(block, BlocksRepository.BlockStatus.FAILED);
-                }
-
-                using (var repo = new TransactionRepository(_connectionString))
-                    await repo.RemoveBlockTransftions(block);
-
+                BlockQueue.Enqueue(currentBlock);
 
                 ConsoleColor.Red.WriteLine($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex}");
             }
@@ -161,20 +192,15 @@ namespace IndexerCore
 
         private async Task IndexTransaction(Transaction tx)
         {
-            Transaction txInserted;
-
-            using (var repo = new TransactionRepository(_connectionString))
-                txInserted = await repo.AddNewTransactionAsync(tx);
-
             IEnumerable<Web3Tracer.Models.TraceResult> trace;
 
             try
             {
-                trace = await _web3Tracer.GetTracesForTransaction(tx.Hash);
+                trace = await _web3Tracer.GetTracesForTransaction(tx.TransactionHash);
             }
             catch (Exception ex)
             {
-                ConsoleColor.Red.WriteLine($"Unnable to get trace of {tx.Hash}. Skipping internal calls. Ex message: {ex.Message}");
+                ConsoleColor.Red.WriteLine($"Unnable to get trace of {tx.TransactionHash}. Skipping internal calls. Ex message: {ex.Message}");
 
                 trace = null;
             }
@@ -182,25 +208,24 @@ namespace IndexerCore
 
             if (trace is null)
             {
-                await this.AddNewCallAsync(
-                    new Call()
-                    {
-                        TransactionId = txInserted.Id,
-                        To = tx.RawTransaction.To,
-                        MethodId = tx.RawTransaction.MethodId,
-                        From = tx.RawTransaction.From
-                    });
+                tx.Calls.Add(new Call()
+                {
+                    To = tx.RawTransaction.To,
+                    MethodId = tx.RawTransaction.MethodId,
+                    From = tx.RawTransaction.From
+                });
 
+                ConsoleColor.Magenta.WriteLine("Trace is null, no internal transactions recorded");
                 return;
             }
 
             foreach (var t in trace)
-                await IndexCall(t, txInserted);
+                IndexCall(t, tx);
 
-            ConsoleColor.Green.WriteLine(tx.Hash);
+            ConsoleColor.Green.WriteLine(tx.TransactionHash);
         }
 
-        private async Task IndexCall(Web3Tracer.Models.TraceResult trace, Transaction tx)
+        private void IndexCall(Web3Tracer.Models.TraceResult trace, Transaction tx)
         {
             if (!ValidCallTypes.Contains(trace.CallType?.ToLower() ?? "")) // if somehow callType is null - null argument exception will not be thrown
             {
@@ -210,17 +235,15 @@ namespace IndexerCore
 
             ConsoleColor.DarkBlue.WriteLine($"\t{trace.CallType}");
 
-
-            await this.AddNewCallAsync(
-                new Call
-                {
-                    From = trace.From,
-                    To = trace.To,
-                    MethodId = _getMethodIdFromInput(trace.Input),
-                    TransactionId = tx.Id,
-                    Type = trace.CallType,
-                    Time = trace.Time
-                });
+            tx.Calls.Add(new Call
+            {
+                From = trace.From,
+                To = trace.To,
+                MethodId = _getMethodIdFromInput(trace.Input),
+                TransactionHash = tx.TransactionHash,
+                Type = trace.CallType,
+                Time = trace.Time
+            });
         }
 
 
@@ -228,12 +251,6 @@ namespace IndexerCore
         {
             using var bRepo = new BlocksRepository(_connectionString);
             return await bRepo.ContainsBlockAsync(block);
-        }
-
-        private async Task AddNewCallAsync(Call call)
-        {
-            using var cRepo = new TransactionRepository(_connectionString);
-            await cRepo.AddNewCallAsync(call);
         }
 
         private async Task<IEnumerable<Transaction>> GetBlockTransactions(ulong blockNubmer)
@@ -246,8 +263,8 @@ namespace IndexerCore
 
                 return new Transaction
                 {
+                    TransactionHash = t.TransactionHash,
                     Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.ToUlong()).UtcDateTime,
-                    Hash = t.TransactionHash,
                     BlockId = (long)blockNubmer,
                     RawTransaction = new RawTransaction
                     {
@@ -264,6 +281,16 @@ namespace IndexerCore
         {
             if (value is null) return String.Empty;
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
+        }
+
+
+        public static List<List<T>> ChunkBy<T>(List<T> source, int chunkSize)
+        {
+            return source
+                .Select((x, i) => new { Index = i, Value = x })
+                .GroupBy(x => x.Index / chunkSize)
+                .Select(x => x.Select(v => v.Value).ToList())
+                .ToList();
         }
 
         private readonly IWeb3Tracer _web3Tracer;

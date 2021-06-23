@@ -52,6 +52,27 @@ namespace Database.Respositories
         }
 
 
+        public async Task AddNewTransactionsAsync(IEnumerable<Transaction> transactions)
+        {
+            string getRowString(Transaction tx) => $"({tx.TransactionHash},{tx.BlockId},{tx.Time})";
+
+            var sql = "insert into Transactions(BlockId,Hash,Time) " +
+                $"values {transactions.Select(t => { if (t.Block.BlockNumber != transactions.Last().Block.BlockNumber) return $"{getRowString(t)}, "; else return $"{getRowString(t)}"; }) }";
+
+            await SqlConnection.ExecuteAsync(sql);
+        }
+
+        public async Task AddNewCallsAsync(IEnumerable<Call> calls)
+        {
+            string getRowString(Call c) => $"({c.TransactionHash},{c.Error},{c.Type},{c.From},{c.To},{c.MethodId})";
+
+            var sql = "insert into Calls(TransactionId,[Error],[Type],[From],[To],MethodId) " +
+                $"values {calls.Select(c => { if (c.Transaction.BlockId != calls.Last().Transaction.BlockId) return $"{getRowString(c)}, "; else return $"{getRowString(c)}"; }) }";
+
+            await SqlConnection.ExecuteAsync(sql);
+        }
+
+
         public async Task<IEnumerable<Transaction>> GetBlockTransactions(Block block)
         {
             var sql =
@@ -62,7 +83,7 @@ namespace Database.Respositories
         }
 
 
-        public async Task<Transaction> AddNewTransactionAsync(Transaction tx)
+       /* public async Task<Transaction> AddNewTransactionAsync(Transaction tx)
         {
             var sql = "insert into Transactions(BlockId,Hash,Time) " +
                 $"values (@BlockId,@Hash,@Time) SELECT CAST(SCOPE_IDENTITY() AS INT)";
@@ -74,9 +95,9 @@ namespace Database.Respositories
 
             return tx;
         }
+*/
 
-
-        public async Task AddNewCallAsync(Call call)
+     /*   public async Task AddNewCallAsync(Call call)
         {
             var sql = "insert into Calls(TransactionId,[Error],[Type],[From],[To],MethodId) " +
                 $"values(@TransactionId,@Error,@Type,@From,@To,@MethodId)";
@@ -85,7 +106,7 @@ namespace Database.Respositories
             await SqlConnection.ExecuteAsync(sql, call);
 
         }
-
+*/
 
         public async Task<IEnumerable<Call>> GetCallsByAddressAndMethodAsync(string address, string methodId)
         {

@@ -39,25 +39,31 @@ namespace Database.Respositories
         {
             var sql =
                "delete from Blocks where BlockId=@BlockNumber";
-            
+
             using (var tRepo = new TransactionRepository(SqlConnection.ConnectionString))
                 await tRepo.RemoveBlockTransftions(block);
 
             await SqlConnection.ExecuteAsync(sql, block);
         }
 
-        public async Task AddNewBlockAsync(Block block, BlockStatus status)
+        public async Task AddNewBlocksAsync(IEnumerable<Block> blocks)
         {
             var sql = "insert into Blocks(BlockNumber,IndexingStatus) " +
-                $"values (@BlockNumber,'{status}')";
+                $"values {blocks.Select(b => { if (b.BlockNumber != blocks.Last().BlockNumber) return $"({b.BlockNumber},'{b.IndexingStatus}'), "; else return $"({b.BlockNumber},'{b.IndexingStatus}')"; }) }";
 
-            await SqlConnection.ExecuteAsync(sql, block);
+            await SqlConnection.ExecuteAsync(sql);
         }
 
+        /*  public async Task AddNewBlockAsync(Block block, BlockStatus status)
+          {
+              var sql = "insert into Blocks(BlockNumber,IndexingStatus) " +
+                  $"values (@BlockNumber,'{status}')";
+
+              await SqlConnection.ExecuteAsync(sql, block);
+          }*/
 
         public async Task ChangeBlockStatusTo(Block block, BlockStatus status)
         {
-
             var sql =
                 $"update Blocks set IndexingStatus='{status}' where BlockNumber=@BlockNumber";
             await SqlConnection.ExecuteAsync(sql, block);
@@ -69,7 +75,7 @@ namespace Database.Respositories
             var sql =
                "select * from Blocks WHERE IndexingStatus=@Status";
 
-            return await SqlConnection.QueryAsync<Block>(sql, new { Status = status});
+            return await SqlConnection.QueryAsync<Block>(sql, new { Status = status });
         }
 
     }

@@ -1,15 +1,15 @@
 create table [Transactions](
-	[TransactionId] INT NOT NULL IDENTITY(1,1) PRIMARY KEY , 
+	[TransactionHash] NVARCHAR(66) NOT NULL PRIMARY KEY , 
 
 	[BlockId] BIGINT NOT NULL FOREIGN KEY REFERENCES Blocks(BlockNumber),
 
-	[Hash] NVARCHAR(66) NOT NULL UNIQUE,	
 	[Time] DATETIME NULL,
 );
 
 create table [Calls] (
 	[CallId] INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-	[TransactionId] INT NOT NULL FOREIGN KEY REFERENCES Transactions(TransactionId),
+
+	[TransactionHash] NVARCHAR(66) NOT NULL FOREIGN KEY REFERENCES Transactions([TransactionHash]),
 
 	[Error] NVARCHAR(500) NULL, 
 	[Type] NVARCHAR(20) NULL,
