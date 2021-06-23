@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using IndexingCore.RpcProviders;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace BadaboomIndexer
 {
@@ -31,6 +32,7 @@ namespace BadaboomIndexer
                 .AddJsonFile("appsettings.json", false)
                 .AddUserSecrets<Program>()
                 .Build();
+
 
             var conn = new ConnectionStringsHelperService(_config);
 
@@ -62,7 +64,6 @@ namespace BadaboomIndexer
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
 
             ConsoleColor.DarkMagenta.WriteLine("\n\nStarting getting new blocks...\n\n");
-
 
             // Run new block monitoring
             await indexer.StartMonitorNewBlocks(1);

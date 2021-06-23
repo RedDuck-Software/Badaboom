@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Indexer", "Indexer\Indexer.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Monitor", "Monitor\Monitor.csproj", "{1F5E9149-65BD-47FE-9402-A5D01EA35883}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureIndexer", "AzureIndexer\AzureIndexer.csproj", "{16C9257C-DAAE-4447-B685-B584E2A604BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{1F5E9149-65BD-47FE-9402-A5D01EA35883}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F5E9149-65BD-47FE-9402-A5D01EA35883}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F5E9149-65BD-47FE-9402-A5D01EA35883}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16C9257C-DAAE-4447-B685-B584E2A604BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16C9257C-DAAE-4447-B685-B584E2A604BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16C9257C-DAAE-4447-B685-B584E2A604BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16C9257C-DAAE-4447-B685-B584E2A604BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,6 +12,7 @@ using Web3Tracer.Tracers;
 using System.Collections.Concurrent;
 using IndexingCore.RpcProviders;
 using Nethereum.JsonRpc.Client;
+using Microsoft.Extensions.Logging;
 
 namespace IndexerCore
 {
@@ -28,13 +29,16 @@ namespace IndexerCore
 
         public const int MAX_INSERT_ROWS = 1000;
 
+        public readonly ILogger Logger;
 
-        public Indexer(IWeb3Tracer web3Tracer, string dbConnectionString, GetBlockIOProvider rpcProvider, int queueSize = MAX_INSERT_ROWS)
+
+        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, GetBlockIOProvider rpcProvider, int queueSize = MAX_INSERT_ROWS)
         {
             _web3Tracer = web3Tracer;
             _connectionString = dbConnectionString;
             QueueSize = queueSize;
             _rpcProvider = rpcProvider;
+            Logger = logger;
         }
 
         public async Task<ulong> GetLatestBlockNumber() => (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
@@ -53,7 +57,7 @@ namespace IndexerCore
 
                 var blocks = failedBlocks.Concat(pendingBlocks);
 
-                ConsoleColor.Green.WriteLine($"Indexing {failedBlocks.Count()} failed blocks and {pendingBlocks.Count()} locked in pending blocks\n\n");
+                Logger.LogInformation($"Indexing {failedBlocks.Count()} failed blocks and {pendingBlocks.Count()} locked in pending blocks\n\n");
 
 
                 foreach (var block in blocks)
@@ -63,14 +67,14 @@ namespace IndexerCore
                 }
             }
 
-            ConsoleColor.Magenta.WriteLine("Indexing completed");
+            Logger.LogInformation("Indexing completed");
         }
 
         public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, ulong step = 20)
         {
             if (startBlock >= endBlock) throw new ArgumentException("Start block cannot be bigger then end block");
 
-            ConsoleColor.Magenta.WriteLine($"Indexing proccess started. Step - 20\n");
+            Logger.LogInformation($"Indexing proccess started. Step - 20\n");
 
             var movements = (endBlock - startBlock) / step;
 
@@ -85,7 +89,7 @@ namespace IndexerCore
 
         public async Task CommitIndexedBlocks()
         {
-            ConsoleColor.Green.WriteLine($"Commiting queued blocks. Current queue size is: { BlockQueue.Count}");
+            Logger.LogInformation($"Commiting queued blocks. Current queue size is: { BlockQueue.Count}");
 
             // split queue into chunks because of t-sql limitation in 1000 rows per one sql query
             IEnumerable<IEnumerable<Block>> blockQueueChunked = ChunkBy(BlockQueue.ToList(), MAX_INSERT_ROWS);
@@ -134,7 +138,7 @@ namespace IndexerCore
 
             try
             {
-                ConsoleColor.Cyan.WriteLine($"========= Blocks [{startBlock} , {endBlock}] =========");
+                Logger.LogInformation($"========= Blocks [{startBlock} , {endBlock}] =========");
 
                 List<Task> tasks = new();
 
@@ -166,10 +170,9 @@ namespace IndexerCore
         {
             if (await this.ContainsBlock(new Block { BlockNumber = (long)blockNubmer }))
             {
-                ConsoleColor.Yellow.WriteLine($"Block {blockNubmer} is already indexed. Skipping");
+                Logger.LogWarning($"Block {blockNubmer} is already indexed. Skipping");
                 return;
             }
-
 
             var currentBlock = new Block { BlockNumber = (long)blockNubmer, IndexingStatus = BlocksRepository.BlockStatus.INDEXING.ToString() };
 
@@ -179,7 +182,7 @@ namespace IndexerCore
 
                 if (!txs.Any())
                 {
-                    ConsoleColor.Yellow.WriteLine($"no transactions in block {blockNubmer}. Skipping");
+                    Logger.LogWarning($"no transactions in block {blockNubmer}. Skipping");
                 }
                 else
                 {
@@ -191,7 +194,7 @@ namespace IndexerCore
                 currentBlock.Transactions = txs.ToList();
                 BlockQueue.Enqueue(currentBlock);
 
-                ConsoleColor.Green.WriteLine($"Block {blockNubmer} added to InsertBlockQueue");
+                Logger.LogInformation($"Block {blockNubmer} added to InsertBlockQueue");
             }
             catch (Exception ex)
             {
@@ -202,7 +205,7 @@ namespace IndexerCore
 
                 BlockQueue.Enqueue(currentBlock);
 
-                ConsoleColor.Red.WriteLine($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex}");
+                Logger.LogCritical($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex}");
             }
         }
 
@@ -216,7 +219,7 @@ namespace IndexerCore
             }
             catch (Exception ex)
             {
-                ConsoleColor.Red.WriteLine($"Unnable to get trace of {tx.TransactionHash}. Skipping internal calls. Ex message: {ex.Message}");
+                Logger.LogError($"Unnable to get trace of {tx.TransactionHash}. Skipping internal calls. Ex message: {ex.Message}");
 
                 trace = null;
             }
@@ -232,14 +235,14 @@ namespace IndexerCore
                     From = tx.RawTransaction.From
                 });
 
-                ConsoleColor.Magenta.WriteLine("Trace is null, no internal transactions recorded");
+                Logger.LogWarning("Trace is null, no internal transactions recorded");
                 return tx;
             }
 
             foreach (var t in trace)
                 IndexCall(t, tx);
 
-            ConsoleColor.Green.WriteLine(tx.TransactionHash);
+            Logger.LogInformation(tx.TransactionHash);
             return tx;
         }
 
@@ -247,11 +250,11 @@ namespace IndexerCore
         {
             if (!ValidCallTypes.Contains(trace.CallType?.ToLower() ?? "")) // if somehow callType is null - null argument exception will not be thrown
             {
-                ConsoleColor.DarkBlue.WriteLine($"Transactions with callType {trace.CallType} is not included");
+                Logger.LogWarning($"Transactions with callType {trace.CallType} is not included");
                 return;
             }
 
-            ConsoleColor.DarkBlue.WriteLine($"\t{trace.CallType}");
+            Logger.LogDebug($"\t{trace.CallType}");
 
             tx.Calls.Add(new Call
             {
