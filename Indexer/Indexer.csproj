@@ -13,8 +13,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="3.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Nethereum.Geth" Version="3.8.0" />
     <PackageReference Include="Nethereum.Parity" Version="3.8.0" />
     <PackageReference Include="Nethereum.RPC" Version="3.8.0" />

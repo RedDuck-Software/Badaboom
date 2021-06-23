@@ -9,6 +9,11 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.13" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Database\Database.csproj" />
+    <ProjectReference Include="..\IndexingCore\IndexingCore.csproj" />
+    <ProjectReference Include="..\Web3Tracer\Web3Tracer.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -17,4 +22,5 @@
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
   </ItemGroup>
+  <ProjectExtensions><VisualStudio><UserProperties host_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 </Project>
