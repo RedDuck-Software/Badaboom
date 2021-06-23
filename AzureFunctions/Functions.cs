@@ -7,6 +7,12 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Linq;
+using IndexingCore.RpcProviders;
+using Nethereum.Geth;
+using Web3Tracer.Tracers.Geth;
+using IndexerCore;
+using System.Configuration;
 
 namespace AzureFunctions
 {
@@ -17,19 +23,58 @@ namespace AzureFunctions
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            string network = req.Query["network"];
 
-            string name = req.Query["name"];
+            string queueSize = req.Query["queueMaxSize"];
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+            string startBlockP = req.Query["startBlock"];
 
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+            string endBlockP = req.Query["endBlock"];
 
-            return new OkObjectResult(responseMessage);
+
+            if (String.IsNullOrEmpty(network)) return new BadRequestObjectResult(new { error = "You must provide {network} parameter" });
+
+            var getBlockIOPrivateKeys = Environment.GetEnvironmentVariable("BlockioPrivateKeys").Split(",").Select(s => s.Trim()).ToList();
+
+            foreach (var str in getBlockIOPrivateKeys)
+                log.LogInformation(str);
+
+
+            log.LogInformation(Environment.GetEnvironmentVariable("ConnStrBSC"));
+
+            log.LogInformation(Environment.GetEnvironmentVariable("ConnStrETH"));
+
+
+
+            if (getBlockIOPrivateKeys.Count() == 0) return new BadRequestObjectResult(new { error = "You must provide at least one private key to use GetBlock rpc provider" });
+
+
+            var rpcProvider = new GetBlockIOProvider(getBlockIOPrivateKeys, network);
+
+            var web3 = new Web3Geth(rpcProvider.GetNextRpcUrl());
+
+            var tracer = new GethWeb3Tracer(web3);
+
+            var indexer = new Indexer(
+                tracer,
+                log,
+                    network == "bsc" ?
+                    Environment.GetEnvironmentVariable("ConnStrBSC") :
+                    Environment.GetEnvironmentVariable("ConnStrETH"),
+                rpcProvider,
+                String.IsNullOrEmpty(queueSize) ? 500 : Convert.ToInt32(queueSize)
+            );
+
+            var startBlock = String.IsNullOrEmpty(startBlockP) ? ulong.Parse(startBlockP) : 0;
+
+            var endBlock = String.IsNullOrEmpty(endBlockP) ? ulong.Parse(endBlockP) : await indexer.GetLatestBlockNumber();
+
+
+            await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
+
+            log.LogInformation("\nIndexing successfully done!");
+
+            return new OkResult();
         }
     }
 }
