@@ -53,8 +53,8 @@ namespace Database.Respositories
             string getRowStringForCall(Call c) => $"('{c.TransactionHash}','{c.Error}','{c.Type}','{c.From}','{c.To}','{c.MethodId}')";
 
 
-            List<Transaction> txs = new List<Transaction>();
-            List<Call> calls = new List<Call>();
+            List<Transaction> txs = new();
+            List<Call> calls = new();
 
             foreach (var block in blocks)
                 txs = txs.Concat(block.Transactions).AsList();
