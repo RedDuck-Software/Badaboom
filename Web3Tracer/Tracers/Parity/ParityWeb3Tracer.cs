@@ -28,6 +28,11 @@ namespace Web3Tracer.Tracers.Parity
             return trace.Select(x => x.ToTraceResult());
         }
 
+        public void ChangeWeb3Provider(string newRpcUrl)
+        {
+            _web3Parity = new Web3Parity(newRpcUrl);
+        }
+
         private Web3Parity _web3Parity;
     }
 }

@@ -10,6 +10,8 @@ using Nethereum.Hex.HexTypes;
 using Nethereum.Web3;
 using Web3Tracer.Tracers;
 using System.Collections.Concurrent;
+using IndexingCore.RpcProviders;
+using Nethereum.JsonRpc.Client;
 
 namespace IndexerCore
 {
@@ -27,11 +29,12 @@ namespace IndexerCore
         public const int MAX_INSERT_ROWS = 1000;
 
 
-        public Indexer(IWeb3Tracer web3Tracer, string dbConnectionString, int queueSize = MAX_INSERT_ROWS)
+        public Indexer(IWeb3Tracer web3Tracer, string dbConnectionString, GetBlockIOProvider rpcProvider, int queueSize = MAX_INSERT_ROWS)
         {
             _web3Tracer = web3Tracer;
             _connectionString = dbConnectionString;
             QueueSize = queueSize;
+            _rpcProvider = rpcProvider;
         }
 
         public async Task<ulong> GetLatestBlockNumber() => (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
@@ -127,17 +130,36 @@ namespace IndexerCore
 
         public async Task IndexInRange(ulong startBlock, ulong endBlock)
         {
-            ConsoleColor.Cyan.WriteLine($"========= Blocks [{startBlock} , {endBlock}] =========");
+            var queueSnapshot = BlockQueue.ToArray();
 
-            List<Task> tasks = new();
+            try
+            {
+                ConsoleColor.Cyan.WriteLine($"========= Blocks [{startBlock} , {endBlock}] =========");
 
-            for (ulong i = startBlock; i < endBlock; i++)
-                tasks.Add(IndexBlock(i));
+                List<Task> tasks = new();
 
-            await Task.WhenAll(tasks);
+                for (ulong i = startBlock; i < endBlock; i++)
+                    tasks.Add(IndexBlock(i));
 
-            if (BlockQueue.Count >= QueueSize)
-                await CommitIndexedBlocks();
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception) // if exception wasn`t handled in IndexBlock method - this is a RpcException
+            {
+                BlockQueue = new ConcurrentQueue<Block>(queueSnapshot);
+
+                _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
+
+                if (_rpcProvider.IsAllTokensUsed)
+                {
+                    _rpcProvider.Reset();
+                    await Task.Delay(TimeSpan.FromHours(24)); // waiting for 24h till all api limits will resets
+                }
+
+                await IndexInRange(startBlock, endBlock);
+
+                if (BlockQueue.Count >= QueueSize)
+                    await CommitIndexedBlocks();
+            }
         }
 
         private async Task IndexBlock(ulong blockNubmer)
@@ -173,6 +195,8 @@ namespace IndexerCore
             }
             catch (Exception ex)
             {
+                if (ex is RpcResponseException || ex is RpcClientTimeoutException) throw;
+
                 currentBlock.IndexingStatus = BlocksRepository.BlockStatus.FAILED.ToString();
                 currentBlock.Transactions = null;
 
@@ -202,7 +226,7 @@ namespace IndexerCore
             {
                 tx.Calls.Add(new Call()
                 {
-                    TransactionHash =tx.TransactionHash,
+                    TransactionHash = tx.TransactionHash,
                     To = tx.RawTransaction.To,
                     MethodId = tx.RawTransaction.MethodId,
                     From = tx.RawTransaction.From
@@ -287,6 +311,8 @@ namespace IndexerCore
                 .Select(x => x.Select(v => v.Value).ToList())
                 .ToList();
         }
+
+        private readonly GetBlockIOProvider _rpcProvider;
 
         private readonly IWeb3Tracer _web3Tracer;
 

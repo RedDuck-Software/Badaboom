@@ -7,26 +7,25 @@ using IndexerCore;
 using IndexerCore.Extensions;
 using Microsoft.Extensions.Configuration;
 using System.IO;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using IndexingCore.RpcProviders;
+using System.Linq;
 
 namespace BadaboomIndexer
 {
     class Program
     {
-
         /// <summary>
         /// First arg - string, possible values: bsc | eth . Responsible for chain selection
-        /// Second args element must be web3 provider url
-        /// Third - startBlock number (optional parameter. Default value - 0)
-        /// Fourth - endBlock number (optional parameter. Default value - CurrentLastBlock)
+        /// Second - startBlock number (optional parameter. Default value - 0)
+        /// Third - endBlock number (optional parameter. Default value - CurrentLastBlock)
+        /// Default (and only) rpc provider - https://getblock.io service
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
-            var web3 = new Web3Geth(args[1]);
-
-            var tracer = new GethWeb3Tracer(web3);
-
             var _config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName)
                 .AddJsonFile("appsettings.json", false)
@@ -35,17 +34,28 @@ namespace BadaboomIndexer
 
             var conn = new ConnectionStringsHelperService(_config);
 
+            var getBlockIOPrivateKeys = _config["GetBlockIOPrivateKeys"].Split(",").Select(s => s.Trim()).ToList();
+
+            if (getBlockIOPrivateKeys.Count() == 0) throw new ArgumentException("You must provide at least one private key to use GetBlock rpc provider");
+
+            var rpcProvider = new GetBlockIOProvider(getBlockIOPrivateKeys, args[0]);
+
+            var web3 = new Web3Geth(rpcProvider.GetNextRpcUrl());
+
+            var tracer = new GethWeb3Tracer(web3);
+
             var indexer = new Indexer(
                 tracer,
                     args[0] == "bsc" ?
                     conn.BscDbName :
                     conn.EthDbName,
-                40
+                rpcProvider,
+                500
             );
 
-            var startBlock = args.Length > 2 ? ulong.Parse(args[2]) : 0;
+            var startBlock = args.Length > 1 ? ulong.Parse(args[1]) : 0;
 
-            var endBlock = args.Length > 3 ? ulong.Parse(args[3]) : await indexer.GetLatestBlockNumber();
+            var endBlock = args.Length > 2 ? ulong.Parse(args[2]) : await indexer.GetLatestBlockNumber();
 
             await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
 

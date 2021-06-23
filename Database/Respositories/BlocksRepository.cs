@@ -52,6 +52,9 @@ namespace Database.Respositories
             string getRowStringForTx(Transaction tx) => $"('{tx.TransactionHash}',{tx.BlockId},'{tx.Time.ToString("s")}')";
             string getRowStringForCall(Call c) => $"('{c.TransactionHash}','{c.Error}','{c.Type}','{c.From}','{c.To}','{c.MethodId}')";
 
+            string valueNamesForBlocks = "BlockNumber, IndexingStatus";
+            string valueNamesForTxs = "[TransactionHash],[BlockId],[Time]";
+            string valueNamesForCalls = "[TransactionHash],[Error],[Type],[From],[To],[MethodId]";
 
             List<Transaction> txs = new();
             List<Call> calls = new();
@@ -67,9 +70,10 @@ namespace Database.Respositories
             var insertValuesCalls = string.Join(' ', calls.Select(c => $"{getRowStringForCall(c)},"));
 
             var sql =
-                ((string.IsNullOrEmpty(insertValuesBlocks) ? "" : $"insert into Blocks(BlockNumber,IndexingStatus) select BlockNumber, IndexingStatus from (values {insertValuesBlocks})sub (BlockNumber,IndexingStatus);") +
-                (string.IsNullOrEmpty(insertValuesTxs) ? "" : $"insert into Transactions([TransactionHash],[BlockId],[Time]) values {insertValuesTxs};") +
-                (string.IsNullOrEmpty(insertValuesCalls) ? "" : $"insert into Calls([TransactionHash],[Error],[Type],[From],[To],[MethodId]) values {insertValuesCalls};")).Replace(",;", ";").Replace(",)", ")").Replace("''", "NULL");
+                ((string.IsNullOrEmpty(insertValuesBlocks) ? "" : $"insert into Blocks({valueNamesForBlocks}) select {valueNamesForBlocks} from (values {insertValuesBlocks})sub ({valueNamesForBlocks});") +
+                (string.IsNullOrEmpty(insertValuesTxs) ? "" : $"insert into Transactions({valueNamesForTxs}) select {valueNamesForTxs} from (values {insertValuesTxs})sub ({valueNamesForTxs});") +
+                (string.IsNullOrEmpty(insertValuesCalls) ? "" : $"insert into Calls({valueNamesForCalls}) select {valueNamesForCalls} from (values {insertValuesCalls})sub ({valueNamesForCalls});"))
+                    .Replace(",;", ";").Replace(",)", ")").Replace("''", "NULL");
 
             await SqlConnection.ExecuteAsync(sql);
         }

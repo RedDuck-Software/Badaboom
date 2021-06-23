@@ -10,5 +10,7 @@ namespace Web3Tracer.Tracers
         Web3 Web3 { get; }
 
         Task<IEnumerable<TraceResult>> GetTracesForTransaction(string txHash);
+
+        void ChangeWeb3Provider(string newRpcUrl);
     }
 }

@@ -42,6 +42,11 @@ namespace Web3Tracer.Tracers.Geth
             return calls;
         }
 
+        public void ChangeWeb3Provider(string newRpcUrl)
+        {
+            _web3Geth = new Web3Geth(newRpcUrl);
+
+        }
 
         private Web3Geth _web3Geth;
     }
