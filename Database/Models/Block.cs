@@ -8,6 +8,6 @@ namespace Database.Models
 
         public string IndexingStatus { get; set; }
 
-        public IEnumerable<Transaction> Transactions { get; set; }
+        public List<Transaction> Transactions { get; set; }
     }
 }

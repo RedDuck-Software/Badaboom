@@ -20,7 +20,7 @@ namespace IndexerCore
         public IReadOnlyCollection<string> ValidCallTypes { get; } = new string[]
                 { "create", "call", "delegatecall", "staticcall" , "callcode" };
 
-        public ConcurrentQueue<Block> BlockQueue { get; set; }
+        public ConcurrentQueue<Block> BlockQueue { get; set; } = new ConcurrentQueue<Block>();
 
         public readonly int QueueSize;
 
@@ -93,15 +93,7 @@ namespace IndexerCore
                 {
                     foreach (var chunk in blockQueueChunked)
                     {
-                        await bRepo.AddNewBlocksAsync(chunk);
-
-                        foreach (var block in chunk)
-                        {
-                            await tRepo.AddNewTransactionsAsync(block.Transactions);
-
-                            foreach (var tx in block.Transactions)
-                                await tRepo.AddNewCallsAsync(tx.Calls);
-                        }
+                        await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(chunk);
                     }
                 }
             }
@@ -127,6 +119,8 @@ namespace IndexerCore
                     await this.GetLatestBlockNumber(),
                     20);
 
+                await CommitIndexedBlocks();
+
                 await Task.Delay(TimeSpan.FromSeconds(secondsToSleepBeforeIterations));
             }
         }
@@ -143,9 +137,7 @@ namespace IndexerCore
             await Task.WhenAll(tasks);
 
             if (BlockQueue.Count >= QueueSize)
-            {
                 await CommitIndexedBlocks();
-            }
         }
 
         private async Task IndexBlock(ulong blockNubmer)
@@ -161,7 +153,7 @@ namespace IndexerCore
 
             try
             {
-                var txs = await GetBlockTransactions(blockNubmer);
+                var txs = (await GetBlockTransactions(blockNubmer)).ToList();
 
                 if (!txs.Any())
                 {
@@ -174,7 +166,7 @@ namespace IndexerCore
                 }
 
                 currentBlock.IndexingStatus = BlocksRepository.BlockStatus.INDEXED.ToString();
-                currentBlock.Transactions = txs;
+                currentBlock.Transactions = txs.ToList();
                 BlockQueue.Enqueue(currentBlock);
 
                 ConsoleColor.Green.WriteLine($"Block {blockNubmer} added to InsertBlockQueue");
@@ -190,7 +182,7 @@ namespace IndexerCore
             }
         }
 
-        private async Task IndexTransaction(Transaction tx)
+        private async Task<Transaction> IndexTransaction(Transaction tx)
         {
             IEnumerable<Web3Tracer.Models.TraceResult> trace;
 
@@ -210,19 +202,21 @@ namespace IndexerCore
             {
                 tx.Calls.Add(new Call()
                 {
+                    TransactionHash =tx.TransactionHash,
                     To = tx.RawTransaction.To,
                     MethodId = tx.RawTransaction.MethodId,
                     From = tx.RawTransaction.From
                 });
 
                 ConsoleColor.Magenta.WriteLine("Trace is null, no internal transactions recorded");
-                return;
+                return tx;
             }
 
             foreach (var t in trace)
                 IndexCall(t, tx);
 
             ConsoleColor.Green.WriteLine(tx.TransactionHash);
+            return tx;
         }
 
         private void IndexCall(Web3Tracer.Models.TraceResult trace, Transaction tx)
@@ -266,6 +260,7 @@ namespace IndexerCore
                     TransactionHash = t.TransactionHash,
                     Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.ToUlong()).UtcDateTime,
                     BlockId = (long)blockNubmer,
+                    Calls = new List<Call>(),
                     RawTransaction = new RawTransaction
                     {
                         From = t.From,

@@ -2,7 +2,7 @@
   "profiles": {
     "Badaboom-indexer": {
       "commandName": "Project",
-      "commandLineArgs": "eth http://localhost:8545"
+      "commandLineArgs": "bsc https://bsc.getblock.io/?api_key=7f0baa21-3b1a-482c-a74a-05edd6f1c5c7"
     }
   }
 }

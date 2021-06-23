@@ -46,21 +46,42 @@ namespace Database.Respositories
             await SqlConnection.ExecuteAsync(sql, block);
         }
 
-        public async Task AddNewBlocksAsync(IEnumerable<Block> blocks)
+        public async Task AddNewBlocksWithTransactionsAndCallsAsync(IEnumerable<Block> blocks)
         {
-            var sql = "insert into Blocks(BlockNumber,IndexingStatus) " +
-                $"values {blocks.Select(b => { if (b.BlockNumber != blocks.Last().BlockNumber) return $"({b.BlockNumber},'{b.IndexingStatus}'), "; else return $"({b.BlockNumber},'{b.IndexingStatus}')"; }) }";
+            string getRowStringForBlocks(Block b) => $"({b.BlockNumber},'{b.IndexingStatus}')";
+            string getRowStringForTx(Transaction tx) => $"('{tx.TransactionHash}',{tx.BlockId},'{tx.Time.ToString("s")}')";
+            string getRowStringForCall(Call c) => $"('{c.TransactionHash}','{c.Error}','{c.Type}','{c.From}','{c.To}','{c.MethodId}')";
+
+
+            List<Transaction> txs = new List<Transaction>();
+            List<Call> calls = new List<Call>();
+
+            foreach (var block in blocks)
+                txs = txs.Concat(block.Transactions).AsList();
+
+            foreach (var tx in txs)
+                calls = calls.Concat(tx.Calls).AsList();
+
+            var insertValuesBlocks = string.Join(' ', blocks.Select(b => $"{getRowStringForBlocks(b)},"));
+            var insertValuesTxs = string.Join(' ', txs.Select(t => $"{getRowStringForTx(t)},"));
+            var insertValuesCalls = string.Join(' ', calls.Select(c => $"{getRowStringForCall(c)},"));
+
+            var sql =
+                ((string.IsNullOrEmpty(insertValuesBlocks) ? "" : $"insert into Blocks(BlockNumber,IndexingStatus) select BlockNumber, IndexingStatus from (values {insertValuesBlocks})sub (BlockNumber,IndexingStatus);") +
+                (string.IsNullOrEmpty(insertValuesTxs) ? "" : $"insert into Transactions([TransactionHash],[BlockId],[Time]) values {insertValuesTxs};") +
+                (string.IsNullOrEmpty(insertValuesCalls) ? "" : $"insert into Calls([TransactionHash],[Error],[Type],[From],[To],[MethodId]) values {insertValuesCalls};")).Replace(",;", ";").Replace(",)", ")").Replace("''", "NULL");
 
             await SqlConnection.ExecuteAsync(sql);
         }
 
-        /*  public async Task AddNewBlockAsync(Block block, BlockStatus status)
-          {
-              var sql = "insert into Blocks(BlockNumber,IndexingStatus) " +
-                  $"values (@BlockNumber,'{status}')";
 
-              await SqlConnection.ExecuteAsync(sql, block);
-          }*/
+        public async Task AddNewBlockAsync(Block block, BlockStatus status)
+        {
+            var sql = "insert into Blocks(BlockNumber,IndexingStatus) " +
+                $"values (@BlockNumber,'{status}')";
+
+            await SqlConnection.ExecuteAsync(sql, block);
+        }
 
         public async Task ChangeBlockStatusTo(Block block, BlockStatus status)
         {

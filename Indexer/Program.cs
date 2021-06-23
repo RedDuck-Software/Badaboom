@@ -39,7 +39,8 @@ namespace BadaboomIndexer
                 tracer,
                     args[0] == "bsc" ?
                     conn.BscDbName :
-                    conn.EthDbName
+                    conn.EthDbName,
+                40
             );
 
             var startBlock = args.Length > 2 ? ulong.Parse(args[2]) : 0;
