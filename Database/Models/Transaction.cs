@@ -9,7 +9,7 @@ namespace Database.Models
 
         public long BlockId { get; set; }
 
-        public DateTime Time { get; set; }
+        public int TimeStamp { get; set; }
 
         public List<Call> Calls { get; set; }
         

@@ -3,11 +3,11 @@ create table [Transactions](
 
 	[BlockId] BIGINT NOT NULL FOREIGN KEY REFERENCES Blocks(BlockNumber),
 
-	[Time] DATETIME NULL,
+	[Time] INT NULL,
 );
 
 create table [Calls] (
-	[CallId] INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+	[CallId] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 
 	[TransactionHash] VARCHAR(64) NOT NULL FOREIGN KEY REFERENCES Transactions([TransactionHash]),
 

@@ -49,7 +49,8 @@ namespace IndexerCore
             {
                 return (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
             }
-            catch (Exception) {
+            catch (Exception)
+            {
 
                 if (_rpcProvider.IsAllTokensUsed)
                 {
@@ -196,7 +197,7 @@ namespace IndexerCore
                 return;
             }
 
-            var currentBlock = new Block { BlockNumber = (long)blockNubmer, IndexingStatus = BlocksRepository.BlockStatus.INDEXING.ToString() };
+            var currentBlock = new Block { BlockNumber = (long)blockNubmer };
 
             try
             {
@@ -212,7 +213,6 @@ namespace IndexerCore
                         await IndexTransaction(tx);
                 }
 
-                currentBlock.IndexingStatus = BlocksRepository.BlockStatus.INDEXED.ToString();
                 currentBlock.Transactions = txs.ToList();
                 BlockQueue.Enqueue(currentBlock);
 
@@ -221,11 +221,6 @@ namespace IndexerCore
             catch (Exception ex)
             {
                 if (ex is RpcResponseException || ex is RpcClientTimeoutException || ex is HttpRequestException) throw;
-
-                currentBlock.IndexingStatus = BlocksRepository.BlockStatus.FAILED.ToString();
-                currentBlock.Transactions = null;
-
-                BlockQueue.Enqueue(currentBlock);
 
                 Logger.LogCritical($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex}");
             }
@@ -280,13 +275,12 @@ namespace IndexerCore
 
             tx.Calls.Add(new Call
             {
-                From = trace.From,
-                To = trace.To,
-                MethodId = _getMethodIdFromInput(trace.Input),
+                From = trace.From.RemoveHashPrefix(),
+                To = trace.To.RemoveHashPrefix(),
+                MethodId = GetMethodIdFromInput(trace.Input).RemoveHashPrefix(),
                 TransactionHash = tx.TransactionHash,
-                Type = trace.CallType,
-                Time = trace.Time
-            });
+                Type = Call.CreataCallTypeFromString(trace.CallType)
+            }); ;
         }
 
 
@@ -306,29 +300,29 @@ namespace IndexerCore
 
                 return new Transaction
                 {
-                    TransactionHash = t.TransactionHash,
-                    Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.ToUlong()).UtcDateTime,
+                    TransactionHash = t.TransactionHash.RemoveHashPrefix(),
+                    TimeStamp = (int)block.Timestamp.ToUlong(),
                     BlockId = (long)blockNubmer,
                     Calls = new List<Call>(),
                     RawTransaction = new RawTransaction
-                    {
-                        From = t.From,
-                        To = t.To, // todo: research {meaning of contractAddress; empty to address}
-                        MethodId = _getMethodIdFromInput(input),
+                    {   
+                        From = t.From.RemoveHashPrefix(),
+                        To = t.To.RemoveHashPrefix(),
+                        MethodId = GetMethodIdFromInput(input).RemoveHashPrefix(),
                         Value = t.Value?.ToString(),
                     }
                 };
             });
         }
 
-        private string _getMethodIdFromInput(string value)
+        private string GetMethodIdFromInput(string value)
         {
             if (value is null) return String.Empty;
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
         }
 
 
-        public static List<List<T>> ChunkBy<T>(List<T> source, int chunkSize)
+        private static List<List<T>> ChunkBy<T>(List<T> source, int chunkSize)
         {
             return source
                 .Select((x, i) => new { Index = i, Value = x })
@@ -343,4 +337,14 @@ namespace IndexerCore
 
         private readonly string _connectionString;
     }
+
+    internal static class StringExtensions
+    {
+        public static string RemoveHashPrefix(this string hash)
+           => hash.Length < 2 ?
+                   hash.Substring(0, 2) == "0x" ?
+                       hash.Remove(0, 2) : hash
+                   : hash;
+    }
 }
+
