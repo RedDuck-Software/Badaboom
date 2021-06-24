@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Nethereum.Geth;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,15 +23,16 @@ namespace IndexingCore.RpcProviders
 
         public string GetNextRpcUrl() => String.Format(_urlBaseTemplate, _network, GetNextApiKey());
 
+
         public void Reset() => (IsAllTokensUsed, _currentKeyPosition) = (false, 0);
 
         private string GetNextApiKey()
         {
             if (_currentKeyPosition >= ApiKeys.Count)
             {
-                IsAllTokensUsed = true; 
+                IsAllTokensUsed = true;
                 _currentKeyPosition = 0; // looping through all keys again
-            } 
+            }
 
             return ApiKeys[_currentKeyPosition++];
         }

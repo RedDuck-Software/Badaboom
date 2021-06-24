@@ -13,6 +13,8 @@ using System.Collections.Concurrent;
 using IndexingCore.RpcProviders;
 using Nethereum.JsonRpc.Client;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
+using Web3Tracer.Tracers.Geth;
 
 namespace IndexerCore
 {
@@ -41,7 +43,25 @@ namespace IndexerCore
             Logger = logger;
         }
 
-        public async Task<ulong> GetLatestBlockNumber() => (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
+        public async Task<ulong> GetLatestBlockNumber()
+        {
+            try
+            {
+                return (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
+            }
+            catch (Exception) {
+
+                if (_rpcProvider.IsAllTokensUsed)
+                {
+                    _rpcProvider.Reset();
+                    await Task.Delay(TimeSpan.FromHours(24));
+                }
+
+                _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
+
+                return await GetLatestBlockNumber();
+            }
+        }
 
         public async Task IndexFailedAndPendingBlocks()
         {
@@ -147,8 +167,10 @@ namespace IndexerCore
 
                 await Task.WhenAll(tasks);
             }
-            catch (Exception) // if exception wasn`t handled in IndexBlock method - this is a RpcException
+            catch (Exception) // if exception wasn`t handled in IndexBlock method - this is a Rpc call Exception
             {
+                Logger.LogCritical("Exception occured while sending RpcRequest. Changing api key");
+
                 BlockQueue = new ConcurrentQueue<Block>(queueSnapshot);
 
                 _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
@@ -156,7 +178,7 @@ namespace IndexerCore
                 if (_rpcProvider.IsAllTokensUsed)
                 {
                     _rpcProvider.Reset();
-                    await Task.Delay(TimeSpan.FromHours(24)); // waiting for 24h till all api limits will resets
+                    await Task.Delay(TimeSpan.FromHours(24));
                 }
 
                 await IndexInRange(startBlock, endBlock);
@@ -198,7 +220,7 @@ namespace IndexerCore
             }
             catch (Exception ex)
             {
-                if (ex is RpcResponseException || ex is RpcClientTimeoutException) throw;
+                if (ex is RpcResponseException || ex is RpcClientTimeoutException || ex is HttpRequestException) throw;
 
                 currentBlock.IndexingStatus = BlocksRepository.BlockStatus.FAILED.ToString();
                 currentBlock.Transactions = null;

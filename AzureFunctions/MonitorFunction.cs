@@ -16,9 +16,9 @@ using System.Configuration;
 
 namespace AzureFunctions
 {
-    public static class Functions
+    public static class MonitorFunction
     {
-        [FunctionName("StartIndexingProcess")]
+        [FunctionName("MonitorAndIndexNewBlocks")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
@@ -45,7 +45,6 @@ namespace AzureFunctions
             log.LogInformation(Environment.GetEnvironmentVariable("ConnStrETH"));
 
 
-
             if (getBlockIOPrivateKeys.Count() == 0) return new BadRequestObjectResult(new { error = "You must provide at least one private key to use GetBlock rpc provider" });
 
 
@@ -62,17 +61,14 @@ namespace AzureFunctions
                     Environment.GetEnvironmentVariable("ConnStrBSC") :
                     Environment.GetEnvironmentVariable("ConnStrETH"),
                 rpcProvider,
-                String.IsNullOrEmpty(queueSize) ? 500 : Convert.ToInt32(queueSize)
+                string.IsNullOrEmpty(queueSize) ? 500 : Convert.ToInt32(queueSize)
             );
 
-            var startBlock = String.IsNullOrEmpty(startBlockP) ? ulong.Parse(startBlockP) : 0;
+            var startBlock = !string.IsNullOrEmpty(startBlockP) ? ulong.Parse(startBlockP) : 0;
 
-            var endBlock = String.IsNullOrEmpty(endBlockP) ? ulong.Parse(endBlockP) : await indexer.GetLatestBlockNumber();
+            var endBlock = !string.IsNullOrEmpty(endBlockP) ? ulong.Parse(endBlockP) : await indexer.GetLatestBlockNumber();
 
-
-            await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
-
-            log.LogInformation("\nIndexing successfully done!");
+            await indexer.StartMonitorNewBlocks(2);
 
             return new OkResult();
         }
