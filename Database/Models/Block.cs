@@ -6,8 +6,6 @@ namespace Database.Models
     {
         public long BlockNumber { get; set; }
 
-        public string IndexingStatus { get; set; }
-
         public List<Transaction> Transactions { get; set; }
     }
 }

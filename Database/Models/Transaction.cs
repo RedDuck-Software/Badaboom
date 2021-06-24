@@ -13,8 +13,6 @@ namespace Database.Models
 
         public List<Call> Calls { get; set; }
         
-        public Block Block { get; set; }
-
         public RawTransaction RawTransaction { get; set; }
     }
 
