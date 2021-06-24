@@ -19,21 +19,11 @@ namespace Database.Respositories
 
         public async Task<Block> GetLastIndexedBlockAsync()
         {
-            var sql = "SELECT TOP 1 * FROM Blocks WHERE IndexingStatus='INDEXED' ORDER BY BlockNumber DESC";
+            var sql = "SELECT TOP 1 * FROM Blocks ORDER BY BlockNumber DESC";
 
             var res = await SqlConnection.QueryAsync<Block>(sql);
             return res.Count() == 0 ? null : res.First();
         }
-
-        public async Task<IEnumerable<Block>> GetAllSuccessfulBlocksAsync()
-            => await this.GetAllBlocksWithStatus("INDEXED");
-
-        public async Task<IEnumerable<Block>> GetAllFailedBlocksAsync()
-            => await this.GetAllBlocksWithStatus("FAILED");
-
-        public async Task<IEnumerable<Block>> GetAllPendingBlocksAsync()
-            => await this.GetAllBlocksWithStatus("INDEXING");
-
 
         public async Task RemoveBlockAsync(Block block)
         {
@@ -48,12 +38,12 @@ namespace Database.Respositories
 
         public async Task AddNewBlocksWithTransactionsAndCallsAsync(IEnumerable<Block> blocks)
         {
-            string getRowStringForBlocks(Block b) => $"({b.BlockNumber},'{b.IndexingStatus}')";
-            string getRowStringForTx(Transaction tx) => $"('{tx.TransactionHash}',{tx.BlockId},'{tx.Time.ToString("s")}')";
-            string getRowStringForCall(Call c) => $"('{c.TransactionHash}','{c.Error}','{c.Type}','{c.From}','{c.To}','{c.MethodId}')";
+            string getRowStringForBlocks(Block b) => $"({b.BlockNumber})";
+            string getRowStringForTx(Transaction tx) => $"('{tx.TransactionHash}',{tx.BlockId},'{tx.TimeStamp}')";
+            string getRowStringForCall(Call c) => $"('{c.TransactionHash}','{c.Error}','{(int)c.Type}','{c.From}','{c.To}','{c.MethodId}')";
 
-            string valueNamesForBlocks = "BlockNumber, IndexingStatus";
-            string valueNamesForTxs = "[TransactionHash],[BlockId],[Time]";
+            string valueNamesForBlocks = "[BlockNumber]";
+            string valueNamesForTxs = "[TransactionHash],[BlockId],[TimeStamp]";
             string valueNamesForCalls = "[TransactionHash],[Error],[Type],[From],[To],[MethodId]";
 
             List<Transaction> txs = new List<Transaction>();
@@ -79,29 +69,12 @@ namespace Database.Respositories
         }
 
 
-        public async Task AddNewBlockAsync(Block block, BlockStatus status)
+        public async Task AddNewBlockAsync(Block block)
         {
-            var sql = "insert into Blocks(BlockNumber,IndexingStatus) " +
-                $"values (@BlockNumber,'{status}')";
+            var sql = "insert into Blocks(BlockNumber) " +
+                $"values (@BlockNumber)";
 
             await SqlConnection.ExecuteAsync(sql, block);
         }
-
-        public async Task ChangeBlockStatusTo(Block block, BlockStatus status)
-        {
-            var sql =
-                $"update Blocks set IndexingStatus='{status}' where BlockNumber=@BlockNumber";
-            await SqlConnection.ExecuteAsync(sql, block);
-        }
-
-
-        private async Task<IEnumerable<Block>> GetAllBlocksWithStatus(string status)
-        {
-            var sql =
-               "select * from Blocks WHERE IndexingStatus=@Status";
-
-            return await SqlConnection.QueryAsync<Block>(sql, new { Status = status });
-        }
-
     }
 }

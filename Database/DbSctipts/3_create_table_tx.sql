@@ -3,7 +3,7 @@ create table [Transactions](
 
 	[BlockId] BIGINT NOT NULL FOREIGN KEY REFERENCES Blocks(BlockNumber),
 
-	[Time] INT NULL,
+	[TimeStamp] INT NULL,
 );
 
 create table [Calls] (

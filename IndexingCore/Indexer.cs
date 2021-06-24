@@ -22,8 +22,7 @@ namespace IndexerCore
     {
         public Web3 Web3 => _web3Tracer.Web3;
 
-        public IReadOnlyCollection<string> ValidCallTypes { get; } = new string[]
-                { "create", "call", "delegatecall", "staticcall" , "callcode" };
+        public IReadOnlyCollection<string> ValidCallTypes { get; }
 
         public ConcurrentQueue<Block> BlockQueue { get; set; } = new ConcurrentQueue<Block>();
 
@@ -34,6 +33,7 @@ namespace IndexerCore
         public readonly ILogger Logger;
 
 
+
         public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, GetBlockIOProvider rpcProvider, int queueSize = MAX_INSERT_ROWS)
         {
             _web3Tracer = web3Tracer;
@@ -41,6 +41,8 @@ namespace IndexerCore
             QueueSize = queueSize;
             _rpcProvider = rpcProvider;
             Logger = logger;
+
+            ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).ToArray();
         }
 
         public async Task<ulong> GetLatestBlockNumber()
@@ -64,32 +66,6 @@ namespace IndexerCore
             }
         }
 
-        public async Task IndexFailedAndPendingBlocks()
-        {
-            using (var bRepo = new BlocksRepository(_connectionString))
-            {
-                var failedBlocks = await bRepo.GetAllFailedBlocksAsync();
-
-                if (failedBlocks is null) failedBlocks = new List<Block>();
-
-                var pendingBlocks = await bRepo.GetAllPendingBlocksAsync();
-
-                if (pendingBlocks is null) pendingBlocks = new List<Block>();
-
-                var blocks = failedBlocks.Concat(pendingBlocks);
-
-                Logger.LogInformation($"Indexing {failedBlocks.Count()} failed blocks and {pendingBlocks.Count()} locked in pending blocks\n\n");
-
-
-                foreach (var block in blocks)
-                {
-                    await bRepo.RemoveBlockAsync(block);
-                    await IndexBlock((ulong)block.BlockNumber);
-                }
-            }
-
-            Logger.LogInformation("Indexing completed");
-        }
 
         public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, ulong step = 20)
         {
@@ -167,10 +143,13 @@ namespace IndexerCore
                     tasks.Add(IndexBlock(i));
 
                 await Task.WhenAll(tasks);
+
+                if (BlockQueue.Count >= QueueSize)
+                    await CommitIndexedBlocks();
             }
-            catch (Exception) // if exception wasn`t handled in IndexBlock method - this is a Rpc call Exception
+            catch (Exception ex) // if exception wasn`t handled in IndexBlock method - this is a Rpc call Exception
             {
-                Logger.LogCritical("Exception occured while sending RpcRequest. Changing api key");
+                Logger.LogCritical($"Exception occured while sending RpcRequest. Changing api key. Ex:  {ex.Message}");
 
                 BlockQueue = new ConcurrentQueue<Block>(queueSnapshot);
 
@@ -183,9 +162,6 @@ namespace IndexerCore
                 }
 
                 await IndexInRange(startBlock, endBlock);
-
-                if (BlockQueue.Count >= QueueSize)
-                    await CommitIndexedBlocks();
             }
         }
 
@@ -220,9 +196,8 @@ namespace IndexerCore
             }
             catch (Exception ex)
             {
-                if (ex is RpcResponseException || ex is RpcClientTimeoutException || ex is HttpRequestException) throw;
-
-                Logger.LogCritical($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex}");
+                Logger.LogCritical($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex.Message}");
+                throw ex;
             }
         }
 
@@ -232,7 +207,7 @@ namespace IndexerCore
 
             try
             {
-                trace = await _web3Tracer.GetTracesForTransaction(tx.TransactionHash);
+                trace = await _web3Tracer.GetTracesForTransaction("0x" + tx.TransactionHash);
             }
             catch (Exception ex)
             {
@@ -260,6 +235,8 @@ namespace IndexerCore
                 IndexCall(t, tx);
 
             Logger.LogInformation(tx.TransactionHash);
+
+            tx.TransactionHash = tx.TransactionHash.RemoveHashPrefix();
             return tx;
         }
 
@@ -279,8 +256,9 @@ namespace IndexerCore
                 To = trace.To.RemoveHashPrefix(),
                 MethodId = GetMethodIdFromInput(trace.Input).RemoveHashPrefix(),
                 TransactionHash = tx.TransactionHash,
-                Type = Call.CreataCallTypeFromString(trace.CallType)
-            }); ;
+                Type = Enum.Parse<CallTypes>(trace.CallType, true),
+                Error = trace.Error != null && trace.Error.Length > 50 ? trace.Error.Substring(0, 50) : trace.Error
+            });
         }
 
 
@@ -305,7 +283,7 @@ namespace IndexerCore
                     BlockId = (long)blockNubmer,
                     Calls = new List<Call>(),
                     RawTransaction = new RawTransaction
-                    {   
+                    {
                         From = t.From.RemoveHashPrefix(),
                         To = t.To.RemoveHashPrefix(),
                         MethodId = GetMethodIdFromInput(input).RemoveHashPrefix(),
@@ -341,7 +319,7 @@ namespace IndexerCore
     internal static class StringExtensions
     {
         public static string RemoveHashPrefix(this string hash)
-           => hash.Length < 2 ?
+           => hash.Length > 2 ?
                    hash.Substring(0, 2) == "0x" ?
                        hash.Remove(0, 2) : hash
                    : hash;
