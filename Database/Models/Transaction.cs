@@ -7,7 +7,7 @@ namespace Database.Models
     {
         public string TransactionHash { get; set; }
 
-        public long BlockId { get; set; }
+        public int BlockId { get; set; }
 
         public int TimeStamp { get; set; }
 

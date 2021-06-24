@@ -1,3 +1,3 @@
 create table [Blocks](
-	[BlockNumber] BIGINT NOT NULL PRIMARY KEY 
+	[BlockNumber] INT NOT NULL PRIMARY KEY 
 );

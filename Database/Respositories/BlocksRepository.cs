@@ -39,8 +39,8 @@ namespace Database.Respositories
         public async Task AddNewBlocksWithTransactionsAndCallsAsync(IEnumerable<Block> blocks)
         {
             string getRowStringForBlocks(Block b) => $"({b.BlockNumber})";
-            string getRowStringForTx(Transaction tx) => $"('{tx.TransactionHash}',{tx.BlockId},'{tx.TimeStamp}')";
-            string getRowStringForCall(Call c) => $"('{c.TransactionHash}','{c.Error}','{(int)c.Type}','{c.From}','{c.To}','{c.MethodId}')";
+            string getRowStringForTx(Transaction tx) => $"(cast('{tx.TransactionHash}' as binary(32)),{tx.BlockId},'{tx.TimeStamp}')";
+            string getRowStringForCall(Call c) => $"(cast('{c.TransactionHash}' as binary(32)),'{c.Error}','{(int)c.Type}',cast('{c.From}' as binary(20)), cast('{c.To}' as binary(20)), cast('{c.MethodId}' as binary(4)))";
 
             string valueNamesForBlocks = "[BlockNumber]";
             string valueNamesForTxs = "[TransactionHash],[BlockId],[TimeStamp]";

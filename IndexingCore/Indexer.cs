@@ -167,13 +167,13 @@ namespace IndexerCore
 
         private async Task IndexBlock(ulong blockNubmer)
         {
-            if (await this.ContainsBlock(new Block { BlockNumber = (long)blockNubmer }))
+            if (await this.ContainsBlock(new Block { BlockNumber = (int)blockNubmer }))
             {
                 Logger.LogWarning($"Block {blockNubmer} is already indexed. Skipping");
                 return;
             }
 
-            var currentBlock = new Block { BlockNumber = (long)blockNubmer };
+            var currentBlock = new Block { BlockNumber = (int)blockNubmer };
 
             try
             {
@@ -280,7 +280,7 @@ namespace IndexerCore
                 {
                     TransactionHash = t.TransactionHash.RemoveHashPrefix(),
                     TimeStamp = (int)block.Timestamp.ToUlong(),
-                    BlockId = (long)blockNubmer,
+                    BlockId = (int)blockNubmer,
                     Calls = new List<Call>(),
                     RawTransaction = new RawTransaction
                     {
