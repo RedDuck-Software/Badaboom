@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using IndexingCore.RpcProviders;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BadaboomIndexer
 {
@@ -36,7 +38,7 @@ namespace BadaboomIndexer
 
             var conn = new ConnectionStringsHelperService(_config);
 
-            var getBlockIOPrivateKeys = _config["GetBlockIOPrivateKeys"].Split(",").Select(s => s.Trim()).ToList();
+            var getBlockIOPrivateKeys = _config["BlockioPrivateKeys"].Split(",").Select(s => s.Trim()).ToList();
 
             if (getBlockIOPrivateKeys.Count() == 0) throw new ArgumentException("You must provide at least one private key to use GetBlock rpc provider");
 
@@ -46,9 +48,20 @@ namespace BadaboomIndexer
 
             var tracer = new GethWeb3Tracer(web3);
 
+
+            var serviceProvider = new ServiceCollection()
+                .AddLogging(config => config.ClearProviders().AddConsole().SetMinimumLevel(LogLevel.Trace))
+                .BuildServiceProvider();
+
+            serviceProvider
+                   .GetService<ILoggerFactory>();
+
+            var logger = serviceProvider.GetService<ILoggerFactory>()
+                  .CreateLogger<Program>();
+
             var indexer = new Indexer(
                 tracer,
-                null,
+                logger,
                     args[0] == "bsc" ?
                     conn.BscDbName :
                     conn.EthDbName,

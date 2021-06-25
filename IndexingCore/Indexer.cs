@@ -1,20 +1,16 @@
-﻿using System;
+﻿using Database.Models;
+using Database.Respositories;
+using IndexingCore.RpcProviders;
+using Microsoft.Extensions.Logging;
+using Nethereum.Hex.HexTypes;
+using Nethereum.Web3;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
-using Database.Models;
-using IndexerCore.Extensions;
-using Database.Respositories;
-using Nethereum.Hex.HexTypes;
-using Nethereum.Web3;
 using Web3Tracer.Tracers;
-using System.Collections.Concurrent;
-using IndexingCore.RpcProviders;
-using Nethereum.JsonRpc.Client;
-using Microsoft.Extensions.Logging;
-using System.Net.Http;
-using Web3Tracer.Tracers.Geth;
 
 namespace IndexerCore
 {
@@ -99,7 +95,16 @@ namespace IndexerCore
                 {
                     foreach (var chunk in blockQueueChunked)
                     {
-                        await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(chunk);
+                        try
+                        {
+                            await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(chunk);
+
+                            Logger.LogInformation("Successfully saved");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.LogCritical("Error while saving BlockQueue into database");
+                        }
                     }
                 }
             }

@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IndexingCore", "IndexingCor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Indexer", "Indexer\Indexer.csproj", "{0F87E3C4-E03A-46AE-AE2E-7314DBF8C958}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunctions", "AzureFunctions\AzureFunctions.csproj", "{F14C097F-B82C-4E8E-AC9D-6FE098973E90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureFunctions", "AzureFunctions\AzureFunctions.csproj", "{F14C097F-B82C-4E8E-AC9D-6FE098973E90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monitor", "Monitor\Monitor.csproj", "{68869EBF-D9D7-4246-ADB2-6EF015D77B42}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{F14C097F-B82C-4E8E-AC9D-6FE098973E90}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F14C097F-B82C-4E8E-AC9D-6FE098973E90}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F14C097F-B82C-4E8E-AC9D-6FE098973E90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68869EBF-D9D7-4246-ADB2-6EF015D77B42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68869EBF-D9D7-4246-ADB2-6EF015D77B42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68869EBF-D9D7-4246-ADB2-6EF015D77B42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68869EBF-D9D7-4246-ADB2-6EF015D77B42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
