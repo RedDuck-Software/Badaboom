@@ -56,6 +56,8 @@ namespace IndexerCore
 
                 if (_rpcProvider.IsAllTokensUsed)
                 {
+                    Logger.LogError("All api keys are already used. Sleep for 24h to make them available again");
+
                     _rpcProvider.Reset();
                     await Task.Delay(TimeSpan.FromHours(24));
                 }
@@ -151,7 +153,7 @@ namespace IndexerCore
             {
                 Logger.LogCritical($"Exception occured while sending RpcRequest. Changing api key. Ex:  {ex.Message}");
 
-                BlockQueue = new ConcurrentQueue<Block>(queueSnapshot);
+                BlockQueue.Clear();
 
                 _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
 
@@ -167,13 +169,13 @@ namespace IndexerCore
 
         private async Task IndexBlock(ulong blockNubmer)
         {
-            if (await this.ContainsBlock(new Block { BlockNumber = (long)blockNubmer }))
+            if (await this.ContainsBlock(new Block { BlockNumber = (int)blockNubmer }))
             {
                 Logger.LogWarning($"Block {blockNubmer} is already indexed. Skipping");
                 return;
             }
 
-            var currentBlock = new Block { BlockNumber = (long)blockNubmer };
+            var currentBlock = new Block { BlockNumber = (int)blockNubmer };
 
             try
             {
@@ -254,7 +256,7 @@ namespace IndexerCore
             {
                 From = trace.From.RemoveHashPrefix(),
                 To = trace.To.RemoveHashPrefix(),
-                MethodId = GetMethodIdFromInput(trace.Input).RemoveHashPrefix(),
+                MethodId = GetMethodIdFromInput(trace.Input)?.RemoveHashPrefix(),
                 TransactionHash = tx.TransactionHash,
                 Type = Enum.Parse<CallTypes>(trace.CallType, true),
                 Error = trace.Error != null && trace.Error.Length > 50 ? trace.Error.Substring(0, 50) : trace.Error
@@ -280,13 +282,13 @@ namespace IndexerCore
                 {
                     TransactionHash = t.TransactionHash.RemoveHashPrefix(),
                     TimeStamp = (int)block.Timestamp.ToUlong(),
-                    BlockId = (long)blockNubmer,
+                    BlockId = (int)blockNubmer,
                     Calls = new List<Call>(),
                     RawTransaction = new RawTransaction
                     {
                         From = t.From.RemoveHashPrefix(),
                         To = t.To.RemoveHashPrefix(),
-                        MethodId = GetMethodIdFromInput(input).RemoveHashPrefix(),
+                        MethodId = GetMethodIdFromInput(input)?.RemoveHashPrefix() ?? "",
                         Value = t.Value?.ToString(),
                     }
                 };
@@ -319,7 +321,8 @@ namespace IndexerCore
     internal static class StringExtensions
     {
         public static string RemoveHashPrefix(this string hash)
-           => hash.Length > 2 ?
+           => string.IsNullOrEmpty(hash) ? hash :
+                hash.Length >= 2 ?
                    hash.Substring(0, 2) == "0x" ?
                        hash.Remove(0, 2) : hash
                    : hash;

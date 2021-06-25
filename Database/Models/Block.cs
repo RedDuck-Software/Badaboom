@@ -4,7 +4,7 @@ namespace Database.Models
 {
     public class Block
     {
-        public long BlockNumber { get; set; }
+        public int BlockNumber { get; set; }
 
         public List<Transaction> Transactions { get; set; }
     }
