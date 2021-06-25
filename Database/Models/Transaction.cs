@@ -5,16 +5,14 @@ namespace Database.Models
 {
     public class Transaction
     {
-        public int Id { get; set; }
+        public string TransactionHash { get; set; }
 
-        public long BlockId { get; set; }
+        public int BlockId { get; set; }
 
-        public string Hash { get; set; }
+        public int TimeStamp { get; set; }
 
-        public DateTime Time { get; set; }
-
-        public IEnumerable<Call> Calls { get; set; }
-
+        public List<Call> Calls { get; set; }
+        
         public RawTransaction RawTransaction { get; set; }
     }
 
@@ -27,11 +25,5 @@ namespace Database.Models
         public string MethodId { get; set; }
 
         public string Value { get; set; }
-
-        public string Input { get; set; }
-
-        public ulong Gas { get; set; }
-
-        public ulong GasPrice { get; set; }
     }
 }

@@ -8,6 +8,4 @@ namespace Web3Tracer.Tracers.Geth.Models
         [JsonProperty("tracer")]
         public string Tracer { get; set; }
     }
-
-    public enum TransactionTracer { callTracer }
 }

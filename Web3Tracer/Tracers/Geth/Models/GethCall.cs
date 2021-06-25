@@ -30,5 +30,8 @@ namespace Web3Tracer.Tracers.Geth.Models
 
         [JsonProperty("error")]
         public string Error { get; set; }
+
+        [JsonProperty("time")]
+        public string Time { get; set; }
     }
 }

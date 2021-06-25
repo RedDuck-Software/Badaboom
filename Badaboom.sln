@@ -3,14 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31229.75
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Badaboom-indexer", "Badaboom-indexer\Badaboom-indexer.csproj", "{55C5C06D-316A-42E9-AFAC-CC0F519D91C9}"
-	ProjectSection(ProjectDependencies) = postProject
-		{A982C799-78D3-42D3-BD31-4238425FDFF2} = {A982C799-78D3-42D3-BD31-4238425FDFF2}
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database", "Database\Database.csproj", "{A982C799-78D3-42D3-BD31-4238425FDFF2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web3Tracer", "Web3Tracer\Web3Tracer.csproj", "{CA5EBA01-961B-44F3-8A7A-7336C1CC5C08}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web3Tracer", "Web3Tracer\Web3Tracer.csproj", "{CA5EBA01-961B-44F3-8A7A-7336C1CC5C08}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IndexingCore", "IndexingCore\IndexingCore.csproj", "{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Indexer", "Indexer\Indexer.csproj", "{0F87E3C4-E03A-46AE-AE2E-7314DBF8C958}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureFunctions", "AzureFunctions\AzureFunctions.csproj", "{F14C097F-B82C-4E8E-AC9D-6FE098973E90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monitor", "Monitor\Monitor.csproj", "{68869EBF-D9D7-4246-ADB2-6EF015D77B42}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,10 +21,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{55C5C06D-316A-42E9-AFAC-CC0F519D91C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55C5C06D-316A-42E9-AFAC-CC0F519D91C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55C5C06D-316A-42E9-AFAC-CC0F519D91C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55C5C06D-316A-42E9-AFAC-CC0F519D91C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A982C799-78D3-42D3-BD31-4238425FDFF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A982C799-78D3-42D3-BD31-4238425FDFF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A982C799-78D3-42D3-BD31-4238425FDFF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -30,6 +29,22 @@ Global
 		{CA5EBA01-961B-44F3-8A7A-7336C1CC5C08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA5EBA01-961B-44F3-8A7A-7336C1CC5C08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA5EBA01-961B-44F3-8A7A-7336C1CC5C08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EFF47B6-6D53-45BE-B2C3-ADA99CA08DFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F87E3C4-E03A-46AE-AE2E-7314DBF8C958}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F87E3C4-E03A-46AE-AE2E-7314DBF8C958}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F87E3C4-E03A-46AE-AE2E-7314DBF8C958}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F87E3C4-E03A-46AE-AE2E-7314DBF8C958}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F14C097F-B82C-4E8E-AC9D-6FE098973E90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F14C097F-B82C-4E8E-AC9D-6FE098973E90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F14C097F-B82C-4E8E-AC9D-6FE098973E90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F14C097F-B82C-4E8E-AC9D-6FE098973E90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68869EBF-D9D7-4246-ADB2-6EF015D77B42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68869EBF-D9D7-4246-ADB2-6EF015D77B42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68869EBF-D9D7-4246-ADB2-6EF015D77B42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68869EBF-D9D7-4246-ADB2-6EF015D77B42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

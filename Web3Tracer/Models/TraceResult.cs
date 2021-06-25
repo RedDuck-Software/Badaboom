@@ -19,5 +19,8 @@
         public string Value { get; set; }
         
         public string Output { get; set; }
+
+        public string Time{ get; set; }
+
     }
 }

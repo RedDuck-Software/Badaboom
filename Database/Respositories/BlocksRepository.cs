@@ -9,8 +9,6 @@ namespace Database.Respositories
 {
     public class BlocksRepository : RepositoryBase
     {
-        public enum BlockStatus { FAILED, INDEXED, INDEXING }
-
         public BlocksRepository(string connectionString) : base(connectionString) { }
 
         public async Task<bool> ContainsBlockAsync(Block block)
@@ -19,46 +17,61 @@ namespace Database.Respositories
 
         public async Task<Block> GetLastIndexedBlockAsync()
         {
-            var sql = "SELECT TOP 1 * FROM Blocks WHERE IndexingStatus='INDEXED' ORDER BY BlockNumber DESC";
+            var sql = "SELECT TOP 1 * FROM Blocks ORDER BY BlockNumber DESC";
 
             var res = await SqlConnection.QueryAsync<Block>(sql);
             return res.Count() == 0 ? null : res.First();
         }
 
-
-        public async Task<IEnumerable<Block>> GetAllFailedBlocksAsync()
+        public async Task RemoveBlockAsync(Block block)
         {
             var sql =
-                "select * from Blocks WHERE IndexingStatus='FAILED'";
+               "delete from Blocks where BlockId=@BlockNumber";
 
-            return await SqlConnection.QueryAsync<Block>(sql);
-        }
-
-
-        public async Task<IEnumerable<Block>> GetAllSuccessfulBlocksAsync()
-        {
-            var sql =
-                "select * from Blocks where IndexingStatus='INDEXED'";
-
-            return await SqlConnection.QueryAsync<Block>(sql);
-        }
-
-
-
-        public async Task AddNewBlockAsync(Block block, BlockStatus status)
-        {
-            var sql = "insert into Blocks(BlockNumber,IndexingStatus) " +
-                $"values (@BlockNumber,'{status}')";
+            using (var tRepo = new TransactionRepository(SqlConnection.ConnectionString))
+                await tRepo.RemoveBlockTransftions(block);
 
             await SqlConnection.ExecuteAsync(sql, block);
         }
 
-
-        public async Task ChangeBlockStatusTo(Block block, BlockStatus status)
+        public async Task AddNewBlocksWithTransactionsAndCallsAsync(IEnumerable<Block> blocks)
         {
+            string getRowStringForBlocks(Block b) => $"({b.BlockNumber})";
+            string getRowStringForTx(Transaction tx) => $"(convert(binary(32),'{tx.TransactionHash}',2),{tx.BlockId},'{tx.TimeStamp}')";
+            string getRowStringForCall(Call c) => $"(convert(binary(32),'{c.TransactionHash}',2),{$"'{c.Error}'".Replace("''", "NULL")},'{(int)c.Type}',convert(binary(20),'{c.From}',2), convert(binary(20),'{c.To}',2) ,convert(binary(4),'{c.MethodId ?? ""}',2))";
+
+            string valueNamesForBlocks = "[BlockNumber]";
+            string valueNamesForTxs = "[TransactionHash],[BlockId],[TimeStamp]";
+            string valueNamesForCalls = "[TransactionHash],[Error],[Type],[From],[To],[MethodId]";
+
+            List<Transaction> txs = new List<Transaction>();
+            List<Call> calls = new List<Call>();
+
+            foreach (var block in blocks)
+                txs = txs.Concat(block.Transactions).AsList();
+
+            foreach (var tx in txs)
+                calls = calls.Concat(tx.Calls).AsList();
+
+            var insertValuesBlocks = string.Join(' ', blocks.Select(b => $"{getRowStringForBlocks(b)},"));
+            var insertValuesTxs = string.Join(' ', txs.Select(t => $"{getRowStringForTx(t)},"));
+            var insertValuesCalls = string.Join(' ', calls.Select(c => $"{getRowStringForCall(c)},"));
 
             var sql =
-                $"update Blocks set IndexingStatus='{status}' where BlockNumber=@BlockNumber";
+                ((((string.IsNullOrEmpty(insertValuesBlocks) ? "" : $"insert into Blocks({valueNamesForBlocks}) select {valueNamesForBlocks} from (values {insertValuesBlocks})sub ({valueNamesForBlocks});") +
+                (string.IsNullOrEmpty(insertValuesTxs) ? "" : $"insert into Transactions({valueNamesForTxs}) select {valueNamesForTxs} from (values {insertValuesTxs})sub ({valueNamesForTxs});")).Replace("''", "NULL") +
+                (string.IsNullOrEmpty(insertValuesCalls) ? "" : $"insert into Calls({valueNamesForCalls}) select {valueNamesForCalls} from (values {insertValuesCalls})sub ({valueNamesForCalls});")))
+                    .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL");
+
+            await SqlConnection.ExecuteAsync(sql);
+        }
+
+
+        public async Task AddNewBlockAsync(Block block)
+        {
+            var sql = "insert into Blocks(BlockNumber) " +
+                $"values (@BlockNumber)";
+
             await SqlConnection.ExecuteAsync(sql, block);
         }
     }
