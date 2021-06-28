@@ -103,8 +103,8 @@ namespace IndexerCore
                         }
                         catch (Exception ex)
                         {
-                            Logger.LogCritical("Error while saving BlockQueue into database. ex: ", ex.Message);
-                                                    }
+                            Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
+                        }
                     }
                 }
             }
@@ -232,10 +232,10 @@ namespace IndexerCore
                     To = tx.RawTransaction.To,
                     MethodId = tx.RawTransaction.MethodId,
                     From = tx.RawTransaction.From,
-                    Value = tx.RawTransaction.Value?.RemoveHashPrefix()?.ZeroHashFormatting(),
-                    GasSended = tx.RawTransaction.Gas?.RemoveHashPrefix()?.ZeroHashFormatting(),
-                    GasUsed =  (await Web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(tx.TransactionHash))?.GasUsed?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting()
-                }) ;
+                    Value = tx.RawTransaction.Value?.FormatHex(),
+                    GasSended = tx.RawTransaction.Gas?.FormatHex(),
+                    GasUsed = (await Web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(tx.TransactionHash))?.GasUsed?.HexValue?.FormatHex()
+                });
 
                 Logger.LogWarning("Trace is null, no internal transactions recorded");
                 return tx;
@@ -264,14 +264,14 @@ namespace IndexerCore
             {
                 From = trace.From.RemoveHashPrefix(),
                 To = trace.To.RemoveHashPrefix(),
-                MethodId = GetMethodIdFromInput(trace.Input)?.RemoveHashPrefix(),
+                MethodId = GetMethodIdFromInput(trace.Input)?.FormatHex(),
                 TransactionHash = tx.TransactionHash,
                 Type = Enum.Parse<CallTypes>(trace.CallType, true),
                 Error = trace.Error != null && trace.Error.Length > 50 ? trace.Error.Substring(0, 50) : trace.Error,
-                GasSended = trace.Gas?.RemoveHashPrefix()?.ZeroHashFormatting(),
-                GasUsed = trace.GasUsed?.RemoveHashPrefix()?.ZeroHashFormatting(),
-                Value = trace.Value?.RemoveHashPrefix()?.ZeroHashFormatting()
-            }); 
+                GasSended = trace.Gas?.FormatHex(),
+                GasUsed = trace.GasUsed?.FormatHex(),
+                Value = trace.Value?.FormatHex()
+            });
         }
 
 
@@ -295,15 +295,15 @@ namespace IndexerCore
                     TimeStamp = (int)block.Timestamp.ToUlong(),
                     BlockId = (int)blockNubmer,
                     Calls = new List<Call>(),
-                    GasPrice = t.Gas?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting(),
+                    GasPrice = t.Gas?.HexValue?.FormatHex(),
                     RawTransaction = new RawTransaction
                     {
                         From = t.From.RemoveHashPrefix(),
                         To = t.To.RemoveHashPrefix(),
-                        MethodId = GetMethodIdFromInput(input)?.RemoveHashPrefix() ?? "",
-                        Value = t.Value?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting(),
-                        GasPrice = t.GasPrice?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting(),
-                        Gas = t.Gas?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting(),
+                        MethodId = GetMethodIdFromInput(input)?.FormatHex() ?? "",
+                        Value = t.Value?.HexValue?.FormatHex(),
+                        GasPrice = t.GasPrice?.HexValue?.FormatHex(),
+                        Gas = t.Gas?.HexValue?.FormatHex(),
                     }
                 };
             });
@@ -334,6 +334,16 @@ namespace IndexerCore
 
     internal static class StringExtensions
     {
+        public static string FormatHex(this string h)
+        {
+            var hash = h.RemoveHashPrefix().ZeroHashFormatting();
+
+            return string.IsNullOrEmpty(hash) ? hash :
+                hash.Length % 2 == 0 ? hash :
+                    hash + "0";
+        }
+
+
         public static string ZeroHashFormatting(this string hash) => hash == "0" ? null : hash;
 
         public static string RemoveHashPrefix(this string hash)

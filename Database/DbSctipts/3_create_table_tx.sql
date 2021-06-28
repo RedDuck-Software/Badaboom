@@ -5,7 +5,7 @@ create table [Transactions](
 
 	[TimeStamp] INT NULL,
 
-	[GasPrice] binary(32) NULL,
+	[GasPrice] binary(8) NULL,
 );
 
 create table [Calls] (
@@ -23,9 +23,9 @@ create table [Calls] (
 
 	[MethodId] binary(4) NOT NULL,
 
-	[GasUsed] binary(32) NOT NULL,
+	[GasUsed] binary(8) NOT NULL,
 
-	[GasSended] binary(32) NOT NULL,
+	[GasSended] binary(8) NOT NULL,
 
 	[Value] binary(32) NOT NULL,
 );
