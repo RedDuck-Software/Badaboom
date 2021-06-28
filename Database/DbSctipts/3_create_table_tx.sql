@@ -4,6 +4,8 @@ create table [Transactions](
 	[BlockId] int NOT NULL FOREIGN KEY REFERENCES Blocks(BlockNumber),
 
 	[TimeStamp] INT NULL,
+
+	[GasPrice] binary(32) NULL,
 );
 
 create table [Calls] (
@@ -21,9 +23,9 @@ create table [Calls] (
 
 	[MethodId] binary(4) NOT NULL,
 
-	[GasUsed] binary(32) NULL,
+	[GasUsed] binary(32) NOT NULL,
 
-	[GasSended] binary(32) NULL,
+	[GasSended] binary(32) NOT NULL,
 
-	[Value] binary(32) NULL,
+	[Value] binary(32) NOT NULL,
 );

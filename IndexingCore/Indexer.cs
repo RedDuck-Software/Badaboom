@@ -101,10 +101,10 @@ namespace IndexerCore
 
                             Logger.LogInformation("Successfully saved");
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
-                            Logger.LogCritical("Error while saving BlockQueue into database");
-                        }
+                            Logger.LogCritical("Error while saving BlockQueue into database. ex: ", ex.Message);
+                                                    }
                     }
                 }
             }
@@ -232,9 +232,9 @@ namespace IndexerCore
                     To = tx.RawTransaction.To,
                     MethodId = tx.RawTransaction.MethodId,
                     From = tx.RawTransaction.From,
-                    Value = tx.RawTransaction.Value,
-                    GasSended = tx.RawTransaction.Gas,
-                    GasUsed =  (await Web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(tx.TransactionHash))?.GasUsed?.HexValue
+                    Value = tx.RawTransaction.Value?.RemoveHashPrefix()?.ZeroHashFormatting(),
+                    GasSended = tx.RawTransaction.Gas?.RemoveHashPrefix()?.ZeroHashFormatting(),
+                    GasUsed =  (await Web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(tx.TransactionHash))?.GasUsed?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting()
                 }) ;
 
                 Logger.LogWarning("Trace is null, no internal transactions recorded");
@@ -268,9 +268,9 @@ namespace IndexerCore
                 TransactionHash = tx.TransactionHash,
                 Type = Enum.Parse<CallTypes>(trace.CallType, true),
                 Error = trace.Error != null && trace.Error.Length > 50 ? trace.Error.Substring(0, 50) : trace.Error,
-                GasSended = trace.Gas,
-                GasUsed = trace.GasUsed,
-                Value = trace.Value
+                GasSended = trace.Gas?.RemoveHashPrefix()?.ZeroHashFormatting(),
+                GasUsed = trace.GasUsed?.RemoveHashPrefix()?.ZeroHashFormatting(),
+                Value = trace.Value?.RemoveHashPrefix()?.ZeroHashFormatting()
             }); 
         }
 
@@ -295,15 +295,15 @@ namespace IndexerCore
                     TimeStamp = (int)block.Timestamp.ToUlong(),
                     BlockId = (int)blockNubmer,
                     Calls = new List<Call>(),
-                    GasPrice = t.Gas?.HexValue,
+                    GasPrice = t.Gas?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting(),
                     RawTransaction = new RawTransaction
                     {
                         From = t.From.RemoveHashPrefix(),
                         To = t.To.RemoveHashPrefix(),
                         MethodId = GetMethodIdFromInput(input)?.RemoveHashPrefix() ?? "",
-                        Value = t.Value?.HexValue,
-                        GasPrice = t.GasPrice?.HexValue,
-                        Gas = t.Gas?.HexValue,
+                        Value = t.Value?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting(),
+                        GasPrice = t.GasPrice?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting(),
+                        Gas = t.Gas?.HexValue?.RemoveHashPrefix()?.ZeroHashFormatting(),
                     }
                 };
             });
@@ -334,6 +334,8 @@ namespace IndexerCore
 
     internal static class StringExtensions
     {
+        public static string ZeroHashFormatting(this string hash) => hash == "0" ? null : hash;
+
         public static string RemoveHashPrefix(this string hash)
            => string.IsNullOrEmpty(hash) ? hash :
                 hash.Length >= 2 ?
