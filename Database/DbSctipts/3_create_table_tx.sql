@@ -20,4 +20,10 @@ create table [Calls] (
 	[To] binary(20) NULL,
 
 	[MethodId] binary(4) NOT NULL,
+
+	[GasUsed] binary(32) NULL,
+
+	[GasSended] binary(32) NULL,
+
+	[Value] binary(32) NULL,
 );

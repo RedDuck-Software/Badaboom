@@ -76,3 +76,13 @@ namespace Database.Respositories
         }
     }
 }
+
+/*
+ 
+	[GasUsed] binary(32) NULL,
+
+	[GasSended] binary(32) NULL,
+
+	[Value] binary(32) NULL,
+
+ */

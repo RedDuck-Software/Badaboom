@@ -231,8 +231,11 @@ namespace IndexerCore
                     TransactionHash = tx.TransactionHash,
                     To = tx.RawTransaction.To,
                     MethodId = tx.RawTransaction.MethodId,
-                    From = tx.RawTransaction.From
-                });
+                    From = tx.RawTransaction.From,
+                    Value = tx.RawTransaction.Value,
+                    GasSended = tx.RawTransaction.Gas,
+                    GasUsed =  (await Web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(tx.TransactionHash))?.GasUsed?.HexValue
+                }) ;
 
                 Logger.LogWarning("Trace is null, no internal transactions recorded");
                 return tx;
@@ -264,8 +267,11 @@ namespace IndexerCore
                 MethodId = GetMethodIdFromInput(trace.Input)?.RemoveHashPrefix(),
                 TransactionHash = tx.TransactionHash,
                 Type = Enum.Parse<CallTypes>(trace.CallType, true),
-                Error = trace.Error != null && trace.Error.Length > 50 ? trace.Error.Substring(0, 50) : trace.Error
-            });
+                Error = trace.Error != null && trace.Error.Length > 50 ? trace.Error.Substring(0, 50) : trace.Error,
+                GasSended = trace.Gas,
+                GasUsed = trace.GasUsed,
+                Value = trace.Value
+            }); 
         }
 
 
@@ -289,12 +295,15 @@ namespace IndexerCore
                     TimeStamp = (int)block.Timestamp.ToUlong(),
                     BlockId = (int)blockNubmer,
                     Calls = new List<Call>(),
+                    GasPrice = t.Gas?.HexValue,
                     RawTransaction = new RawTransaction
                     {
                         From = t.From.RemoveHashPrefix(),
                         To = t.To.RemoveHashPrefix(),
                         MethodId = GetMethodIdFromInput(input)?.RemoveHashPrefix() ?? "",
-                        Value = t.Value?.ToString(),
+                        Value = t.Value?.HexValue,
+                        GasPrice = t.GasPrice?.HexValue,
+                        Gas = t.Gas?.HexValue,
                     }
                 };
             });
