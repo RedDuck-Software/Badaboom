@@ -1,7 +1,7 @@
 create table [Transactions](
 	[TransactionHash] binary(32) NOT NULL PRIMARY KEY , 
 
-	[BlockId] INT NOT NULL FOREIGN KEY REFERENCES Blocks(BlockNumber),
+	[BlockId] int NOT NULL FOREIGN KEY REFERENCES Blocks(BlockNumber),
 
 	[TimeStamp] INT NULL,
 );

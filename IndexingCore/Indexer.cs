@@ -1,20 +1,16 @@
-﻿using System;
+﻿using Database.Models;
+using Database.Respositories;
+using IndexingCore.RpcProviders;
+using Microsoft.Extensions.Logging;
+using Nethereum.Hex.HexTypes;
+using Nethereum.Web3;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
-using Database.Models;
-using IndexerCore.Extensions;
-using Database.Respositories;
-using Nethereum.Hex.HexTypes;
-using Nethereum.Web3;
 using Web3Tracer.Tracers;
-using System.Collections.Concurrent;
-using IndexingCore.RpcProviders;
-using Nethereum.JsonRpc.Client;
-using Microsoft.Extensions.Logging;
-using System.Net.Http;
-using Web3Tracer.Tracers.Geth;
 
 namespace IndexerCore
 {
@@ -56,6 +52,8 @@ namespace IndexerCore
 
                 if (_rpcProvider.IsAllTokensUsed)
                 {
+                    Logger.LogError("All api keys are already used. Sleep for 24h to make them available again");
+
                     _rpcProvider.Reset();
                     await Task.Delay(TimeSpan.FromHours(24));
                 }
@@ -97,7 +95,16 @@ namespace IndexerCore
                 {
                     foreach (var chunk in blockQueueChunked)
                     {
-                        await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(chunk);
+                        try
+                        {
+                            await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(chunk);
+
+                            Logger.LogInformation("Successfully saved");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.LogCritical("Error while saving BlockQueue into database");
+                        }
                     }
                 }
             }
@@ -151,7 +158,7 @@ namespace IndexerCore
             {
                 Logger.LogCritical($"Exception occured while sending RpcRequest. Changing api key. Ex:  {ex.Message}");
 
-                BlockQueue = new ConcurrentQueue<Block>(queueSnapshot);
+                BlockQueue.Clear();
 
                 _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
 
@@ -254,7 +261,7 @@ namespace IndexerCore
             {
                 From = trace.From.RemoveHashPrefix(),
                 To = trace.To.RemoveHashPrefix(),
-                MethodId = GetMethodIdFromInput(trace.Input).RemoveHashPrefix(),
+                MethodId = GetMethodIdFromInput(trace.Input)?.RemoveHashPrefix(),
                 TransactionHash = tx.TransactionHash,
                 Type = Enum.Parse<CallTypes>(trace.CallType, true),
                 Error = trace.Error != null && trace.Error.Length > 50 ? trace.Error.Substring(0, 50) : trace.Error
@@ -286,7 +293,7 @@ namespace IndexerCore
                     {
                         From = t.From.RemoveHashPrefix(),
                         To = t.To.RemoveHashPrefix(),
-                        MethodId = GetMethodIdFromInput(input).RemoveHashPrefix(),
+                        MethodId = GetMethodIdFromInput(input)?.RemoveHashPrefix() ?? "",
                         Value = t.Value?.ToString(),
                     }
                 };
@@ -319,7 +326,8 @@ namespace IndexerCore
     internal static class StringExtensions
     {
         public static string RemoveHashPrefix(this string hash)
-           => hash.Length > 2 ?
+           => string.IsNullOrEmpty(hash) ? hash :
+                hash.Length >= 2 ?
                    hash.Substring(0, 2) == "0x" ?
                        hash.Remove(0, 2) : hash
                    : hash;
