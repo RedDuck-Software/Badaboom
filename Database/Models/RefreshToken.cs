@@ -6,7 +6,7 @@ namespace Database.Models
 {
     public class RefreshToken
     {
-        public int Id { get; set; }
+        public long TokenId { get; set; }
 
         public long UserId { get; set; }
 

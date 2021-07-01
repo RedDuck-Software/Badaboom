@@ -22,6 +22,17 @@ namespace Backend.Controllers
         }
 
         [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest model)
+        {
+            var response = await _userService.Register(model);
+
+            if (response == null) return new BadRequestObjectResult("User with this address is already exist");
+
+            return new OkObjectResult(response);
+        } 
+
+        [AllowAnonymous]
         [HttpPost("authenticate")]
         public async Task<IActionResult> Authenticate([FromBody] AuthenticateRequest model)
         {
@@ -65,7 +76,7 @@ namespace Backend.Controllers
 
 
         [HttpGet("/user/{address}")]
-        public async Task<IActionResult> GetByAddress(string address)
+        public async Task<IActionResult> GetUserByAddress(string address)
         {
             var user = await _userService.GetByAddress(address);
             

@@ -42,6 +42,7 @@ namespace BackendCore.Services
         {
             _appSettings = appSettings.Value;
             _configuration = configuration;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
             _nonceGeneratorService = nonceGeneratorService;
         }
 
@@ -60,7 +61,7 @@ namespace BackendCore.Services
             using (var uRepo = new UserRepository(_connectionString))
                 await uRepo.CreateUser(user);
 
-            return new RegisterResponse() { Nonce = user.Nonce} ;
+            return new RegisterResponse() { Nonce = user.Nonce };
         }
 
         public async Task<AuthenticateResponse> Authenticate(AuthenticateRequest model, string ipAddress)
@@ -77,9 +78,11 @@ namespace BackendCore.Services
             var jwtToken = GenerateJwtToken(user);
             var refreshToken = GenerateRefreshToken(ipAddress);
 
+            refreshToken.UserId = user.Id;
+
             // save refresh token
             using (var uRepo = new UserRepository(_connectionString))
-                await uRepo.AddNewRefreshToken(user, refreshToken);
+                await uRepo.AddNewRefreshToken(refreshToken);
 
             return new AuthenticateResponse(user, jwtToken, refreshToken.Token);
         }
@@ -106,10 +109,10 @@ namespace BackendCore.Services
             refreshToken.Revoked = DateTime.UtcNow;
             refreshToken.RevokedByIp = ipAddress;
             refreshToken.ReplacedByToken = newRefreshToken.Token;
-            
-            using(var uRepo = new UserRepository(_connectionString))
+
+            using (var uRepo = new UserRepository(_connectionString))
             {
-                await uRepo.AddNewRefreshToken(user, newRefreshToken);
+                await uRepo.AddNewRefreshToken(newRefreshToken);
                 // todo:  revoke old token
             }
 
