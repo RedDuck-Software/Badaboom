@@ -7,12 +7,12 @@ namespace Backend.Models
     {
         public string Issuer { get; set; }  
         public string Audience { get; set; } 
-        public string Key { get; set; }
+        public string Secret { get; set; }
         public int AccessTokenLifetime { get; set; }
-        public int RefreshLifetime { get; set; }
+        public int RefreshTokenLifetime { get; set; }
 
 
         public SymmetricSecurityKey GetSymmetricSecurityKey()
-            => new SymmetricSecurityKey(Encoding.ASCII.GetBytes(this.Key));
+            => new SymmetricSecurityKey(Encoding.ASCII.GetBytes(this.Secret));
     }
 }

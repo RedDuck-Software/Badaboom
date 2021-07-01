@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using BackendCore.Models.Request;
+using BackendCore.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Backend.Controllers
@@ -13,24 +12,75 @@ namespace Backend.Controllers
     public class AuthorizationController : ControllerBase
     {
         private readonly ILogger<AuthorizationController> _logger;
+        
+        private readonly IUserService _userService;
 
-        public AuthorizationController(ILogger<AuthorizationController> logger)
+        public AuthorizationController(ILogger<AuthorizationController> logger, IUserService userService)
         {
             _logger = logger;
+            _userService = userService;
         }
 
         [AllowAnonymous]
-        [HttpGet("~/testGet")]
-        public string TestGet()
+        [HttpPost("authenticate")]
+        public async Task<IActionResult> Authenticate([FromBody] AuthenticateRequest model)
         {
-            return "test get anonymous!";
+            var response = await _userService.Authenticate(model, IpAddress());
+
+            if (response == null)
+                return BadRequest(new { message = "Username or password is incorrect" });
+
+            return Ok(response);
         }
 
-        [Authorize]
-        [HttpGet("~/testGetAuthorized")]
-        public string TestGetAuthorized()
+        [AllowAnonymous]
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken()
         {
-            return "test get authtorized!";
+            var refreshToken = Request.Cookies["refreshToken"];
+            var response = await _userService.RefreshToken(refreshToken, IpAddress());
+
+            if (response == null)
+                return Unauthorized(new { message = "Invalid token" });
+
+            return Ok(response);
+        }
+
+        [HttpPost("revoke-token")]
+        public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest model)
+        {
+            // accept token from request body or cookie
+            var token = model.Token ?? Request.Cookies["refreshToken"];
+
+            if (string.IsNullOrEmpty(token))
+                return BadRequest(new { message = "Token is required" });
+
+            var response = await _userService.RevokeToken(token, IpAddress());
+
+            if (!response)
+                return NotFound(new { message = "Token not found" });
+
+            return Ok(new { message = "Token revoked" });
+        }
+
+
+        [HttpGet("{address}")]
+        public async Task<IActionResult> GetById(string address)
+        {
+            var user = await _userService.GetByAddress(address);
+            
+            if (user == null) return NotFound();
+
+            return Ok(user);
+        }
+
+
+        private string IpAddress()
+        {
+            if (Request.Headers.ContainsKey("X-Forwarded-For"))
+                return Request.Headers["X-Forwarded-For"];
+            else
+                return HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
         }
     }
 }

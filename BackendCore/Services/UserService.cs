@@ -27,7 +27,7 @@ namespace BackendCore.Services
         Task<User> GetByAddress(string address);
     }
 
-    class UserService : IUserService
+    public class UserService : IUserService
     {
         private readonly JWTAuth _appSettings;
         private readonly IConfiguration _configuration;
@@ -159,7 +159,7 @@ namespace BackendCore.Services
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var key = Encoding.ASCII.GetBytes(_appSettings.Key);
+            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -183,7 +183,7 @@ namespace BackendCore.Services
                 return new RefreshToken
                 {
                     Token = Convert.ToBase64String(randomBytes),
-                    Expires = DateTime.UtcNow.AddDays(_appSettings.RefreshLifetime),
+                    Expires = DateTime.UtcNow.AddDays(_appSettings.RefreshTokenLifetime),
                     Created = DateTime.UtcNow,
                     CreatedByIp = ipAddress
                 };

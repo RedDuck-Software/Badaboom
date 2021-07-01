@@ -1,4 +1,6 @@
 using Backend.Models;
+using BackendCore.Models.AppSettings;
+using BackendCore.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,27 +32,40 @@ namespace Backend
         public void ConfigureServices(IServiceCollection services)
         {
             var jwtConfig = Configuration.GetSection("JWT");
+            var servicesConfig = Configuration.GetSection("ServicesConfig");
+
 
             var jwtAuth = jwtConfig.Get<JWTAuth>();
+            var servicesSettings = servicesConfig.Get<ServicesSettings>();
 
             services.Configure<JWTAuth>(jwtConfig);
+            services.Configure<ServicesSettings>(servicesSettings);
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    options.RequireHttpsMetadata = false;
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidIssuer = jwtAuth.Issuer,
-                        ValidateIssuer = true,
-                        ValidAudience = jwtAuth.Audience,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        IssuerSigningKey = jwtAuth.GetSymmetricSecurityKey(),
-                        ValidateIssuerSigningKey = true,
-                        ClockSkew = TimeSpan.FromSeconds(jwtAuth.AccessTokenLifetime)
-                    };
-                });
+                    ValidIssuer = jwtAuth.Issuer,
+                    ValidateIssuer = true,
+                    ValidAudience = jwtAuth.Audience,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    IssuerSigningKey = jwtAuth.GetSymmetricSecurityKey(),
+                    ValidateIssuerSigningKey = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+
+            services.AddScoped<INonceGeneratorService, NonceGeneratorService>((factory) => new NonceGeneratorService(2));
+
+            services.AddScoped<IUserService, UserService>();
 
 
             services.AddControllers();
