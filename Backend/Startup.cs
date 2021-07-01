@@ -39,7 +39,7 @@ namespace Backend
             var servicesSettings = servicesConfig.Get<ServicesSettings>();
 
             services.Configure<JWTAuth>(jwtConfig);
-            services.Configure<ServicesSettings>(servicesSettings);
+            services.Configure<ServicesSettings>(servicesConfig);
 
 
             services.AddAuthentication(x =>
@@ -63,7 +63,7 @@ namespace Backend
                 };
             });
 
-            services.AddScoped<INonceGeneratorService, NonceGeneratorService>((factory) => new NonceGeneratorService(2));
+            services.AddScoped<INonceGeneratorService, NonceGeneratorService>((factory) => new NonceGeneratorService(servicesSettings.NonceLenght));
 
             services.AddScoped<IUserService, UserService>();
 
