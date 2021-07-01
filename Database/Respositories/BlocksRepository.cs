@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Database.Models;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -37,12 +38,12 @@ namespace Database.Respositories
         public async Task AddNewBlocksWithTransactionsAndCallsAsync(IEnumerable<Block> blocks)
         {
             string getRowStringForBlocks(Block b) => $"({b.BlockNumber})";
-            string getRowStringForTx(Transaction tx) => $"(convert(binary(32),'{tx.TransactionHash}',2),{tx.BlockId},'{tx.TimeStamp}')";
-            string getRowStringForCall(Call c) => $"(convert(binary(32),'{c.TransactionHash}',2),{$"'{c.Error}'".Replace("''", "NULL")},'{(int)c.Type}',convert(binary(20),'{c.From}',2), convert(binary(20),'{c.To}',2) ,convert(binary(4),'{c.MethodId ?? ""}',2))";
+            string getRowStringForTx(Transaction tx) => $"(convert(binary(32),'{tx.TransactionHash}',2),{tx.BlockId},'{tx.TimeStamp}', convert(binary(8), '{tx.GasPrice}', 2))";
+            string getRowStringForCall(Call c) => $"(convert(binary(32),'{c.TransactionHash}',2),{$"'{c.Error}'".Replace("''", "NULL")},'{(int)c.Type}',convert(binary(20),'{c.From}',2), convert(binary(20),'{c.To}',2) ,convert(binary(4),'{c.MethodId ?? ""}',2), convert(binary(8),'{c.GasUsed ?? ""}',2), convert(binary(8),'{c.GasSended ?? ""}',2), convert(binary(32),'{c.Value ?? ""}',2))";
 
             string valueNamesForBlocks = "[BlockNumber]";
-            string valueNamesForTxs = "[TransactionHash],[BlockId],[TimeStamp]";
-            string valueNamesForCalls = "[TransactionHash],[Error],[Type],[From],[To],[MethodId]";
+            string valueNamesForTxs = "[TransactionHash],[BlockId],[TimeStamp],[GasPrice]";
+            string valueNamesForCalls = "[TransactionHash],[Error],[Type],[From],[To],[MethodId],[GasUsed],[GasSended],[Value]";
 
             List<Transaction> txs = new List<Transaction>();
             List<Call> calls = new List<Call>();
@@ -63,7 +64,7 @@ namespace Database.Respositories
                 (string.IsNullOrEmpty(insertValuesCalls) ? "" : $"insert into Calls({valueNamesForCalls}) select {valueNamesForCalls} from (values {insertValuesCalls})sub ({valueNamesForCalls});")))
                     .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL");
 
-            await SqlConnection.ExecuteAsync(sql);
+            await SqlConnection.ExecuteAsync(sql, commandTimeout: TimeSpan.FromHours(2).Seconds);
         }
 
 

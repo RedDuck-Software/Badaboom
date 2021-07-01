@@ -14,6 +14,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace BadaboomIndexer
 {
@@ -29,6 +30,8 @@ namespace BadaboomIndexer
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
+            if (args.Length < 2) throw new ArgumentException("You need to provide at least 2 arguments: network type and LoggerFilePath");
+
             var _config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName)
                 .AddJsonFile("appsettings.json", false)
@@ -38,7 +41,7 @@ namespace BadaboomIndexer
 
             var conn = new ConnectionStringsHelperService(_config);
 
-            var getBlockIOPrivateKeys = _config["BlockioPrivateKeys"].Split(",").Select(s => s.Trim()).ToList();
+            var getBlockIOPrivateKeys = _config["GetBlockIOPrivateKeys"].Split(",").Select(s => s.Trim()).ToList();
 
             if (getBlockIOPrivateKeys.Count() == 0) throw new ArgumentException("You must provide at least one private key to use GetBlock rpc provider");
 
@@ -48,9 +51,22 @@ namespace BadaboomIndexer
 
             var tracer = new GethWeb3Tracer(web3);
 
+            if (!File.Exists(args[1]))
+                File.Create(args[1]);
+
+
+            var Logger = new LoggerConfiguration()
+                                .Enrich.FromLogContext()
+                                .WriteTo.Console()
+                                .WriteTo.File(args[1])
+                                .CreateLogger();
+
 
             var serviceProvider = new ServiceCollection()
-                .AddLogging(config => config.ClearProviders().AddConsole().SetMinimumLevel(LogLevel.Trace))
+                .AddLogging(config =>
+                {
+                    config.AddSerilog(Logger, true);
+                })
                 .BuildServiceProvider();
 
             serviceProvider
@@ -69,9 +85,9 @@ namespace BadaboomIndexer
                 500
             );
 
-            var startBlock = args.Length > 1 ? ulong.Parse(args[1]) : 0;
+            var startBlock = args.Length > 2 ? ulong.Parse(args[2]) : 0;
 
-            var endBlock = args.Length > 2 ? ulong.Parse(args[2]) : await indexer.GetLatestBlockNumber();
+            var endBlock = args.Length > 3 ? ulong.Parse(args[3]) : await indexer.GetLatestBlockNumber();
 
             await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
 

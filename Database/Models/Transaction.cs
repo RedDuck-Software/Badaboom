@@ -11,6 +11,8 @@ namespace Database.Models
 
         public int TimeStamp { get; set; }
 
+        public string GasPrice { get; set; }
+
         public List<Call> Calls { get; set; }
         
         public RawTransaction RawTransaction { get; set; }
@@ -25,5 +27,9 @@ namespace Database.Models
         public string MethodId { get; set; }
 
         public string Value { get; set; }
+
+        public string GasPrice { get; set; }
+
+        public string Gas { get; set; }
     }
 }
