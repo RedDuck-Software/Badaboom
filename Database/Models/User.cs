@@ -10,8 +10,5 @@ namespace Database.Models
         public long Id { get; set; }
 
         public string Address { get; set; }
-
-        [JsonIgnore]
-        public List<RefreshToken> RefreshTokens { get; set; }
     }
 }

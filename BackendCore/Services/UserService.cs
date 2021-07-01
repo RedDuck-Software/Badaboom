@@ -2,11 +2,16 @@
 using BackendCore.Models;
 using BackendCore.Models.Request;
 using Database.Models;
+using Database.Respositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,14 +19,14 @@ namespace BackendCore.Services
 {
     public interface IUserService
     {
-        AuthenticateResponse Authenticate(AuthenticateRequest model, string ipAddress);
-        AuthenticateResponse RefreshToken(string token, string ipAddress);
-        bool RevokeToken(string token, string ipAddress);
-        IEnumerable<User> GetAll();
-        User GetById(int id);
+        Task<AuthenticateResponse> Register(RegisterRequest model, string ipAddress);
+        Task<AuthenticateResponse> Authenticate(AuthenticateRequest model, string ipAddress);
+        Task<AuthenticateResponse> RefreshToken(string token, string ipAddress);
+        Task<bool> RevokeToken(string token, string ipAddress);
+        Task<User> GetByAddress(string address);
     }
 
-    class UserService
+    class UserService : IUserService
     {
         private readonly JWTAuth _appSettings;
         private readonly IConfiguration _configuration;
@@ -35,64 +40,97 @@ namespace BackendCore.Services
             _configuration = configuration;
         }
 
-        public AuthenticateResponse Authenticate(AuthenticateRequest model, string ipAddress)
+        public async Task<AuthenticateResponse> Register(RegisterRequest model, string ipAddress)
         {
-            using (var uRepo = new UserRepository(_connectionString))
-            {
+            User user;
 
-            }
-            var user = _context.Users.SingleOrDefault(x => x.Username == model.Username && x.Password == model.Password);
+            using (var uRepo = new UserRepository(_connectionString))
+                user = await uRepo.GetUserByAddress(model.Address);
 
             // return null if user not found
             if (user == null) return null;
 
             // authentication successful so generate jwt and refresh tokens
-            var jwtToken = generateJwtToken(user);
-            var refreshToken = generateRefreshToken(ipAddress);
+            var jwtToken = GenerateJwtToken(user);
+            var refreshToken = GenerateRefreshToken(ipAddress);
 
             // save refresh token
-            user.RefreshTokens.Add(refreshToken);
-            _context.Update(user);
-            _context.SaveChanges();
+            using (var uRepo = new UserRepository(_connectionString))
+                await uRepo.AddNewRefreshToken(user, refreshToken);
 
             return new AuthenticateResponse(user, jwtToken, refreshToken.Token);
         }
 
-        public AuthenticateResponse RefreshToken(string token, string ipAddress)
+        public async Task<AuthenticateResponse> Authenticate(AuthenticateRequest model, string ipAddress)
         {
-            var user = _context.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == token));
+            User user;
+
+            using (var uRepo = new UserRepository(_connectionString))
+                user = await uRepo.GetUserByAddress(model.Address);
+
+            // return null if user not found
+            if (user == null) return null;
+
+            // authentication successful so generate jwt and refresh tokens
+            var jwtToken = GenerateJwtToken(user);
+            var refreshToken = GenerateRefreshToken(ipAddress);
+
+            // save refresh token
+            using (var uRepo = new UserRepository(_connectionString))
+                await uRepo.AddNewRefreshToken(user, refreshToken);
+
+            return new AuthenticateResponse(user, jwtToken, refreshToken.Token);
+        }
+
+        public async Task<AuthenticateResponse> RefreshToken(string token, string ipAddress)
+        {
+            User user;
+            RefreshToken refreshToken;
+
+            using (var uRepo = new UserRepository(_connectionString))
+                user = await uRepo.GetUserByRefreshToken(token);
 
             // return null if no user found with token
             if (user == null) return null;
 
-            var refreshToken = user.RefreshTokens.Single(x => x.Token == token);
+            using (var uRepo = new UserRepository(_connectionString))
+                refreshToken = await uRepo.GetRefreshToken(token);
 
             // return null if token is no longer active
             if (!refreshToken.IsActive) return null;
 
             // replace old refresh token with a new one and save
-            var newRefreshToken = generateRefreshToken(ipAddress);
+            var newRefreshToken = GenerateRefreshToken(ipAddress);
             refreshToken.Revoked = DateTime.UtcNow;
             refreshToken.RevokedByIp = ipAddress;
             refreshToken.ReplacedByToken = newRefreshToken.Token;
-            user.RefreshTokens.Add(newRefreshToken);
-            _context.Update(user);
-            _context.SaveChanges();
+            
+            using(var uRepo = new UserRepository(_connectionString))
+            {
+                await uRepo.AddNewRefreshToken(user, newRefreshToken);
+                // todo:  revoke old token
+            }
+
 
             // generate new jwt
-            var jwtToken = generateJwtToken(user);
+            var jwtToken = GenerateJwtToken(user);
 
             return new AuthenticateResponse(user, jwtToken, newRefreshToken.Token);
         }
 
-        public bool RevokeToken(string token, string ipAddress)
+        public async Task<bool> RevokeToken(string token, string ipAddress)
         {
-            var user = _context.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == token));
+            User user;
+            RefreshToken refreshToken;
+
+            using (var uRepo = new UserRepository(_connectionString))
+                user = await uRepo.GetUserByRefreshToken(token);
 
             // return false if no user found with token
             if (user == null) return false;
 
-            var refreshToken = user.RefreshTokens.Single(x => x.Token == token);
+            using (var uRepo = new UserRepository(_connectionString))
+                refreshToken = await uRepo.GetRefreshToken(token);
 
             // return false if token is not active
             if (!refreshToken.IsActive) return false;
@@ -100,42 +138,41 @@ namespace BackendCore.Services
             // revoke token and save
             refreshToken.Revoked = DateTime.UtcNow;
             refreshToken.RevokedByIp = ipAddress;
-            _context.Update(user);
-            _context.SaveChanges();
+
+            using (var uRepo = new UserRepository(_connectionString))
+            {
+                // todo:  revoke old token
+            }
 
             return true;
         }
 
-        public IEnumerable<User> GetAll()
+        public async Task<User> GetByAddress(string contractAddress)
         {
-            return _context.Users;
+            using (var uRepo = new UserRepository(_connectionString))
+                return await uRepo.GetUserByAddress(contractAddress);
         }
 
-        public User GetById(int id)
-        {
-            return _context.Users.Find(id);
-        }
-
-        // helper methods
-
-        private string generateJwtToken(User user)
+        private string GenerateJwtToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+
+            var key = Encoding.ASCII.GetBytes(_appSettings.Key);
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, user.Id.ToString())
+                    new Claim(ClaimTypes.Name, user.Address)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(15),
+                Expires = DateTime.UtcNow.AddMinutes(_appSettings.Lifetime),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
 
-        private RefreshToken generateRefreshToken(string ipAddress)
+        private RefreshToken GenerateRefreshToken(string ipAddress)
         {
             using (var rngCryptoServiceProvider = new RNGCryptoServiceProvider())
             {

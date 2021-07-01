@@ -2,12 +2,9 @@
 
 namespace BackendCore.Models.Request
 {
-    public class AuthenticateRequest
+    public class RegisterRequest
     {
         [Required]
         public string Address { get; set; }
-
-        [Required]
-        public string SignedNonce { get; set; }
     }
 }

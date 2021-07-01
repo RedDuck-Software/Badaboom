@@ -19,6 +19,32 @@ namespace Database.Respositories
             await SqlConnection.ExecuteAsync(sql, user);
         }
 
+        public async Task<User> GetUserByAddress(string address)
+        {
+            var sql = "select from Users where Address=@Address;";
+            return await SqlConnection.QuerySingleAsync<User>(sql, new { Address = address});
+        }
+            
+        public async Task AddNewRefreshToken(User user, RefreshToken newToken)
+        {
+            var sql = "insert into RefreshTokens(UserId,Token,Expires,Created,Revoked,ReplacedByToken,CreatedByIp,RevokedByIp) " +
+                "values(@UserId,@Token,@Expires,@Created,@Revoked,@ReplacedByToken,@CreatedByIp,@RevokedByIp);";
 
+            await SqlConnection.QuerySingleAsync<User>(sql, newToken);
+        }
+
+
+        public async Task<User> GetUserByRefreshToken(string refreshToken)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public async Task<RefreshToken> GetRefreshToken(string address)
+        {
+            throw new NotImplementedException();
+            /*var sql = "select from Users where Address=@Address;";
+            return await SqlConnection.QuerySingleAsync<User>(sql, new { Address = address });*/
+        }
     }
 }
