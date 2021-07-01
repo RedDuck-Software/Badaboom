@@ -1,15 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BackendCore.Services
 {
-    public class NonceGeneratorService
+    public interface INonceGeneratorService
+    {
+        int NonceLenght { get; }
+
+        string GenerateNonce();
+    }
+
+    public class NonceGeneratorService : INonceGeneratorService
     {
         public int NonceLenght { get; }
-
 
 
         public NonceGeneratorService(int nonceLenght)

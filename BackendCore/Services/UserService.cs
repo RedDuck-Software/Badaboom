@@ -1,6 +1,7 @@
 ﻿using Backend.Models;
 using BackendCore.Models;
 using BackendCore.Models.Request;
+using BackendCore.Models.Response;
 using Database.Models;
 using Database.Respositories;
 using Microsoft.Extensions.Configuration;
@@ -19,7 +20,7 @@ namespace BackendCore.Services
 {
     public interface IUserService
     {
-        Task<AuthenticateResponse> Register(RegisterRequest model, string ipAddress);
+        Task<RegisterResponse> Register(RegisterRequest model);
         Task<AuthenticateResponse> Authenticate(AuthenticateRequest model, string ipAddress);
         Task<AuthenticateResponse> RefreshToken(string token, string ipAddress);
         Task<bool> RevokeToken(string token, string ipAddress);
@@ -30,17 +31,21 @@ namespace BackendCore.Services
     {
         private readonly JWTAuth _appSettings;
         private readonly IConfiguration _configuration;
+        private readonly INonceGeneratorService _nonceGeneratorService;
         private readonly string _connectionString;
 
         public UserService(
             IOptions<JWTAuth> appSettings,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            INonceGeneratorService nonceGeneratorService
+            )
         {
             _appSettings = appSettings.Value;
             _configuration = configuration;
+            _nonceGeneratorService = nonceGeneratorService;
         }
 
-        public async Task<AuthenticateResponse> Register(RegisterRequest model, string ipAddress)
+        public async Task<RegisterResponse> Register(RegisterRequest model)
         {
             User user;
 
@@ -48,17 +53,14 @@ namespace BackendCore.Services
                 user = await uRepo.GetUserByAddress(model.Address);
 
             // return null if user not found
-            if (user == null) return null;
+            if (user != null) return null;
 
-            // authentication successful so generate jwt and refresh tokens
-            var jwtToken = GenerateJwtToken(user);
-            var refreshToken = GenerateRefreshToken(ipAddress);
+            user = new User { Address = model.Address, Nonce = _nonceGeneratorService.GenerateNonce() };
 
-            // save refresh token
             using (var uRepo = new UserRepository(_connectionString))
-                await uRepo.AddNewRefreshToken(user, refreshToken);
+                await uRepo.CreateUser(user);
 
-            return new AuthenticateResponse(user, jwtToken, refreshToken.Token);
+            return new RegisterResponse() { Nonce = user.Nonce} ;
         }
 
         public async Task<AuthenticateResponse> Authenticate(AuthenticateRequest model, string ipAddress)
