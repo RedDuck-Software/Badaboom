@@ -49,16 +49,13 @@ namespace IndexerCore
             }
             catch (Exception)
             {
+                _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
 
                 if (_rpcProvider.IsAllTokensUsed)
                 {
                     Logger.LogError("All api keys are already used. Sleep for 24h to make them available again");
-
                     _rpcProvider.Reset();
-                    await Task.Delay(TimeSpan.FromHours(24));
                 }
-
-                _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
 
                 return await GetLatestBlockNumber();
             }
@@ -163,10 +160,7 @@ namespace IndexerCore
                 _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
 
                 if (_rpcProvider.IsAllTokensUsed)
-                {
                     _rpcProvider.Reset();
-                    await Task.Delay(TimeSpan.FromHours(24));
-                }
 
                 await IndexInRange(startBlock, endBlock);
             }
