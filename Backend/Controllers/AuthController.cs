@@ -9,13 +9,13 @@ namespace Backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthorizationController : ControllerBase
+    public class AuthController : ControllerBase
     {
-        private readonly ILogger<AuthorizationController> _logger;
+        private readonly ILogger<AuthController> _logger;
         
         private readonly IUserService _userService;
 
-        public AuthorizationController(ILogger<AuthorizationController> logger, IUserService userService)
+        public AuthController(ILogger<AuthController> logger, IUserService userService)
         {
             _logger = logger;
             _userService = userService;
@@ -34,7 +34,7 @@ namespace Backend.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("refresh-token")]
+        [HttpPost("refreshToken")]
         public async Task<IActionResult> RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
@@ -46,7 +46,7 @@ namespace Backend.Controllers
             return Ok(response);
         }
 
-        [HttpPost("revoke-token")]
+        [HttpPost("revokeToken")]
         public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest model)
         {
             // accept token from request body or cookie
@@ -64,8 +64,8 @@ namespace Backend.Controllers
         }
 
 
-        [HttpGet("{address}")]
-        public async Task<IActionResult> GetById(string address)
+        [HttpGet("/user/{address}")]
+        public async Task<IActionResult> GetByAddress(string address)
         {
             var user = await _userService.GetByAddress(address);
             
