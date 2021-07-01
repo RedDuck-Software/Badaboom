@@ -77,6 +77,9 @@ namespace IndexerCore
 
             if (multRes < endBlock)
                 await this.IndexInRange(multRes, endBlock);
+
+            if (!BlockQueue.IsEmpty)
+                await this.CommitIndexedBlocks();
         }
 
         public async Task CommitIndexedBlocks()

@@ -1,3 +1,5 @@
+using Backend.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -6,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
@@ -26,6 +29,29 @@ namespace Backend
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var jwtConfig = Configuration.GetSection("JWT");
+
+            var jwtAuth = jwtConfig.Get<JWTAuth>();
+
+            services.Configure<JWTAuth>(jwtConfig);
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidIssuer = jwtAuth.Issuer,
+                        ValidateIssuer = true,
+                        ValidAudience = jwtAuth.Audience,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        IssuerSigningKey = jwtAuth.GetSymmetricSecurityKey(),
+                        ValidateIssuerSigningKey = true,
+                        ClockSkew = TimeSpan.FromSeconds(jwtAuth.Lifetime)
+                    };
+                });
+
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
