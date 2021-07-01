@@ -37,7 +37,7 @@ namespace BackendCore.Services
         public UserService(
             IOptions<JWTAuth> appSettings,
             IConfiguration configuration,
-            INonceGeneratorService nonceGeneratorService
+            INonceGeneratorService nonceGeneratorService // todo: register service in ConfigureServices
             )
         {
             _appSettings = appSettings.Value;
@@ -167,7 +167,7 @@ namespace BackendCore.Services
                 {
                     new Claim(ClaimTypes.Name, user.Address)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(_appSettings.Lifetime),
+                Expires = DateTime.UtcNow.AddMinutes(_appSettings.AccessTokenLifetime),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -183,7 +183,7 @@ namespace BackendCore.Services
                 return new RefreshToken
                 {
                     Token = Convert.ToBase64String(randomBytes),
-                    Expires = DateTime.UtcNow.AddDays(7),
+                    Expires = DateTime.UtcNow.AddDays(_appSettings.RefreshLifetime),
                     Created = DateTime.UtcNow,
                     CreatedByIp = ipAddress
                 };

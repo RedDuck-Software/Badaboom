@@ -48,7 +48,7 @@ namespace Backend
                         ValidateLifetime = true,
                         IssuerSigningKey = jwtAuth.GetSymmetricSecurityKey(),
                         ValidateIssuerSigningKey = true,
-                        ClockSkew = TimeSpan.FromSeconds(jwtAuth.Lifetime)
+                        ClockSkew = TimeSpan.FromSeconds(jwtAuth.AccessTokenLifetime)
                     };
                 });
 
