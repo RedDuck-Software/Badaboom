@@ -22,15 +22,17 @@ namespace BadaboomIndexer
     {
         /// <summary>
         /// First arg - string, possible values: bsc | eth . Responsible for chain selection
-        /// Second - startBlock number (optional parameter. Default value - 0)
-        /// Third - endBlock number (optional parameter. Default value - CurrentLastBlock)
+        /// Second arg - Log file
+        /// Third arg - LogCritical file
+        /// Fourth - startBlock number (optional parameter. Default value - 0)
+        /// Fifth - endBlock number (optional parameter. Default value - CurrentLastBlock)
         /// Default (and only) rpc provider - https://getblock.io service
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
-            if (args.Length < 2) throw new ArgumentException("You need to provide at least 2 arguments: network type and LoggerFilePath");
+            if (args.Length < 3) throw new ArgumentException("You need to provide at least 3 arguments: network type, LoggerFilePath and LoggerCriticalFilePath");
 
             var _config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName)
@@ -55,10 +57,14 @@ namespace BadaboomIndexer
                 File.Create(args[1]);
 
 
+            if (!File.Exists(args[2]))
+                File.Create(args[2]);
+
             var Logger = new LoggerConfiguration()
                                 .Enrich.FromLogContext()
                                 .WriteTo.Console()
                                 .WriteTo.File(args[1])
+                                .WriteTo.File(args[2], Serilog.Events.LogEventLevel.Fatal)
                                 .CreateLogger();
 
 
@@ -85,9 +91,9 @@ namespace BadaboomIndexer
                 500
             );
 
-            var startBlock = args.Length > 2 ? ulong.Parse(args[2]) : 0;
+            var startBlock = args.Length > 3 ? ulong.Parse(args[3]) : 0;
 
-            var endBlock = args.Length > 3 ? ulong.Parse(args[3]) : await indexer.GetLatestBlockNumber();
+            var endBlock = args.Length > 4 ? ulong.Parse(args[4]) : await indexer.GetLatestBlockNumber();
 
             await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
 

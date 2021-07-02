@@ -104,6 +104,18 @@ namespace IndexerCore
                         catch (Exception ex)
                         {
                             Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
+
+                            foreach (var block in chunk)
+                            {
+                                try
+                                {
+                                    await bRepo.RemoveBlockAsync(block);
+                                }
+                                catch (Exception e)
+                                {
+                                    Logger.LogCritical($"Error while removing block {block.BlockNumber}. ex: " + e.Message);
+                                }
+                            }
                         }
                     }
                 }
@@ -200,7 +212,7 @@ namespace IndexerCore
             }
             catch (Exception ex)
             {
-                Logger.LogCritical($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex.Message}");
+                Logger.LogError($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex.Message}");
                 throw ex;
             }
         }
