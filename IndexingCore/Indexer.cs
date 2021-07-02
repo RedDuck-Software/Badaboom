@@ -36,7 +36,7 @@ namespace IndexerCore
             _rpcProvider = rpcProvider;
             Logger = logger;
 
-            ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).ToArray();
+            ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).Where(v=> v != CallTypes.NO_CALL_TYPE.ToString().ToLower()).ToArray();
         }
 
         public async Task<ulong> GetLatestBlockNumber()
@@ -232,9 +232,6 @@ namespace IndexerCore
                     To = tx.RawTransaction.To,
                     MethodId = tx.RawTransaction.MethodId,
                     From = tx.RawTransaction.From,
-                    Value = tx.RawTransaction.Value?.FormatHex(),
-                    GasSended = tx.RawTransaction.Gas?.FormatHex(),
-                    GasUsed = (await Web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(tx.TransactionHash))?.GasUsed?.HexValue?.FormatHex()
                 });
 
                 Logger.LogWarning("Trace is null, no internal transactions recorded");
@@ -268,9 +265,6 @@ namespace IndexerCore
                 TransactionHash = tx.TransactionHash,
                 Type = Enum.Parse<CallTypes>(trace.CallType, true),
                 Error = trace.Error != null && trace.Error.Length > 50 ? trace.Error.Substring(0, 50) : trace.Error,
-                GasSended = trace.Gas?.FormatHex(),
-                GasUsed = trace.GasUsed?.FormatHex(),
-                Value = trace.Value?.FormatHex()
             });
         }
 
@@ -313,16 +307,6 @@ namespace IndexerCore
         {
             if (value is null) return String.Empty;
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
-        }
-
-
-        private static List<List<T>> ChunkBy<T>(List<T> source, int chunkSize)
-        {
-            return source
-                .Select((x, i) => new { Index = i, Value = x })
-                .GroupBy(x => x.Index / chunkSize)
-                .Select(x => x.Select(v => v.Value).ToList())
-                .ToList();
         }
 
         private readonly GetBlockIOProvider _rpcProvider;
