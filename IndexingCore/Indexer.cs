@@ -24,13 +24,11 @@ namespace IndexerCore
 
         public readonly int QueueSize;
 
-        public const int MAX_INSERT_ROWS = 1000;
-
         public readonly ILogger Logger;
 
 
 
-        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, GetBlockIOProvider rpcProvider, int queueSize = MAX_INSERT_ROWS)
+        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, GetBlockIOProvider rpcProvider, int queueSize)
         {
             _web3Tracer = web3Tracer;
             _connectionString = dbConnectionString;
@@ -86,36 +84,29 @@ namespace IndexerCore
         {
             Logger.LogInformation($"Commiting queued blocks. Current queue size is: { BlockQueue.Count}");
 
-            // split queue into chunks because of t-sql limitation in 1000 rows per one sql query
-            IEnumerable<IEnumerable<Block>> blockQueueChunked = ChunkBy(BlockQueue.ToList(), MAX_INSERT_ROWS);
+            var blockQueueList = BlockQueue.ToList();
 
             using (var bRepo = new BlocksRepository(_connectionString))
             {
-                using (var tRepo = new TransactionRepository(_connectionString))
+                try
                 {
-                    foreach (var chunk in blockQueueChunked)
+                    await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(blockQueueList);
+
+                    Logger.LogInformation("Successfully saved");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
+
+                    foreach (var block in blockQueueList)
                     {
                         try
                         {
-                            await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(chunk);
-
-                            Logger.LogInformation("Successfully saved");
+                            await bRepo.RemoveBlockAsync(block);
                         }
-                        catch (Exception ex)
+                        catch (Exception e)
                         {
-                            Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
-
-                            foreach (var block in chunk)
-                            {
-                                try
-                                {
-                                    await bRepo.RemoveBlockAsync(block);
-                                }
-                                catch (Exception e)
-                                {
-                                    Logger.LogCritical($"Error while removing block {block.BlockNumber}. ex: " + e.Message);
-                                }
-                            }
+                            Logger.LogCritical($"Error while removing block {block.BlockNumber}. ex: " + e.Message);
                         }
                     }
                 }
