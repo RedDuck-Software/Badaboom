@@ -32,8 +32,5 @@ namespace Database.Models
         NO_CALL_TYPE,
         Create, 
         Call, 
-        Delegatecall, 
-        StaticCall, 
-        Callcode
     }
 }
