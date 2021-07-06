@@ -16,8 +16,24 @@ namespace Database.Respositories
 
         public async Task CreateUser(User user)
         {
-            var sql = $"insert into Users(Address,Nonce) values(convert(binary(20),'{user.Address}',1),@Nonce);";
+            var sql = "insert " +
+                      "into Users" +
+                            "(Address,Nonce) " +
+                      "values" +
+                            "(convert(binary(20),@Address,1),@Nonce);";
+
             await SqlConnection.ExecuteAsync(sql, user);
+        }
+
+        public async Task UpdateUserNonce(long userId, string newNonce)
+        {
+            var sql = "update Users " +
+                      "set " +
+                            "Nonce=@Nonce " +
+                      "where " +
+                            "UserId=@UserId;";
+
+            await SqlConnection.ExecuteAsync(sql, new { UserId = userId, Nonce = newNonce });
         }
 
         public async Task<User> GetUserByAddress(string address)
@@ -35,8 +51,11 @@ namespace Database.Respositories
 
         public async Task AddNewRefreshToken(RefreshToken newToken)
         {
-            var sql = "insert into RefreshTokens(UserId,Token,Expires,Created,CreatedByIp) " +
-                "values(@UserId,@Token,@Expires,@Created,@CreatedByIp);";
+            var sql = "insert " +
+                      "into RefreshTokens" +
+                            "(UserId,Token,Expires,Created,CreatedByIp) " +
+                      "values" +
+                            "(@UserId,@Token,@Expires,@Created,@CreatedByIp);";
 
             await SqlConnection.ExecuteAsync(sql, newToken);
         }
@@ -62,9 +81,9 @@ namespace Database.Respositories
         public async Task RemoveRefreshToken(string token)
         {
             var sql = "delete " +
-                        "from RefreshTokens " +
-                        "where Token=@Token";
-
+                      "from RefreshTokens " +
+                      "where " +
+                            "Token=@Token";
             await SqlConnection.ExecuteAsync(sql, new { Token = token });
         }
     }
