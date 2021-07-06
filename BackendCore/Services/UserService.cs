@@ -37,7 +37,7 @@ namespace BackendCore.Services
         public UserService(
             IOptions<JWTAuth> appSettings,
             IConfiguration configuration,
-            INonceGeneratorService nonceGeneratorService // todo: register service in ConfigureServices
+            INonceGeneratorService nonceGeneratorService
             )
         {
             _appSettings = appSettings.Value;
