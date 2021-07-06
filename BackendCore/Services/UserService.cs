@@ -22,7 +22,7 @@ namespace BackendCore.Services
     {
         Task<RegisterResponse> Register(RegisterRequest model);
         Task<AuthenticateResponse> Authenticate(AuthenticateRequest model, string ipAddress);
-        Task<AuthenticateResponse> RefreshToken(string token, string ipAddress);
+        Task<AuthenticateResponse> RefreshToken(string token);
         Task<bool> RevokeToken(string token);
         Task<User> GetUserByAddress(string address);
     }
@@ -87,7 +87,7 @@ namespace BackendCore.Services
             return new AuthenticateResponse(user, jwtToken, refreshToken.Token);
         }
 
-        public async Task<AuthenticateResponse> RefreshToken(string token, string ipAddress)
+        public async Task<AuthenticateResponse> RefreshToken(string token)
         {
             RefreshToken refreshToken;
 
@@ -107,7 +107,7 @@ namespace BackendCore.Services
             // generate new jwt
             var jwtToken = GenerateJwtToken(refreshToken.User);
 
-            return new AuthenticateResponse(refreshToken.User, jwtToken, refreshToken.Token);
+            return new AuthenticateResponse(refreshToken.User, jwtToken, token);
         }
 
         public async Task<bool> RevokeToken(string token)

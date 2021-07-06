@@ -50,7 +50,7 @@ namespace Backend.Controllers
         {
             var refreshToken = Request.Cookies["refreshToken"] ?? request.Token;
 
-            var response = await _userService.RefreshToken(refreshToken, GetIpAddress());
+            var response = await _userService.RefreshToken(refreshToken);
 
             if (response == null)
                 return Unauthorized(new { message = "Invalid token" });
