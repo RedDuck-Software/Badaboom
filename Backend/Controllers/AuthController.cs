@@ -59,6 +59,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("revokeToken")]
+        [Authorize]
         public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest model)
         {
             // accept token from request body or cookie
@@ -67,7 +68,7 @@ namespace Backend.Controllers
             if (string.IsNullOrEmpty(token))
                 return BadRequest(new { message = "Token is required" });
 
-            var response = await _userService.RevokeToken(token, GetIpAddress());
+            var response = await _userService.RevokeToken(token);
 
             if (!response)
                 return NotFound(new { message = "Token not found" });
@@ -79,7 +80,7 @@ namespace Backend.Controllers
         [HttpGet("/user/{address}")]
         public async Task<IActionResult> GetUserByAddress(string address)
         {
-            var user = await _userService.GetByAddress(address);
+            var user = await _userService.GetUserByAddress(address);
             
             if (user == null) return NotFound();
 

@@ -23,8 +23,8 @@ namespace BackendCore.Services
         Task<RegisterResponse> Register(RegisterRequest model);
         Task<AuthenticateResponse> Authenticate(AuthenticateRequest model, string ipAddress);
         Task<AuthenticateResponse> RefreshToken(string token, string ipAddress);
-        Task<bool> RevokeToken(string token, string ipAddress);
-        Task<User> GetByAddress(string address);
+        Task<bool> RevokeToken(string token);
+        Task<User> GetUserByAddress(string address);
     }
 
     public class UserService : IUserService
@@ -95,53 +95,49 @@ namespace BackendCore.Services
                 refreshToken = await uRepo.GetRefreshTokenWithUser(token);
 
             // return null if no user found with token
-            if (refreshToken == null || !refreshToken.IsActive) return null;
+            if (refreshToken == null) return null;
 
-            // replace old refresh token with a new one and save
-            var newRefreshToken = GenerateRefreshToken(ipAddress);
-            newRefreshToken.UserId = refreshToken.UserId;
-
-            refreshToken.Revoked = DateTime.UtcNow;
-            refreshToken.RevokedByIp = ipAddress;
-
-            using (var uRepo = new UserRepository(_connectionString))
+            if(!refreshToken.IsActive)
             {
-                await uRepo.AddNewRefreshToken(newRefreshToken);
-                await uRepo.RevokeToken(refreshToken.Token, refreshToken.Revoked.Value, refreshToken.RevokedByIp);
+                await RemoveToken(refreshToken.Token);
+
+                return null;
             }
 
             // generate new jwt
             var jwtToken = GenerateJwtToken(refreshToken.User);
 
-            return new AuthenticateResponse(refreshToken.User, jwtToken, newRefreshToken.Token);
+            return new AuthenticateResponse(refreshToken.User, jwtToken, refreshToken.Token);
         }
 
-        public async Task<bool> RevokeToken(string token, string ipAddress)
+        public async Task<bool> RevokeToken(string token)
         {
             RefreshToken refreshToken;
 
             using (var uRepo = new UserRepository(_connectionString))
                 refreshToken = await uRepo.GetRefreshTokenWithUser(token);
 
-
             // return false if no user found with token
-            if (refreshToken == null || !refreshToken.IsActive) return false;
+            if (refreshToken == null) return false;
 
-            // revoke token and save
-            refreshToken.Revoked = DateTime.UtcNow;
-            refreshToken.RevokedByIp = ipAddress;
-
-            using (var uRepo = new UserRepository(_connectionString))
-                await uRepo.RevokeToken(refreshToken.Token, refreshToken.Revoked.Value, refreshToken.RevokedByIp);
+            await RemoveToken(refreshToken.Token);
 
             return true;
         }
 
-        public async Task<User> GetByAddress(string contractAddress)
+        public async Task<User> GetUserByAddress(string contractAddress)
         {
-            using (var uRepo = new UserRepository(_connectionString))
-                return await uRepo.GetUserByAddress(contractAddress);
+            using var uRepo = new UserRepository(_connectionString);
+            return await uRepo.GetUserByAddress(contractAddress);
         }
+
+
+        private async Task RemoveToken(string refreshToken)
+        {
+            using var uRepo = new UserRepository(_connectionString);
+            await uRepo.RemoveRefreshToken(refreshToken);
+        }
+
 
         private string GenerateJwtToken(User user)
         {

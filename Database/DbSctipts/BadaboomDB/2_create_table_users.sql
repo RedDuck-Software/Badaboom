@@ -16,11 +16,6 @@ create table [RefreshTokens] (
 	[Expires] DateTime NOT NULL,
 	
 	[Created] DateTime NOT NULL,
-
-	[Revoked] DateTime NULL,
-
 	
 	[CreatedByIp] varchar(15) NULL,
-
-	[RevokedByIp] varchar(15) NULL
 );

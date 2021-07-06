@@ -35,8 +35,8 @@ namespace Database.Respositories
 
         public async Task AddNewRefreshToken(RefreshToken newToken)
         {
-            var sql = "insert into RefreshTokens(UserId,Token,Expires,Created,Revoked,CreatedByIp,RevokedByIp) " +
-                "values(@UserId,@Token,@Expires,@Created,@Revoked,@CreatedByIp,@RevokedByIp);";
+            var sql = "insert into RefreshTokens(UserId,Token,Expires,Created,CreatedByIp) " +
+                "values(@UserId,@Token,@Expires,@Created,@CreatedByIp);";
 
             await SqlConnection.ExecuteAsync(sql, newToken);
         }
@@ -45,7 +45,7 @@ namespace Database.Respositories
         public async Task<RefreshToken> GetRefreshTokenWithUser(string refreshToken)
         {
             var sql = "select " +
-                            "r.TokenId, r.UserId,r.Token,r.Expires,r.Created,r.Revoked,r.CreatedByIp,r.RevokedByIp, " +
+                            "r.TokenId, r.UserId,r.Token,r.Expires,r.Created,r.CreatedByIp, " +
                             "u.UserId, " +
                             "convert(varchar(42), u.Address, 1) as Address, " +
                             "u.Nonce " +
@@ -59,15 +59,13 @@ namespace Database.Respositories
             }, splitOn: "UserId"))?.FirstOrDefault();
         }
 
-        public async Task RevokeToken(string token, DateTime revokedTime, string revokedByIp)
+        public async Task RemoveRefreshToken(string token)
         {
-            var sql = "update RefreshTokens " +
-                      "set " +
-                            "[Revoked]=@Revoked," +
-                            "[RevokedByIp]=@RevokedByIp " +
-                      "where Token=@Token";
+            var sql = "delete " +
+                        "from RefreshTokens " +
+                        "where Token=@Token";
 
-            await SqlConnection.ExecuteAsync(sql, new { Revoked = revokedTime, Token = token, RevokedByIp = revokedByIp });
+            await SqlConnection.ExecuteAsync(sql, new { Token = token });
         }
     }
 }
