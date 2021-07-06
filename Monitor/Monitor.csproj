@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Database\Database.csproj" />
-    <ProjectReference Include="..\IndexingCore\IndexingCore.csproj" />
+    <ProjectReference Include="..\IndexingCore\Indexer.Core.csproj" />
     <ProjectReference Include="..\Web3Tracer\Web3Tracer.csproj" />
   </ItemGroup>
 
