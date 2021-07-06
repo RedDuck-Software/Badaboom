@@ -33,7 +33,7 @@ namespace BadaboomIndexer
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
-            if (args.Length < 4) throw new ArgumentException("You need to provide at least 3 arguments: network type, LoggerFilePath and LoggerCriticalFilePath");
+            if (args.Length < 4) throw new ArgumentException("You need to provide at least 4 arguments: network type, LoggerFilePath, LoggerCriticalFilePath and BlockQueueSize");
 
             var _config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName)
