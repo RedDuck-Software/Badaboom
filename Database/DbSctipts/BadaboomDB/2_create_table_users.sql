@@ -1,7 +1,7 @@
 ﻿create table [Users](
 	[UserId] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 
-	[Address] binary(20) NOT NULL, 
+	[Address] binary(20) NOT NULL UNIQUE, 
 
 	[Nonce] varchar(12) NOT NULL
 );
@@ -11,7 +11,7 @@ create table [RefreshTokens] (
 
 	[UserId] BIGINT NOT NULL FOREIGN KEY REFERENCES [Users]([UserId]),
 
-	[Token] text NOT NULL,
+	[Token] varchar(256) NOT NULL UNIQUE,
 
 	[Expires] DateTime NOT NULL,
 	
