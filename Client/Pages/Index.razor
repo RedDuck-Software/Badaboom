@@ -1,0 +1,123 @@
+﻿@page "/"
+@inject HttpClient Http
+@using System.IO
+@using Models
+@using System.Text.Json
+<h3>Main Page</h3>
+
+<Pagination TotaPagesQuantity="totalPageQuantity" CurrentPage="currentPage" Radius="2"
+            SelectedPage="SelectedPage"></Pagination>
+
+@if (searchResults == null)
+{
+    <p><em>Maybe your filters are wrong or there are no records...</em></p>
+}
+else
+{
+<table class="main-table">
+    <thead>
+        <tr>
+            <th>Txn Hash</th>
+            <th>Method</th>
+            <th>Block</th>
+            <th>Age</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Value</th>
+            <th>Txn Fee</th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <td colspan="4">
+                <div class="links"><a href="#">&laquo;</a> <a class="active" href="#">1</a> <a href="#">2</a> <a href="#">3</a> <a href="#">4</a> <a href="#">&raquo;</a></div>
+            </td>
+        </tr>
+    </tfoot>
+    <tbody>
+        @foreach (var row in transactions)
+        {
+            <tr>
+                <td>
+                    <NavLink class="nav-link hash-width text-truncate" href="@row.TxnHash">
+                        @row.TxnHash
+                    </NavLink>
+                </td>
+                <td>@row.Method</td>
+                <td>@row.Block</td>
+                <td>@DateTimeOffset.FromUnixTimeSeconds(@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
+                <td>
+                    <NavLink class="nav-link hash-width text-truncate" href="@row.From">
+                        @row.From
+                    </NavLink>
+                </td>
+                <td>
+                    <NavLink class="nav-link hash-width text-truncate" href="@row.To">
+                        @row.To
+                    </NavLink>
+                </td>
+                <td>@row.Value Ether</td>
+                <td>@row.TxnFee</td>
+            </tr>
+        }
+    </tbody>
+</table>
+}
+
+
+
+@code {
+    private SearchResult[] searchResults;
+    private List<Transaction> transactions;
+    private int totalPageQuantity;
+    private int currentPage = 1;
+    private string nameFilter = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        searchResults = await Http.GetFromJsonAsync<SearchResult[]>("sample-data/temp-result.json");
+        await LoadTransactions();
+    }
+
+    async Task LoadTransactions(int page = 1, int quantityPerPage = 10)
+    {
+        await Task.Delay(4000);
+        //var httpResponse = await Http.GetAsync($"api/people?page={page}&quantityPerPage={quantityPerPage}&name={nameFilter}");
+        var httpResponse = await Http.GetAsync($"api/transaction?page={page}&quantityPerPage={quantityPerPage}");
+
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            totalPageQuantity = int.Parse(httpResponse.Headers.GetValues("pagesQuantity").FirstOrDefault());
+            var responseString = await httpResponse.Content.ReadAsStringAsync();
+            transactions = JsonSerializer.Deserialize<List<Transaction>>(responseString,
+            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+        }
+        else
+        {
+            // handle error
+        }
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        currentPage = page;
+        await LoadTransactions(page);
+    }
+
+
+
+
+
+
+    public class SearchResult
+    {
+        public string TxnHash { get; set; }
+        public string Method { get; set; }
+        public uint Block { get; set; }
+        public uint Age { get; set; }
+        public string From { get; set; }
+        public string To { get; set; }
+        public decimal Value { get; set; }
+        public decimal TxnFee { get; set; }
+    }
+}
