@@ -1,14 +1,13 @@
 ﻿@page "/"
 @inject HttpClient Http
-@using System.IO
-@using Models
 @using System.Text.Json
+@using ClientCore.Models
+
 <h3>Main Page</h3>
 
-<Pagination TotaPagesQuantity="totalPageQuantity" CurrentPage="currentPage" Radius="2"
-            SelectedPage="SelectedPage"></Pagination>
 
-@if (searchResults == null)
+
+@if (transactions == null)
 {
     <p><em>Maybe your filters are wrong or there are no records...</em></p>
 }
@@ -29,8 +28,11 @@ else
     </thead>
     <tfoot>
         <tr>
-            <td colspan="4">
-                <div class="links"><a href="#">&laquo;</a> <a class="active" href="#">1</a> <a href="#">2</a> <a href="#">3</a> <a href="#">4</a> <a href="#">&raquo;</a></div>
+            <td colspan="8" class="justify-content-center">
+                <Pagination TotaPagesQuantity="totalPageQuantity"
+                            CurrentPage="currentPage"
+                            Radius="2"
+                            SelectedPage="SelectedPage" />
             </td>
         </tr>
     </tfoot>
@@ -67,30 +69,28 @@ else
 
 
 @code {
-    private SearchResult[] searchResults;
-    private List<Transaction> transactions;
+    private IEnumerable<Transaction> transactions;
     private int totalPageQuantity;
     private int currentPage = 1;
-    private string nameFilter = string.Empty;
+    //private string nameFilter = string.Empty; not implemented
 
     protected override async Task OnInitializedAsync()
     {
-        searchResults = await Http.GetFromJsonAsync<SearchResult[]>("sample-data/temp-result.json");
         await LoadTransactions();
     }
 
-    async Task LoadTransactions(int page = 1, int quantityPerPage = 10)
+    async Task LoadTransactions(int page = 1, int quantityPerPage = 9)
     {
-        await Task.Delay(4000);
-        //var httpResponse = await Http.GetAsync($"api/people?page={page}&quantityPerPage={quantityPerPage}&name={nameFilter}");
-        var httpResponse = await Http.GetAsync($"api/transaction?page={page}&quantityPerPage={quantityPerPage}");
+        var httpResponse = await Http.GetAsync($"https://localhost:44345/api/Transaction?page={page}&quantityPerPage={quantityPerPage}");
 
         if (httpResponse.IsSuccessStatusCode)
         {
-            totalPageQuantity = int.Parse(httpResponse.Headers.GetValues("pagesQuantity").FirstOrDefault());
+            //totalPageQuantity = int.Parse(httpResponse.Headers.GetValues("pagesQuantity").FirstOrDefault());
             var responseString = await httpResponse.Content.ReadAsStringAsync();
-            transactions = JsonSerializer.Deserialize<List<Transaction>>(responseString,
-            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            var paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
+                new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            totalPageQuantity = paginationTransactionResponse.Count;
+            transactions = paginationTransactionResponse.Transactions;
         }
         else
         {

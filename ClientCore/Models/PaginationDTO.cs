@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Client.Models
+namespace ClientCore.Models
 {
     public class PaginationDTO
     {
-        public int Page { get; set; } = 1;
-        public int QuantityPerPage { get; set; } = 10;
+        public int page { get; set; } = 1;
+        public int quantityPerPage { get; set; } = 10;
     }
 }
