@@ -16,12 +16,6 @@ namespace Database.Models
 
         public string MethodId { get; set; }
 
-        public string GasSended { get; set; }
-
-        public string GasUsed { get; set; }
-
-        public string Value { get; set; }
-
         public Transaction Transaction { get; set; }
 
         public CallTypes Type { get; set; }
@@ -32,8 +26,5 @@ namespace Database.Models
         NO_CALL_TYPE,
         Create, 
         Call, 
-        Delegatecall, 
-        StaticCall, 
-        Callcode
     }
 }

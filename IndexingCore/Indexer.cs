@@ -24,13 +24,11 @@ namespace IndexerCore
 
         public readonly int QueueSize;
 
-        public const int MAX_INSERT_ROWS = 1000;
-
         public readonly ILogger Logger;
 
 
 
-        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, GetBlockIOProvider rpcProvider, int queueSize = MAX_INSERT_ROWS)
+        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, GetBlockIOProvider rpcProvider, int queueSize)
         {
             _web3Tracer = web3Tracer;
             _connectionString = dbConnectionString;
@@ -38,7 +36,7 @@ namespace IndexerCore
             _rpcProvider = rpcProvider;
             Logger = logger;
 
-            ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).ToArray();
+            ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).Where(v=> v != CallTypes.NO_CALL_TYPE.ToString().ToLower()).ToArray();
         }
 
         public async Task<ulong> GetLatestBlockNumber()
@@ -77,30 +75,38 @@ namespace IndexerCore
 
             if (multRes < endBlock)
                 await this.IndexInRange(multRes, endBlock);
+
+            if (!BlockQueue.IsEmpty)
+                await this.CommitIndexedBlocks();
         }
 
         public async Task CommitIndexedBlocks()
         {
             Logger.LogInformation($"Commiting queued blocks. Current queue size is: { BlockQueue.Count}");
 
-            // split queue into chunks because of t-sql limitation in 1000 rows per one sql query
-            IEnumerable<IEnumerable<Block>> blockQueueChunked = ChunkBy(BlockQueue.ToList(), MAX_INSERT_ROWS);
+            var blockQueueList = BlockQueue.ToList();
 
             using (var bRepo = new BlocksRepository(_connectionString))
             {
-                using (var tRepo = new TransactionRepository(_connectionString))
+                try
                 {
-                    foreach (var chunk in blockQueueChunked)
+                    await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(blockQueueList);
+
+                    Logger.LogInformation("Successfully saved");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
+
+                    foreach (var block in blockQueueList)
                     {
                         try
                         {
-                            await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(chunk);
-
-                            Logger.LogInformation("Successfully saved");
+                            await bRepo.RemoveBlockAsync(block);
                         }
-                        catch (Exception ex)
+                        catch (Exception e)
                         {
-                            Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
+                            Logger.LogCritical($"Error while removing block {block.BlockNumber}. ex: " + e.Message);
                         }
                     }
                 }
@@ -197,7 +203,7 @@ namespace IndexerCore
             }
             catch (Exception ex)
             {
-                Logger.LogCritical($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex.Message}");
+                Logger.LogError($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex.Message}");
                 throw ex;
             }
         }
@@ -226,9 +232,6 @@ namespace IndexerCore
                     To = tx.RawTransaction.To,
                     MethodId = tx.RawTransaction.MethodId,
                     From = tx.RawTransaction.From,
-                    Value = tx.RawTransaction.Value?.FormatHex(),
-                    GasSended = tx.RawTransaction.Gas?.FormatHex(),
-                    GasUsed = (await Web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(tx.TransactionHash))?.GasUsed?.HexValue?.FormatHex()
                 });
 
                 Logger.LogWarning("Trace is null, no internal transactions recorded");
@@ -262,9 +265,6 @@ namespace IndexerCore
                 TransactionHash = tx.TransactionHash,
                 Type = Enum.Parse<CallTypes>(trace.CallType, true),
                 Error = trace.Error != null && trace.Error.Length > 50 ? trace.Error.Substring(0, 50) : trace.Error,
-                GasSended = trace.Gas?.FormatHex(),
-                GasUsed = trace.GasUsed?.FormatHex(),
-                Value = trace.Value?.FormatHex()
             });
         }
 
@@ -307,16 +307,6 @@ namespace IndexerCore
         {
             if (value is null) return String.Empty;
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
-        }
-
-
-        private static List<List<T>> ChunkBy<T>(List<T> source, int chunkSize)
-        {
-            return source
-                .Select((x, i) => new { Index = i, Value = x })
-                .GroupBy(x => x.Index / chunkSize)
-                .Select(x => x.Select(v => v.Value).ToList())
-                .ToList();
         }
 
         private readonly GetBlockIOProvider _rpcProvider;
