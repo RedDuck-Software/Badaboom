@@ -19,7 +19,7 @@ namespace BackendCore.Models
 
         public AuthenticateResponse(User user, string jwtToken, string refreshToken)
         {
-            Id = user.Id;
+            Id = user.UserId;
             UserAddress = user.Address;
             JwtToken = jwtToken;
             RefreshToken = refreshToken;

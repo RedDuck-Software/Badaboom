@@ -36,7 +36,7 @@ namespace Backend.Controllers
         [HttpPost("authenticate")]
         public async Task<IActionResult> Authenticate([FromBody] AuthenticateRequest model)
         {
-            var response = await _userService.Authenticate(model, IpAddress());
+            var response = await _userService.Authenticate(model, GetIpAddress());
 
             if (response == null)
                 return BadRequest(new { message = "Username or password is incorrect" });
@@ -46,10 +46,11 @@ namespace Backend.Controllers
 
         [AllowAnonymous]
         [HttpPost("refreshToken")]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
-            var refreshToken = Request.Cookies["refreshToken"];
-            var response = await _userService.RefreshToken(refreshToken, IpAddress());
+            var refreshToken = Request.Cookies["refreshToken"] ?? request.Token;
+
+            var response = await _userService.RefreshToken(refreshToken, GetIpAddress());
 
             if (response == null)
                 return Unauthorized(new { message = "Invalid token" });
@@ -66,7 +67,7 @@ namespace Backend.Controllers
             if (string.IsNullOrEmpty(token))
                 return BadRequest(new { message = "Token is required" });
 
-            var response = await _userService.RevokeToken(token, IpAddress());
+            var response = await _userService.RevokeToken(token, GetIpAddress());
 
             if (!response)
                 return NotFound(new { message = "Token not found" });
@@ -86,7 +87,7 @@ namespace Backend.Controllers
         }
 
 
-        private string IpAddress()
+        private string GetIpAddress()
         {
             if (Request.Headers.ContainsKey("X-Forwarded-For"))
                 return Request.Headers["X-Forwarded-For"];

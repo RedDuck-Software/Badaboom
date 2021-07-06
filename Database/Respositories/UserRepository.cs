@@ -1,11 +1,10 @@
 ﻿using Dapper;
 using Database.Models;
-using Database.Models.BinaryModels;
-using Database.Models.BinaryModels.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Database.Respositories
 {
@@ -36,24 +35,39 @@ namespace Database.Respositories
 
         public async Task AddNewRefreshToken(RefreshToken newToken)
         {
-            var sql = "insert into RefreshTokens(UserId,Token,Expires,Created,Revoked,ReplacedByToken,CreatedByIp,RevokedByIp) " +
-                "values(@UserId,@Token,@Expires,@Created,@Revoked,@ReplacedByToken,@CreatedByIp,@RevokedByIp);";
+            var sql = "insert into RefreshTokens(UserId,Token,Expires,Created,Revoked,CreatedByIp,RevokedByIp) " +
+                "values(@UserId,@Token,@Expires,@Created,@Revoked,@CreatedByIp,@RevokedByIp);";
 
-            await SqlConnection.QuerySingleAsync<User>(sql, newToken);
+            await SqlConnection.ExecuteAsync(sql, newToken);
         }
 
 
-        public async Task<User> GetUserByRefreshToken(string refreshToken)
+        public async Task<RefreshToken> GetRefreshTokenWithUser(string refreshToken)
         {
-            throw new NotImplementedException();
+            var sql = "select " +
+                            "r.TokenId, r.UserId,r.Token,r.Expires,r.Created,r.Revoked,r.CreatedByIp,r.RevokedByIp, " +
+                            "u.UserId, " +
+                            "convert(varchar(42), u.Address, 1) as Address, " +
+                            "u.Nonce " +
+                      "from RefreshTokens r " +
+                      "inner join Users u on r.UserId=u.UserId";
+
+            return (await SqlConnection.QueryAsync<RefreshToken, User, RefreshToken>(sql, (refreshToken, user) =>
+            {
+                refreshToken.User = user;
+                return refreshToken;
+            }, splitOn: "UserId"))?.FirstOrDefault();
         }
 
-
-        public async Task<RefreshToken> GetRefreshToken(string address)
+        public async Task RevokeToken(string token, DateTime revokedTime, string revokedByIp)
         {
-            throw new NotImplementedException();
-            /*var sql = "select from Users where Address=@Address;";
-            return await SqlConnection.QuerySingleAsync<User>(sql, new { Address = address });*/
+            var sql = "update RefreshTokens " +
+                      "set " +
+                            "[Revoked]=@Revoked," +
+                            "[RevokedByIp]=@RevokedByIp " +
+                      "where Token=@Token";
+
+            await SqlConnection.ExecuteAsync(sql, new { Revoked = revokedTime, Token = token, RevokedByIp = revokedByIp });
         }
     }
 }

@@ -14,7 +14,6 @@ namespace Database.Models
         public DateTime Expires { get; set; }
         public DateTime Created { get; set; }
         public DateTime? Revoked { get; set; }
-        public string ReplacedByToken { get; set; }
 
         public string CreatedByIp { get; set; }
         public string RevokedByIp { get; set; }
@@ -22,5 +21,6 @@ namespace Database.Models
         public bool IsActive => Revoked == null && !IsExpired;
         public bool IsExpired => DateTime.UtcNow >= Expires;
 
+        public User User { get; set; }
     }
 }
