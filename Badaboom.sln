@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Monitor", "Monitor\Monitor.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Badaboom.Core", "BackendCore\Badaboom.Core.csproj", "{0F9963EC-418B-4C7E-8450-D434772B8370}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Badaboom.Backend.Infostructure", "Badaboom.Backend.Infostructure\Badaboom.Backend.Infostructure.csproj", "{F1349EB9-6B83-47ED-B053-94293DA028C9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Badaboom.Backend.Infrastructure", "Badaboom.Backend.Infostructure\Badaboom.Backend.Infrastructure.csproj", "{F1349EB9-6B83-47ED-B053-94293DA028C9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Badaboom.Backend", "Badaboom.Backend\Badaboom.Backend.csproj", "{79EFB626-FD58-43E3-BE2C-75FE806DAAAE}"
 EndProject

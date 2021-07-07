@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BackendCore\Badaboom.Core.csproj" />
-    <ProjectReference Include="..\Badaboom.Backend.Infostructure\Badaboom.Backend.Infostructure.csproj" />
+    <ProjectReference Include="..\Badaboom.Backend.Infostructure\Badaboom.Backend.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
