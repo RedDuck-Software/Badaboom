@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.11.1" />
+    <PackageReference Include="Nethereum.Signer" Version="3.8.0" />
   </ItemGroup>
 
   <ItemGroup>

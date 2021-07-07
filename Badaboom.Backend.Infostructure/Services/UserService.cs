@@ -7,6 +7,7 @@ using Database.Respositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Nethereum.Signer;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -74,6 +75,8 @@ namespace BackendCore.Services
             // return null if user not found
             if (user == null) return null;
 
+            if (ValidateNonce(model.Address, model.SignedNonce, user.Nonce)) return null;
+
             // authentication successful so generate jwt and refresh tokens
             var jwtToken = GenerateJwtToken(user);
             var refreshToken = GenerateRefreshToken(ipAddress);
@@ -138,6 +141,13 @@ namespace BackendCore.Services
             await uRepo.RemoveRefreshToken(refreshToken);
         }
 
+
+        private bool ValidateNonce(string signerAddress,string signedNonce, string originalNonce)
+        {
+            var signer = new EthereumMessageSigner();
+            var addr = signer.EncodeUTF8AndEcRecover(originalNonce, signedNonce);
+            return addr == signerAddress;
+        }
 
         private string GenerateJwtToken(User user)
         {
