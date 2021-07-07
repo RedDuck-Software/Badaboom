@@ -21,13 +21,11 @@ namespace BackendCore.Services
         }
 
         public string GenerateNonce()
-        {
-            return new string(Enumerable.Repeat(chars, NonceLenght)
+            => new string(Enumerable.Repeat(chars, NonceLenght)
               .Select(s => s[_random.Next(s.Length)]).ToArray());
-        }
 
         private readonly Random _random = new();
-        
+
         private readonly string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghigklmnopqrstuvwxyz-!#$%^&";
     }
 }

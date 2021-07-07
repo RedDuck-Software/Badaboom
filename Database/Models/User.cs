@@ -7,10 +7,12 @@ namespace Database.Models
 {
     public class User
     {
-        public long Id { get; set; }
+        public long UserId { get; set; }
 
         public string Address { get; set; }
 
         public string Nonce { get; set; }
+
+        public List<RefreshToken> RefreshTokens { get; set; }
     }
 }

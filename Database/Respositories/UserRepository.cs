@@ -1,11 +1,10 @@
 ﻿using Dapper;
 using Database.Models;
-using Database.Models.BinaryModels;
-using Database.Models.BinaryModels.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Database.Respositories
 {
@@ -17,8 +16,24 @@ namespace Database.Respositories
 
         public async Task CreateUser(User user)
         {
-            var sql = $"insert into Users(Address,Nonce) values(convert(binary(20),'{user.Address}',1),@Nonce);";
+            var sql = "insert " +
+                      "into Users" +
+                            "(Address,Nonce) " +
+                      "values" +
+                            "(convert(binary(20),@Address,1),@Nonce);";
+
             await SqlConnection.ExecuteAsync(sql, user);
+        }
+
+        public async Task UpdateUserNonce(long userId, string newNonce)
+        {
+            var sql = "update Users " +
+                      "set " +
+                            "Nonce=@Nonce " +
+                      "where " +
+                            "UserId=@UserId;";
+
+            await SqlConnection.ExecuteAsync(sql, new { UserId = userId, Nonce = newNonce });
         }
 
         public async Task<User> GetUserByAddress(string address)
@@ -36,24 +51,40 @@ namespace Database.Respositories
 
         public async Task AddNewRefreshToken(RefreshToken newToken)
         {
-            var sql = "insert into RefreshTokens(UserId,Token,Expires,Created,Revoked,ReplacedByToken,CreatedByIp,RevokedByIp) " +
-                "values(@UserId,@Token,@Expires,@Created,@Revoked,@ReplacedByToken,@CreatedByIp,@RevokedByIp);";
+            var sql = "insert " +
+                      "into RefreshTokens" +
+                            "(UserId,Token,Expires,Created,CreatedByIp) " +
+                      "values" +
+                            "(@UserId,@Token,@Expires,@Created,@CreatedByIp);";
 
-            await SqlConnection.QuerySingleAsync<User>(sql, newToken);
+            await SqlConnection.ExecuteAsync(sql, newToken);
         }
 
 
-        public async Task<User> GetUserByRefreshToken(string refreshToken)
+        public async Task<RefreshToken> GetRefreshTokenWithUser(string refreshToken)
         {
-            throw new NotImplementedException();
+            var sql = "select " +
+                            "r.TokenId, r.UserId,r.Token,r.Expires,r.Created,r.CreatedByIp, " +
+                            "u.UserId, " +
+                            "convert(varchar(42), u.Address, 1) as Address, " +
+                            "u.Nonce " +
+                      "from RefreshTokens r " +
+                      "inner join Users u on r.UserId=u.UserId";
+
+            return (await SqlConnection.QueryAsync<RefreshToken, User, RefreshToken>(sql, (refreshToken, user) =>
+            {
+                refreshToken.User = user;
+                return refreshToken;
+            }, splitOn: "UserId"))?.FirstOrDefault();
         }
 
-
-        public async Task<RefreshToken> GetRefreshToken(string address)
+        public async Task RemoveRefreshToken(string token)
         {
-            throw new NotImplementedException();
-            /*var sql = "select from Users where Address=@Address;";
-            return await SqlConnection.QuerySingleAsync<User>(sql, new { Address = address });*/
+            var sql = "delete " +
+                      "from RefreshTokens " +
+                      "where " +
+                            "Token=@Token";
+            await SqlConnection.ExecuteAsync(sql, new { Token = token });
         }
     }
 }

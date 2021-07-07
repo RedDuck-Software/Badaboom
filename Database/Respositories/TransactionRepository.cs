@@ -57,7 +57,6 @@ namespace Database.Respositories
 
         }
 
-
         public async Task<IEnumerable<Call>> GetCallsByAddressAndMethodAsync(string address, string methodId)
         {
             var sql =
