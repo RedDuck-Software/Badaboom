@@ -1,4 +1,5 @@
-﻿using ClientCore.Models;
+﻿using Badaboom.Core.Models.Request;
+using Badaboom.Core.Models.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;

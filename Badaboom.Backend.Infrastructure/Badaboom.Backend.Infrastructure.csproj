@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BackendCore\Badaboom.Core.csproj" />
+    <ProjectReference Include="..\Badaboom.Core\Badaboom.Core.csproj" />
     <ProjectReference Include="..\Database\Database.csproj" />
   </ItemGroup>
 

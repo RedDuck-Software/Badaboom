@@ -6,7 +6,7 @@ using System;
 using System.Threading.Tasks;
 
 
-namespace Client.Shared
+namespace Badaboom.Client.Shared
 {
     public partial class Login : IDisposable
     {

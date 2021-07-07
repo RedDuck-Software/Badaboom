@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using ClientCore.Models;
+using Badaboom.Core.Models.Response;
 using MetaMask.Blazor;
 using MetaMask.Blazor.Enums;
 using MetaMask.Blazor.Exceptions;
@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Components;
 //using Nethereum.ABI.FunctionEncoding;
 //using Nethereum.ABI.Model;
 
-namespace Client.Pages
+namespace Badaboom.Client.Pages
 {
     public partial class Index
     {
