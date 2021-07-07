@@ -159,16 +159,18 @@ namespace IndexerCore
             }
             catch (Exception ex) // if exception wasn`t handled in IndexBlock method - this is a Rpc call Exception
             {
-                Logger.LogCritical($"Exception occured while sending RpcRequest. Changing api key. Ex:  {ex.Message}");
+                Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
+                
+                System.Environment.Exit(1);
 
-                BlockQueue.Clear();
+                /*BlockQueue.Clear();
 
                 _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
 
                 if (_rpcProvider.IsAllTokensUsed)
                     _rpcProvider.Reset();
 
-                await IndexInRange(startBlock, endBlock);
+                await IndexInRange(startBlock, endBlock);*/
             }
         }
 
