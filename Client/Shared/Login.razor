@@ -1,0 +1,16 @@
+﻿@if (!HasMetaMask)
+{
+    <div class="alert alert-primary" role="alert" style="margin-top: 15px;">
+        No MetaMask detected. Please install <a href="https://metamask.io" target="_blank">MetaMask</a>.
+    </div>
+}
+else if (string.IsNullOrEmpty(SelectedAddress))
+{
+    <button class="btn btn-primary" @onclick="ConnectMetaMask">Login</button>
+}
+else
+{
+    <div class="alert alert-primary" role="alert" style="margin-top: 15px;">
+        Addres: @SelectedAddress
+    </div>
+}

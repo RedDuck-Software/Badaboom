@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BackendCore", "BackendCore\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client\Client.csproj", "{A2B901DD-0FCE-4133-AF55-35C8181DD12A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientCore", "ClientCore\ClientCore.csproj", "{E4D0784E-9A39-4CC5-8C29-AF2E2EE0B479}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientCore", "ClientCore\ClientCore.csproj", "{E4D0784E-9A39-4CC5-8C29-AF2E2EE0B479}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

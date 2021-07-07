@@ -1,15 +1,14 @@
 ﻿@page "/"
-@inject HttpClient Http
-@using System.Text.Json
-@using ClientCore.Models
 
 <h3>Main Page</h3>
 
-
-
-@if (transactions == null)
+@if (Transactions == null)
 {
-    <p><em>Maybe your filters are wrong or there are no records...</em></p>
+    <p><em>Loading ...</em></p>
+}
+else if (Transactions.Count() == 0)
+{
+    <p><em>Maybe your filters are wrong ...</em></p>
 }
 else
 {
@@ -29,15 +28,15 @@ else
     <tfoot>
         <tr>
             <td colspan="8" class="justify-content-center">
-                <Pagination TotaPagesQuantity="totalPageQuantity"
-                            CurrentPage="currentPage"
+                <Pagination TotaPagesQuantity="TotalPageQuantity"
+                            CurrentPage="CurrentPage"
                             Radius="2"
                             SelectedPage="SelectedPage" />
             </td>
         </tr>
     </tfoot>
     <tbody>
-        @foreach (var row in transactions)
+        @foreach (var row in Transactions)
         {
             <tr>
                 <td>
@@ -69,55 +68,6 @@ else
 
 
 @code {
-    private IEnumerable<Transaction> transactions;
-    private int totalPageQuantity;
-    private int currentPage = 1;
     //private string nameFilter = string.Empty; not implemented
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadTransactions();
-    }
-
-    async Task LoadTransactions(int page = 1, int quantityPerPage = 9)
-    {
-        var httpResponse = await Http.GetAsync($"https://localhost:44345/api/Transaction?page={page}&quantityPerPage={quantityPerPage}");
-
-        if (httpResponse.IsSuccessStatusCode)
-        {
-            //totalPageQuantity = int.Parse(httpResponse.Headers.GetValues("pagesQuantity").FirstOrDefault());
-            var responseString = await httpResponse.Content.ReadAsStringAsync();
-            var paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
-                new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            totalPageQuantity = paginationTransactionResponse.Count;
-            transactions = paginationTransactionResponse.Transactions;
-        }
-        else
-        {
-            // handle error
-        }
-    }
-
-    private async Task SelectedPage(int page)
-    {
-        currentPage = page;
-        await LoadTransactions(page);
-    }
-
-
-
-
-
-
-    public class SearchResult
-    {
-        public string TxnHash { get; set; }
-        public string Method { get; set; }
-        public uint Block { get; set; }
-        public uint Age { get; set; }
-        public string From { get; set; }
-        public string To { get; set; }
-        public decimal Value { get; set; }
-        public decimal TxnFee { get; set; }
-    }
 }
