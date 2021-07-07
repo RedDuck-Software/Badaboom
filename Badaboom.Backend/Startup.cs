@@ -31,6 +31,15 @@ namespace Backend
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: "AllowAll",
+                                  builder =>
+                                  {
+                                      builder.WithOrigins("*");
+                                  });
+            });
+
             var jwtConfig = Configuration.GetSection("JWT");
             var servicesConfig = Configuration.GetSection("ServicesConfig");
 
@@ -88,6 +97,8 @@ namespace Backend
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors("AllowAll");
 
             app.UseAuthorization();
 

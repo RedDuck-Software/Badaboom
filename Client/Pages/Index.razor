@@ -1,0 +1,73 @@
+﻿@page "/"
+
+<h3>Main Page</h3>
+
+@if (Transactions == null)
+{
+    <p><em>Loading ...</em></p>
+}
+else if (Transactions.Count() == 0)
+{
+    <p><em>Maybe your filters are wrong ...</em></p>
+}
+else
+{
+<table class="main-table">
+    <thead>
+        <tr>
+            <th>Txn Hash</th>
+            <th>Method</th>
+            <th>Block</th>
+            <th>Age</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Value</th>
+            <th>Txn Fee</th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <td colspan="8" class="justify-content-center">
+                <Pagination TotaPagesQuantity="TotalPageQuantity"
+                            CurrentPage="CurrentPage"
+                            Radius="2"
+                            SelectedPage="SelectedPage" />
+            </td>
+        </tr>
+    </tfoot>
+    <tbody>
+        @foreach (var row in Transactions)
+        {
+            <tr>
+                <td>
+                    <NavLink class="nav-link hash-width text-truncate" href="@row.TxnHash">
+                        @row.TxnHash
+                    </NavLink>
+                </td>
+                <td>@row.Method</td>
+                <td>@row.Block</td>
+                <td>@DateTimeOffset.FromUnixTimeSeconds(@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
+                <td>
+                    <NavLink class="nav-link hash-width text-truncate" href="@row.From">
+                        @row.From
+                    </NavLink>
+                </td>
+                <td>
+                    <NavLink class="nav-link hash-width text-truncate" href="@row.To">
+                        @row.To
+                    </NavLink>
+                </td>
+                <td>@row.Value Ether</td>
+                <td>@row.TxnFee</td>
+            </tr>
+        }
+    </tbody>
+</table>
+}
+
+
+
+@code {
+    //private string nameFilter = string.Empty; not implemented
+
+}

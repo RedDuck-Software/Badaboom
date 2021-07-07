@@ -1,0 +1,104 @@
+﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+a, .btn-link {
+    color: #0366d6;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+.content {
+    padding-top: 1.1rem;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid red;
+}
+
+.validation-message {
+    color: red;
+}
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
+
+.hash-width {
+    max-width: 170px;
+}
+
+body {
+    background: #f9f9f9;
+}
+
+.main-table {
+    border-collapse: separate;
+    width: 100%;
+    border-spacing: 0 10px;
+    margin-top: -10px; /* correct offset on first border spacing if desired */
+}
+
+    .main-table td, .main-table th {
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+    }
+
+    .main-table th {
+        color: #8797aa;
+        background: #f9f9f9;
+    }
+
+    .main-table td {
+        border: 0px;
+        border-style: solid none;
+        color: #415466;
+    }
+
+    .main-table td:first-child {
+        border-left-style: solid;
+        border-top-left-radius: 30px;
+        border-bottom-left-radius: 30px;
+    }
+
+    .main-table td:last-child {
+        border-right-style: solid;
+        border-bottom-right-radius: 30px;
+        border-top-right-radius: 30px;
+    }
+
+    .main-table tr:nth-child(2n+1) {
+        background-color: #eff3f7;
+    }
+    .main-table tr:nth-child(2n) {
+        background-color: #ffffff;
+    }
+    .main-table tr:hover {
+        background-color: #ddd;
+    }
