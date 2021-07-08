@@ -1,23 +1,28 @@
 ﻿using MetaMask.Blazor;
-using MetaMask.Blazor.Enums;
 using MetaMask.Blazor.Exceptions;
 using Microsoft.AspNetCore.Components;
 using System;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using Badaboom.Client.Infrastructure.Services;
+using Badaboom.Client.Infrastructure.Helpers;
+using Badaboom.Client.Infrastructure.Models;
 
-
-namespace Badaboom.Client.Shared
+namespace Badaboom.Client.Pages
 {
     public partial class Login : IDisposable
     {
         [Inject]
         public MetaMaskService MetaMaskService { get; set; } = default!;
-
         public bool HasMetaMask { get; set; }
         public string SelectedAddress { get; set; }
-        public string SelectedChain { get; set; }
-        public string TransactionCount { get; set; }
         public string SignedData { get; set; }
+
+        [Inject]
+        public IAuthenticationService AuthenticationService { get; set; } = default!;
+        [Inject]
+        public NavigationManager NavigationManager { get; set; } = default!;
+        public bool Loading { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -39,6 +44,12 @@ namespace Badaboom.Client.Shared
             }
 
             #endregion
+
+            // redirect to home if already logged in
+            if (AuthenticationService.User != null)
+            {
+                NavigationManager.NavigateTo("/");
+            }
         }
 
         #region Metamask
@@ -79,6 +90,24 @@ namespace Badaboom.Client.Shared
         }
 
         #endregion
+
+        private async void LoginOnServer()
+        {
+            string selectedAddress = SelectedAddress;
+
+            Loading = true;
+            try
+            {
+                await AuthenticationService.Login(selectedAddress);
+                var returnUrl = NavigationManager.QueryString("returnUrl") ?? "";
+                NavigationManager.NavigateTo(returnUrl);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Loading = false;
+            }
+        }
 
         public void Dispose()
         {

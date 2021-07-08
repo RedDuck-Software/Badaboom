@@ -1,3 +1,4 @@
+using Badaboom.Client.Infrastructure.Services;
 using MetaMask.Blazor;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -18,11 +19,22 @@ namespace Badaboom.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:44345") });
 
             builder.Services.AddMetaMaskBlazor();
 
-            await builder.Build().RunAsync();
+            builder.Services
+                .AddScoped<IAuthenticationService, AuthenticationService>()
+                .AddScoped<IUserService, UserService>()
+                .AddScoped<IHttpService, HttpService>()
+                .AddScoped<ILocalStorageService, LocalStorageService>();
+
+            var host = builder.Build();
+            var authenticationService = host.Services.GetRequiredService<IAuthenticationService>();
+            await authenticationService.Initialize();
+
+            //await builder.Build().RunAsync();
+            await host.RunAsync();
         }
     }
 }

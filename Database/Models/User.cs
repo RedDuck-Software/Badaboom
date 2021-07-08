@@ -13,6 +13,7 @@ namespace Database.Models
 
         public string Nonce { get; set; }
 
+        [JsonIgnore]
         public List<RefreshToken> RefreshTokens { get; set; }
     }
 }

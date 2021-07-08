@@ -1,6 +1,7 @@
 ﻿using BackendCore.Models.Request;
 using BackendCore.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
@@ -8,7 +9,8 @@ using System.Threading.Tasks;
 namespace Backend.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("/api/[controller]")]
+    [EnableCors("AllowAll")]
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
@@ -77,7 +79,7 @@ namespace Backend.Controllers
         }
 
 
-        [HttpGet("/user/{address}")]
+        [HttpGet("/api/auth/user/{address}")]
         public async Task<IActionResult> GetUserByAddress(string address)
         {
             var user = await _userService.GetUserByAddress(address);

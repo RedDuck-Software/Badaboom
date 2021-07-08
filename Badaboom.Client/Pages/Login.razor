@@ -1,0 +1,38 @@
+﻿@page "/login"
+
+<div class="col-md-6 offset-md-3 mt-5">
+    <div class="card">
+        <h4 class="card-header">Blazor WebAssembly JWT Login</h4>
+        <div class="card-body">
+
+            @if (!HasMetaMask)
+            {
+                <div class="alert alert-primary" role="alert" style="margin-top: 15px;">
+                    No MetaMask detected. Please install <a href="https://metamask.io" target="_blank">MetaMask</a>.
+                </div>
+            }
+            else if (string.IsNullOrEmpty(SelectedAddress))
+            {
+                <button class="btn btn-primary" @onclick="ConnectMetaMask">Login via Metamask</button>
+            }
+            else
+            {
+                <div class="alert alert-primary" role="alert" style="margin-top: 15px;">
+                    Addres: @SelectedAddress
+                </div>
+                <button class="btn btn-primary mx-auto" @onclick="LoginOnServer">
+                    @if (Loading)
+                    {
+                        <span class="spinner-border spinner-border-sm mr-1"></span>
+                    }
+                    Login
+                </button>
+            }
+
+        </div>
+    </div>
+</div>
+
+@code {
+
+}

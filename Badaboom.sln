@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Badaboom.Core", "Badaboom.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Badaboom.Client", "Badaboom.Client\Badaboom.Client.csproj", "{AD1E701C-4320-45AB-9CC5-2EFE011DEE83}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Badaboom.Client.Infrastructure", "Badaboom.Client.Infrastructure\Badaboom.Client.Infrastructure.csproj", "{B3F19D30-853F-4818-9798-56F778BBAAFD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{AD1E701C-4320-45AB-9CC5-2EFE011DEE83}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD1E701C-4320-45AB-9CC5-2EFE011DEE83}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD1E701C-4320-45AB-9CC5-2EFE011DEE83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3F19D30-853F-4818-9798-56F778BBAAFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3F19D30-853F-4818-9798-56F778BBAAFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3F19D30-853F-4818-9798-56F778BBAAFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3F19D30-853F-4818-9798-56F778BBAAFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

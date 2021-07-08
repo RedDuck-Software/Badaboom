@@ -36,7 +36,9 @@ namespace Backend
                 options.AddPolicy(name: "AllowAll",
                                   builder =>
                                   {
-                                      builder.WithOrigins("*");
+                                      builder.WithOrigins("*")
+                                          .AllowAnyHeader()
+                                          .AllowAnyMethod();
                                   });
             });
 
