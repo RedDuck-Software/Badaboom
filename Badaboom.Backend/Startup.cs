@@ -1,6 +1,7 @@
 using Backend.Models;
 using BackendCore.Models.AppSettings;
 using BackendCore.Services;
+using Badaboom.Backend.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -103,6 +104,8 @@ namespace Backend
             app.UseCors("AllowAll");
 
             app.UseAuthorization();
+
+            app.UseMiddleware<JwtMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

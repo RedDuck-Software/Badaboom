@@ -151,21 +151,16 @@ namespace BackendCore.Services
 
         private string GenerateJwtToken(User user)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwt = new JwtSecurityToken(
+                    issuer: _appSettings.Issuer,
+                    audience: _appSettings.Audience,
+                    notBefore: DateTime.UtcNow,
+                    claims: new Claim[]{ new Claim(ClaimTypes.Name, user.Address) },
+                    expires: DateTime.UtcNow.AddMinutes(_appSettings.AccessTokenLifetime),
+                    signingCredentials: new SigningCredentials(_appSettings.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.Address)
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(_appSettings.AccessTokenLifetime),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            return encodedJwt;
         }
 
         private RefreshToken GenerateRefreshToken(string ipAddress)

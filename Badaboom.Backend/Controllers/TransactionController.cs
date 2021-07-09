@@ -1,4 +1,5 @@
-﻿using Badaboom.Core.Models.Request;
+﻿using Badaboom.Backend.Controllers;
+using Badaboom.Core.Models.Request;
 using Badaboom.Core.Models.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -18,7 +19,7 @@ namespace Backend.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [EnableCors("AllowAll")]
-    public class TransactionController : ControllerBase
+    public class TransactionController : BaseController
     {
         //private readonly ApplicationDbContext context;
 
@@ -27,8 +28,7 @@ namespace Backend.Controllers
         //    this.context = context;
         //}
 
-        [HttpGet/*("transaction")*/]
-        //[AllowAnonymous]
+        [HttpGet]
         public async Task<ActionResult<PaginationTransactionResponse>> Get([FromQuery] PaginationDTO pagination)
         {
             string json = @"

@@ -77,7 +77,7 @@ namespace Badaboom.Client.Infrastructure.Services
         }
 
         /// <param name="address">MetaMask account address</param>
-        /// <returns>User responce nonce</returns>
+        /// <returns>User response nonce</returns>
         private async Task<string> Register(string address)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/register")
@@ -85,8 +85,8 @@ namespace Badaboom.Client.Infrastructure.Services
                 Content = new StringContent(JsonSerializer.Serialize(new { address }), System.Text.Encoding.UTF8, "application/json")
             };
 
-            var responce = await _httpService.HttpClient.SendAsync(request);
-            string content = await responce.Content.ReadAsStringAsync();
+            var response = await _httpService.HttpClient.SendAsync(request);
+            string content = await response.Content.ReadAsStringAsync();
             var userResponce = JsonSerializer.Deserialize<UserResponce>(content, 
                 new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             return userResponce.Nonce;

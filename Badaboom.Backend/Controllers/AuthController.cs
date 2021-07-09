@@ -1,5 +1,7 @@
 ﻿using BackendCore.Models.Request;
 using BackendCore.Services;
+using Badaboom.Backend.Controllers;
+using Database.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +13,7 @@ namespace Backend.Controllers
     [ApiController]
     [Route("/api/[controller]")]
     [EnableCors("AllowAll")]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
         private readonly ILogger<AuthController> _logger;
         
@@ -61,7 +63,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("revokeToken")]
-        [Authorize]
+        [Badaboom.Backend.Attributes.Authorize]
         public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest model)
         {
             // accept token from request body or cookie
@@ -87,6 +89,13 @@ namespace Backend.Controllers
             if (user == null) return NotFound();
 
             return Ok(user);
+        }
+
+        [HttpGet("userAddress")]
+        [Badaboom.Backend.Attributes.Authorize]
+        public async Task<IActionResult> GetUserAddress()
+        {
+            return Ok(new { address = CurrentUser.Address });
         }
 
 

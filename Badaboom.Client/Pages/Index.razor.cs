@@ -1,16 +1,9 @@
-﻿using System;
+﻿using Badaboom.Core.Models.Response;
+using Microsoft.AspNetCore.Components;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Badaboom.Core.Models.Response;
-using MetaMask.Blazor;
-using MetaMask.Blazor.Enums;
-using MetaMask.Blazor.Exceptions;
-using Microsoft.AspNetCore.Components;
-//using Nethereum.ABI.FunctionEncoding;
-//using Nethereum.ABI.Model;
 
 namespace Badaboom.Client.Pages
 {
