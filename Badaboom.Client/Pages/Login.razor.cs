@@ -98,7 +98,7 @@ namespace Badaboom.Client.Pages
             Loading = true;
             try
             {
-                await AuthenticationService.Login(selectedAddress);
+                await AuthenticationService.Connect(selectedAddress);
                 var returnUrl = NavigationManager.QueryString("returnUrl") ?? "";
                 NavigationManager.NavigateTo(returnUrl);
             }

@@ -10,10 +10,10 @@ namespace Badaboom.Core.Models.Response
 {
     public class UserResponce
     {
-        public long userId { get; set; }
+        public long UserId { get; set; }
 
-        public string address { get; set; }
+        public string Address { get; set; }
 
-        public string nonce { get; set; }
+        public string Nonce { get; set; }
     }
 }

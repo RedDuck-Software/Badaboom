@@ -2,8 +2,8 @@
 
 <div class="col-md-6 offset-md-3 mt-5">
     <div class="card">
-        <h4 class="card-header">Blazor WebAssembly JWT Login</h4>
-        <div class="card-body">
+        <h4 class="card-header text-center">Connect to your future</h4>
+        <div class="card-body text-center" >
 
             @if (!HasMetaMask)
             {
@@ -13,14 +13,14 @@
             }
             else if (string.IsNullOrEmpty(SelectedAddress))
             {
-                <button class="btn btn-primary" @onclick="ConnectMetaMask">Login via Metamask</button>
+                <button class="btn btn-primary col-md-8 col-sm-12" @onclick="ConnectMetaMask">Login via Metamask</button>
             }
             else
             {
                 <div class="alert alert-primary" role="alert" style="margin-top: 15px;">
                     Addres: @SelectedAddress
                 </div>
-                <button class="btn btn-primary mx-auto" @onclick="LoginOnServer">
+                <button class="btn btn-primary mx-auto col-md-8 col-sm-12" @onclick="LoginOnServer">
                     @if (Loading)
                     {
                         <span class="spinner-border spinner-border-sm mr-1"></span>

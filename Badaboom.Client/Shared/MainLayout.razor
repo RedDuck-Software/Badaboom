@@ -11,6 +11,9 @@
         <div class="top-row px-4">
             @if (AuthenticationService.User != null)
             {
+                <div class="alert alert-primary" role="alert" style="margin: 15px;">
+                    Addres: @AuthenticationService.User.Address
+                </div>
                 <button class="btn btn-primary" @onclick="@(_ => NavigationManager.NavigateTo("logout"))">Logout</button>
             }
             else
