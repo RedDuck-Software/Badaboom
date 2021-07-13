@@ -22,7 +22,7 @@ namespace Badaboom.Client.Pages
             await LoadTransactions();
         }
 
-        public async Task LoadTransactions(int page = 1, int quantityPerPage = 9)
+        public async Task LoadTransactions(int page = 1, int quantityPerPage = 10)
         {
             var httpResponse = await Http.GetAsync($"https://localhost:44345/api/Transaction?page={page}&quantityPerPage={quantityPerPage}");
 
