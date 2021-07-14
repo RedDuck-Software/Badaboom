@@ -59,22 +59,25 @@ namespace Database.Respositories
 
         public async Task<IEnumerable<Call>> GetCallsByAddressAndMethodAsync(CallsPagination pagination)
         {
-            if (pagination != null)
-            {
-                if (!(pagination.BlockId != null || pagination.To != null))
-                    throw new System.ArgumentException("Invalid pagination parameters");
-            }
-
-
             string method = pagination?.MethodId;
             string to = pagination?.To;
             string block = pagination?.BlockId?.ToString();
             int page = pagination?.Page ?? 1;
             int count = pagination?.Count ?? 1;
 
-            string blockWherePaginationQuery = block == null ? "" : $"t.BlockId={block} {(to == null ? "" : " and ")}";
-            string toWherePaginationQuery = to == null ? "" : $"c.To=convert(binary(20),'{to}',1) {(method == null ? "" : " and ")}";
+            string blockWherePaginationQuery = block == null ? "" : $"t.BlockId={block} ";
+            string toWherePaginationQuery = to == null ? "" : $"c.To=convert(binary(20),'{to}',1) ";
             string methodWherePaginationQuery = method == null ? "" : $"c.MethodId=convert(binary(4),'{method}',1) ";
+
+            List<string> whereList = new List<string>();
+
+            void pushToWhereListIfNotNull(string value) { if (!string.IsNullOrEmpty(value)) whereList.Add(value); };
+
+            pushToWhereListIfNotNull(blockWherePaginationQuery);
+            pushToWhereListIfNotNull(toWherePaginationQuery);
+            pushToWhereListIfNotNull(methodWherePaginationQuery);
+
+            string resWhereStatement = string.Join(" and ", whereList);
 
             var sql =
                 "select " +
@@ -91,15 +94,14 @@ namespace Database.Respositories
 
                 "from " +
                     "Calls c " +
-                (block == null ? "" :
                 "inner join Transactions t " +
                 "on " +
-                    "c.TransactionHash=t.TransactionHash ") +
-                "where " +
+                    "c.TransactionHash=t.TransactionHash " +
+                (string.IsNullOrEmpty(resWhereStatement) ? "" : "where " +
                     blockWherePaginationQuery +
                     toWherePaginationQuery +
-                    methodWherePaginationQuery +
-                "order by t.TimeStamp " + 
+                    methodWherePaginationQuery) +
+                "order by t.TimeStamp " +
                 $"offset {count * page} rows " +
                 $"FETCH NEXT {count} rows only;";
 
