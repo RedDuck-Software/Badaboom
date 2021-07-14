@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject NavigationManager NavigationManager;
 
 <h3>Main Page</h3>
 
@@ -40,7 +41,7 @@ else
         {
             <tr>
                 <td>
-                    <NavLink class="nav-link hash-width text-truncate" href="@row.TxnHash">
+                    <NavLink class="nav-link hash-width text-truncate" @onclick="@(_ => NavigationManager.NavigateTo($"details/{row.TxnHash}"))">
                         @row.TxnHash
                     </NavLink>
                 </td>
@@ -69,5 +70,12 @@ else
 
 @code {
     //private string nameFilter = string.Empty; not implemented
+
+    private async Task TransactionDetails(string txnHash)
+    {
+
+
+
+    }
 
 }

@@ -1,16 +1,9 @@
-﻿using System;
+﻿using Badaboom.Core.Models.Response;
+using Microsoft.AspNetCore.Components;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Badaboom.Core.Models.Response;
-using MetaMask.Blazor;
-using MetaMask.Blazor.Enums;
-using MetaMask.Blazor.Exceptions;
-using Microsoft.AspNetCore.Components;
-//using Nethereum.ABI.FunctionEncoding;
-//using Nethereum.ABI.Model;
 
 namespace Badaboom.Client.Pages
 {
@@ -29,7 +22,7 @@ namespace Badaboom.Client.Pages
             await LoadTransactions();
         }
 
-        public async Task LoadTransactions(int page = 1, int quantityPerPage = 9)
+        public async Task LoadTransactions(int page = 1, int quantityPerPage = 10)
         {
             var httpResponse = await Http.GetAsync($"https://localhost:44345/api/Transaction?page={page}&quantityPerPage={quantityPerPage}");
 
