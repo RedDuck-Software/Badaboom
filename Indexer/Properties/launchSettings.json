@@ -2,7 +2,7 @@
   "profiles": {
     "Badaboom-indexer": {
       "commandName": "Project",
-      "commandLineArgs": "bsc \"D:\\Log.log\" \"D:\\LogCritical.log\" 100"
+      "commandLineArgs": "mainnet \"D:\\Log.log\" \"D:\\LogCritical.log\" 100 1000000 1100000"
     }
   }
 }

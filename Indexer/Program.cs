@@ -44,11 +44,11 @@ namespace BadaboomIndexer
 
             var conn = new ConnectionStringsHelperService(_config);
 
-            var getBlockIOPrivateKeys = _config["GetBlockIOPrivateKeys"].Split(",").Select(s => s.Trim()).ToList();
+            var inuraPrivateKeys = _config["InfuraApiKeys"].Split(",").Select(s => s.Trim()).ToList();
 
-            if (getBlockIOPrivateKeys.Count() == 0) throw new ArgumentException("You must provide at least one private key to use GetBlock rpc provider");
+            if (inuraPrivateKeys.Count() == 0) throw new ArgumentException("You must provide at least one private key to use Infura rpc provider");
 
-            var rpcProvider = new GetBlockIOProvider(getBlockIOPrivateKeys, args[0]);
+            var rpcProvider = new InfuraProvider(inuraPrivateKeys, args[0]);
 
             var web3 = new Web3Geth(rpcProvider.GetNextRpcUrl());
 
@@ -87,6 +87,9 @@ namespace BadaboomIndexer
 
             if (blockQueueSize < 1) throw new ArgumentException("BlockQueueSize must be greater than zero");
 
+            var t = rpcProvider.GetNextRpcUrl();
+
+
             var indexer = new Indexer(
                 tracer,
                 logger,
@@ -106,9 +109,6 @@ namespace BadaboomIndexer
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
 
             ConsoleColor.DarkMagenta.WriteLine("\n\nStarting getting new blocks...\n\n");
-
-            // Run new block monitoring
-            await indexer.StartMonitorNewBlocks(1);
         }
     }
 }

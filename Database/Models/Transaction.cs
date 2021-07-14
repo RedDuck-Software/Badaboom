@@ -26,6 +26,8 @@ namespace Database.Models
 
         public string MethodId { get; set; }
 
+        public string Input { get; set; }
+
         public string Value { get; set; }
 
         public string GasPrice { get; set; }

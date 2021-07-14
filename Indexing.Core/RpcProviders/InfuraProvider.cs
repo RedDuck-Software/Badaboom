@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace IndexingCore.RpcProviders
 {
-    public class GetBlockIOProvider
+    public class InfuraProvider
     {
         public List<string> ApiKeys { get; }
 
         public bool IsAllTokensUsed { get; private set; }
 
 
-        public GetBlockIOProvider(IEnumerable<string> apiKeys, string network)
+        public InfuraProvider(IEnumerable<string> apiKeys, string network)
         {
             ApiKeys = new List<string>(apiKeys);
             _network = network;
@@ -37,7 +37,7 @@ namespace IndexingCore.RpcProviders
             return ApiKeys[_currentKeyPosition++];
         }
 
-        private static readonly string _urlBaseTemplate = "https://{0}.getblock.io/?api_key={1}";
+        private static readonly string _urlBaseTemplate = "https://{0}.infura.io/v3/{1}";
 
         private readonly string _network;
 

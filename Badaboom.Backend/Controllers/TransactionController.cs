@@ -1,4 +1,5 @@
 ﻿using Badaboom.Backend.Controllers;
+using Badaboom.Backend.Infrastructure.Services;
 using Badaboom.Core.Models.Request;
 using Badaboom.Core.Models.Response;
 using Microsoft.AspNetCore.Authorization;
@@ -27,6 +28,19 @@ namespace Backend.Controllers
         //{
         //    this.context = context;
         //}
+        private ITransactionService _transactionService;
+
+
+        public TransactionController(ITransactionService transactionSerivice)
+        {
+            this._transactionService = transactionSerivice;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<PaginationTransactionResponse>> GetTransactionsByContractAndMethod([FromQuery] GetFilteredTransactionRequest request)
+        {
+            return _transactionService.
+        }
 
         [HttpGet]
         public async Task<ActionResult<PaginationTransactionResponse>> Get([FromQuery] PaginationDTO pagination)

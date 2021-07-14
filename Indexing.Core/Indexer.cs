@@ -28,7 +28,7 @@ namespace IndexerCore
 
 
 
-        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, GetBlockIOProvider rpcProvider, int queueSize)
+        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, InfuraProvider rpcProvider, int queueSize)
         {
             _web3Tracer = web3Tracer;
             _connectionString = dbConnectionString;
@@ -36,7 +36,7 @@ namespace IndexerCore
             _rpcProvider = rpcProvider;
             Logger = logger;
 
-            ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).Where(v=> v != CallTypes.NO_CALL_TYPE.ToString().ToLower()).ToArray();
+            ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).Where(v => v != CallTypes.NO_CALL_TYPE.ToString().ToLower()).ToArray();
         }
 
         public async Task<ulong> GetLatestBlockNumber()
@@ -193,7 +193,7 @@ namespace IndexerCore
                 else
                 {
                     foreach (var tx in txs)
-                        await IndexTransaction(tx);
+                        IndexTransaction(tx);
                 }
 
                 currentBlock.Transactions = txs.ToList();
@@ -208,42 +208,21 @@ namespace IndexerCore
             }
         }
 
-        private async Task<Transaction> IndexTransaction(Transaction tx)
+        private Transaction IndexTransaction(Transaction tx)
         {
-            IEnumerable<Web3Tracer.Models.TraceResult> trace;
-
-            try
+            tx.Calls.Add(new Call()
             {
-                trace = await _web3Tracer.GetTracesForTransaction("0x" + tx.TransactionHash);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Unnable to get trace of {tx.TransactionHash}. Skipping internal calls. Ex message: {ex.Message}");
-
-                trace = null;
-            }
-
-
-            if (trace is null)
-            {
-                tx.Calls.Add(new Call()
-                {
-                    TransactionHash = tx.TransactionHash,
-                    To = tx.RawTransaction.To,
-                    MethodId = tx.RawTransaction.MethodId,
-                    From = tx.RawTransaction.From,
-                });
-
-                Logger.LogWarning("Trace is null, no internal transactions recorded");
-                return tx;
-            }
-
-            foreach (var t in trace)
-                IndexCall(t, tx);
-
-            Logger.LogInformation(tx.TransactionHash);
+                TransactionHash = tx.TransactionHash,
+                To = tx.RawTransaction.To,
+                MethodId = tx.RawTransaction.MethodId,
+                From = tx.RawTransaction.From,
+                Input = tx.RawTransaction.Input,
+                Type = CallTypes.Call
+            });
 
             tx.TransactionHash = tx.TransactionHash.RemoveHashPrefix();
+
+            Logger.LogInformation(tx.TransactionHash);
             return tx;
         }
 
@@ -298,6 +277,7 @@ namespace IndexerCore
                         Value = t.Value?.HexValue?.FormatHex(),
                         GasPrice = t.GasPrice?.HexValue?.FormatHex(),
                         Gas = t.Gas?.HexValue?.FormatHex(),
+                        Input = t.Input?.FormatHex(),
                     }
                 };
             });
@@ -309,7 +289,7 @@ namespace IndexerCore
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
         }
 
-        private readonly GetBlockIOProvider _rpcProvider;
+        private readonly InfuraProvider _rpcProvider;
 
         private readonly IWeb3Tracer _web3Tracer;
 

@@ -15,10 +15,20 @@ namespace Database.Models
         public string To { get; set; }
 
         public string MethodId { get; set; }
+        
+        public string Input { get; set; }
 
         public Transaction Transaction { get; set; }
 
         public CallTypes Type { get; set; }
+    }
+
+
+    public class CallsPagination
+    {
+        public long? BlockId;
+        public string MethodId;
+        public string To;
     }
 
     public enum CallTypes

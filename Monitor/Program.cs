@@ -35,7 +35,7 @@ namespace Monitor
 
             if (getBlockIOPrivateKeys.Count() == 0) throw new ArgumentException("You must provide at least one private key to use GetBlock rpc provider");
 
-            var rpcProvider = new GetBlockIOProvider(getBlockIOPrivateKeys, args[0]);
+            var rpcProvider = new InfuraProvider(getBlockIOPrivateKeys, args[0]);
 
             var web3 = new Web3Geth(rpcProvider.GetNextRpcUrl());
 
