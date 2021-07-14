@@ -69,6 +69,8 @@ namespace Database.Respositories
             string method = pagination?.MethodId;
             string to = pagination?.To;
             string block = pagination?.BlockId?.ToString();
+            int page = pagination?.Page ?? 1;
+            int count = pagination?.Count ?? 1;
 
             string blockWherePaginationQuery = block == null ? "" : $"t.BlockId={block} {(to == null ? "" : " and ")}";
             string toWherePaginationQuery = to == null ? "" : $"c.To=convert(binary(20),'{to}',1) {(method == null ? "" : " and ")}";
@@ -76,25 +78,30 @@ namespace Database.Respositories
 
             var sql =
                 "select " +
-                    "c.CallId " +
-                    "convert(varchar(6), c.[TransactionHash], 1) as TransactionHash, " +
-                    "c.Error " +
-                    "c.Type " +
-                    "convert(varchar(44), c.[From], 1) as From, " +
-                    "convert(varchar(44), c.[To], 1) as To, " +
-                    "convert(varchar(10), c.[MethodId], 1) as MethodId, " +
-                    "convert(varchar(MAX), c.[Input], 1) as Input, " +
+                    "c.CallId, " +
+                    "convert(varchar(66), c.[TransactionHash], 1) as [TransactionHash], " +
+                    "c.Error, " +
+                    "c.Type, " +
+                    "convert(varchar(44), c.[From], 1) as [From], " +
+                    "convert(varchar(44), c.[To], 1) as [To], " +
+                    "convert(varchar(10), c.[MethodId], 1) as [MethodId], " +
+                    "convert(varchar(MAX), c.[Input], 1) as [Input], " +
+                    "t.BlockId, " +
+                    "t.TimeStamp " +
 
                 "from " +
                     "Calls c " +
-                block == null ? "" :
-                ("inner join Transactions t " +
+                (block == null ? "" :
+                "inner join Transactions t " +
                 "on " +
-                    "c.TransactionHash=t.TransactionHash") +
+                    "c.TransactionHash=t.TransactionHash ") +
                 "where " +
                     blockWherePaginationQuery +
                     toWherePaginationQuery +
-                    methodWherePaginationQuery + ";";
+                    methodWherePaginationQuery +
+                "order by t.TimeStamp " + 
+                $"offset {count * page} rows " +
+                $"FETCH NEXT {count} rows only;";
 
             return await SqlConnection.QueryAsync<Call>(sql);
         }

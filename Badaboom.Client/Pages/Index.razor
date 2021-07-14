@@ -47,7 +47,7 @@ else
                 </td>
                 <td>@row.Method</td>
                 <td>@row.Block</td>
-                <td>@DateTimeOffset.FromUnixTimeSeconds(@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
+                <td>@DateTimeOffset.FromUnixTimeSeconds((long)@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
                 <td>
                     <NavLink class="nav-link hash-width text-truncate" href="@row.From">
                         @row.From

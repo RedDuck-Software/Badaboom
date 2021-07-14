@@ -1,6 +1,7 @@
 using Backend.Models;
 using BackendCore.Models.AppSettings;
 using BackendCore.Services;
+using Badaboom.Backend.Infrastructure.Services;
 using Badaboom.Backend.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -78,6 +79,7 @@ namespace Backend
             services.AddScoped<INonceGeneratorService, NonceGeneratorService>((factory) => new NonceGeneratorService(servicesSettings.NonceLenght));
 
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<ITransactionService, TransactionService>();
 
 
             services.AddControllers();

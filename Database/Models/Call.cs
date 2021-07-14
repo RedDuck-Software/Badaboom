@@ -23,6 +23,8 @@ namespace Database.Models
         public CallTypes Type { get; set; }
 
         public long BlockId { get; set; }
+        
+        public long TimeStamp { get; set; }
     }
 
 
@@ -31,6 +33,8 @@ namespace Database.Models
         public long? BlockId;
         public string MethodId;
         public string To;
+        public int Count;
+        public int Page;
     }
 
     public enum CallTypes

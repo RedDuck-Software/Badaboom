@@ -36,7 +36,7 @@ namespace Backend.Controllers
             this._transactionService = transactionSerivice;
         }
 
-        [HttpGet]
+        [HttpGet("GetTransactions")]
         public async Task<ActionResult<PaginationTransactionResponse>> GetTransactionsByContractAndMethod([FromQuery] GetFilteredTransactionRequest request)
         {
             return await _transactionService.GetPaginatedFilteredTransactions(request);
