@@ -1,7 +1,10 @@
-﻿using Badaboom.Core.Models.Response;
+﻿using Badaboom.Core.Models.Request;
+using Badaboom.Core.Models.Response;
 using Microsoft.AspNetCore.Components;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -14,21 +17,34 @@ namespace Badaboom.Client.Pages
 
         public IEnumerable<Transaction> Transactions { get; set; }
         public int TotalPageQuantity { get; set; }
-        public int CurrentPage { get; set; } = 1;
-
+        public GetFilteredTransactionRequest TransactionFilter { get; set; } = new GetFilteredTransactionRequest();
 
         protected override async Task OnInitializedAsync()
         {
             await LoadTransactions();
         }
 
-        public async Task LoadTransactions(int page = 1, int quantityPerPage = 10)
+        public async Task LoadTransactions()
         {
-            var httpResponse = await Http.GetAsync($"https://localhost:44345/api/Transaction?page={page}&quantityPerPage={quantityPerPage}");
+            StringBuilder url = new($"https://localhost:44345/api/Transaction/GetTransactions?Count={TransactionFilter.Count}&Page={TransactionFilter.Page}");
+
+            if (TransactionFilter.BlockNumber != null)
+            {
+                url.Append($"&BlockNumber={TransactionFilter.BlockNumber}");
+            }
+            if (!string.IsNullOrEmpty(TransactionFilter.ContractAddress))
+            {
+                url.Append($"&ContractAddress={TransactionFilter.ContractAddress}");
+            }
+            if (!string.IsNullOrEmpty(TransactionFilter.MethodId))
+            {
+                url.Append($"&MethodId={TransactionFilter.MethodId}");
+            }
+            Console.WriteLine(url.ToString());
+            var httpResponse = await Http.GetAsync(url.ToString());
 
             if (httpResponse.IsSuccessStatusCode)
             {
-                //totalPageQuantity = int.Parse(httpResponse.Headers.GetValues("pagesQuantity").FirstOrDefault());
                 var responseString = await httpResponse.Content.ReadAsStringAsync();
                 var paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
                     new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -43,8 +59,20 @@ namespace Badaboom.Client.Pages
 
         private async Task SelectedPage(int page)
         {
-            CurrentPage = page;
-            await LoadTransactions(page);
+            TransactionFilter.Page = page;
+            await LoadTransactions();
+        }
+
+        private async Task Filter()
+        {
+            TransactionFilter.Page = 1;
+            await LoadTransactions();
+        }
+
+        private async Task Delete()
+        {
+            TransactionFilter.Page = 1;
+            await LoadTransactions();
         }
     }
 }
