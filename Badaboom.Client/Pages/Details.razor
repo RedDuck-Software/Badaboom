@@ -1,16 +1,15 @@
 ﻿@page "/details/{txnHash}"
 @inject HttpClient Http;
-@using System.Text.Json;
+@inject Microsoft.Extensions.Configuration.IConfiguration config;
 @using Nethereum.Web3;
-@using Nethereum.Web3.Accounts;
 @using System.Globalization;
 @using Badaboom.Client.Infrastructure.Models;
 
-@if (transactionDetails == null)
+@if (IsHashAddressValid && transactionDetails == null)
 {
     <p><em>Loading ...</em></p>
 }
-else
+else if (IsHashAddressValid)
 {
     <div class="card">
         <div class="card-header">
@@ -149,13 +148,17 @@ else
         </div>
     </div>
 }
+else
+{
+    <p><em>Transaction hash address is not valid</em></p>
+}
 
 
 
 @code {
     private bool show = false;
 
-    string rpcUrl = "https://mainnet.infura.io/v3/93d0346d9ebe4812a4e0bdcceac93c7b";
+    private bool IsHashAddressValid { get; set; } = true;
     private uint Timestamp { get; set; }
     private decimal GasPriceEth { get; set; }
     private decimal EthPriceAtSpecificTime { get; set; }
@@ -179,25 +182,36 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Web3 web3 = new(rpcUrl);
+        Web3 web3 = new(config.GetSection("RPCUrls")["Eth"]);
 
-        transactionDetails = await web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(txnHash);
+        try
+        {
+            transactionDetails = await web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(txnHash);
+            IsHashAddressValid = true;
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException)
+        {
+            IsHashAddressValid = false;
+        }
 
-        transactionReceipt = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txnHash);
+        if (IsHashAddressValid)
+        {
+            transactionReceipt = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txnHash);
 
-        var result = await web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(transactionDetails.BlockNumber);
-        Timestamp = (uint)result.Timestamp.Value;
+            var result = await web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(transactionDetails.BlockNumber);
+            Timestamp = (uint)result.Timestamp.Value;
 
-        EthValue = Web3.Convert.FromWei(transactionDetails.Value.Value);
+            EthValue = Web3.Convert.FromWei(transactionDetails.Value.Value);
 
-        EthPriceAtSpecificTime = await GetTransactionPriceEthInUSD(Timestamp);
-        CurrentEthPrice = await GetCurrentPriceEthInUSD();
+            EthPriceAtSpecificTime = await GetTransactionPriceEthInUSD(Timestamp);
+            CurrentEthPrice = await GetCurrentPriceEthInUSD();
 
-        GasPriceEth = Web3.Convert.FromWei(transactionDetails.GasPrice.Value);
+            GasPriceEth = Web3.Convert.FromWei(transactionDetails.GasPrice.Value);
 
-        TransactionFee = GasPriceEth * (long)transactionDetails.Gas.Value;
+            TransactionFee = GasPriceEth * (long)transactionDetails.Gas.Value;
 
-        InputData = await DecodeInputData(transactionDetails.Input);
+            InputData = await DecodeInputData(transactionDetails.Input);
+        }
     }
 
     private async Task<decimal> GetTransactionPriceEthInUSD(long startTime)
