@@ -210,7 +210,8 @@ else
 
             TransactionFee = GasPriceEth * (long)transactionDetails.Gas.Value;
 
-        InputData = DecodeInputData(transactionDetails.Input);
+            InputData = DecodeInputData(transactionDetails.Input);
+        }
     }
 
     private async Task<decimal> GetTransactionPriceEthInUSD(long startTime)
