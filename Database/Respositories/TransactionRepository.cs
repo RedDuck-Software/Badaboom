@@ -66,7 +66,7 @@ namespace Database.Respositories
             int count = pagination?.Count ?? 1;
 
             string blockWherePaginationQuery = block == null ? "" : $"t.BlockId={block} ";
-            string toWherePaginationQuery = to == null ? "" : $"c.To=convert(binary(20),'{to}',1) ";
+            string toWherePaginationQuery = to == null ? "" : $"c.[To]=convert(binary(20),'{to}',1) ";
             string methodWherePaginationQuery = method == null ? "" : $"c.MethodId=convert(binary(4),'{method}',1) ";
 
             List<string> whereList = new List<string>();
@@ -102,7 +102,7 @@ namespace Database.Respositories
                     toWherePaginationQuery +
                     methodWherePaginationQuery) +
                 "order by t.TimeStamp " +
-                $"offset {count * page} rows " +
+                $"offset {count * (page - 1)} rows " +
                 $"FETCH NEXT {count} rows only;";
 
             return await SqlConnection.QueryAsync<Call>(sql);

@@ -16,7 +16,9 @@ namespace Badaboom.Core.Models.Response
         public ulong Age { get; set; }
         
         public string From { get; set; }
-        
+
+        public string Input { get; set; }
+
         public string To { get; set; }
         
         public decimal Value { get; set; }

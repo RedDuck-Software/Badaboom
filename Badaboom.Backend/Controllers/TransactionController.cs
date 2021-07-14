@@ -33,13 +33,25 @@ namespace Backend.Controllers
 
         public TransactionController(ITransactionService transactionSerivice)
         {
-            this._transactionService = transactionSerivice;
+            _transactionService = transactionSerivice;
         }
 
+
         [HttpGet("GetTransactions")]
-        public async Task<ActionResult<PaginationTransactionResponse>> GetTransactionsByContractAndMethod([FromQuery] GetFilteredTransactionRequest request)
+        public async Task<ActionResult<PaginationTransactionResponse>> GetFilteredTransactions([FromQuery] GetFilteredTransactionRequest request)
         {
-            return await _transactionService.GetPaginatedFilteredTransactions(request);
+            IEnumerable<Transaction> res;
+
+            if (request.DecodeInputDataInfo != null)
+                res = await _transactionService.GetPaginatedFilteredTransactionsWithInputParameters(request, 10);
+            else
+                res = await _transactionService.GetPaginatedFilteredTransactions(request);
+
+            return new PaginationTransactionResponse()
+            {
+                Count = res.Count(),
+                Transactions = res.ToList()
+            };
         }
 
         [HttpGet]

@@ -1,4 +1,6 @@
-﻿namespace Badaboom.Core.Models.Request
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace Badaboom.Core.Models.Request
 {
     public class GetFilteredTransactionRequest
     {
@@ -20,6 +22,8 @@
 
         public int Page { get; set; } = 1;
 
+        [FromQuery]
+        public DecodeInputDataRequest DecodeInputDataInfo { get; set; }
     }
 
 }
