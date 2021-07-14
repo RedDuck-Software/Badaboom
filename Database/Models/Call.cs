@@ -21,6 +21,8 @@ namespace Database.Models
         public Transaction Transaction { get; set; }
 
         public CallTypes Type { get; set; }
+
+        public long BlockId { get; set; }
     }
 
 

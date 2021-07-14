@@ -100,9 +100,9 @@ namespace BadaboomIndexer
                 blockQueueSize
             );
 
-            var startBlock = args.Length > 4 ? ulong.Parse(args[4]) : 0;
+            var startBlock = args.Length > 4 ? long.Parse(args[4]) : 0;
 
-            var endBlock = args.Length > 5 ? ulong.Parse(args[5]) : await indexer.GetLatestBlockNumber();
+            var endBlock = args.Length > 5 ? long.Parse(args[5]) : (long)await indexer.GetLatestBlockNumber();
 
             await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
 

@@ -9,7 +9,7 @@ namespace Badaboom.Core.Models.Response
     {
         public string TxnHash { get; set; }
         public string Method { get; set; }
-        public uint Block { get; set; }
+        public ulong Block { get; set; }
         public uint Age { get; set; }
         public string From { get; set; }
         public string To { get; set; }

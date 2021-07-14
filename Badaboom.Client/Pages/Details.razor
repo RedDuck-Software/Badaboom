@@ -197,7 +197,7 @@ else
 
         TransactionFee = GasPriceEth * (long)transactionDetails.Gas.Value;
 
-        InputData = await DecodeInputData(transactionDetails.Input);
+        InputData = DecodeInputData(transactionDetails.Input);
     }
 
     private async Task<decimal> GetTransactionPriceEthInUSD(long startTime)
@@ -231,7 +231,7 @@ else
         return Math.Round(decimal.Parse(ethToUsdPrice, CultureInfo.InvariantCulture), 2);
     }
 
-    private async Task<TransactionInputData> DecodeInputData(string inputData)
+    private TransactionInputData DecodeInputData(string inputData)
     {
         if (inputData.Length <= 2)
         {

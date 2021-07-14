@@ -3,11 +3,8 @@ using Badaboom.Core.Models.Response;
 using Database.Models;
 using Database.Respositories;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Badaboom.Backend.Infrastructure.Services
@@ -36,11 +33,23 @@ namespace Badaboom.Backend.Infrastructure.Services
 
             using (var tRepo = new TransactionRepository(_connectionString))
             {
-                res =  await tRepo.GetCallsByAddressAndMethodAsync(request.ContractAddress, request.MethodId);
+                res = await tRepo.GetCallsByAddressAndMethodAsync(new CallsPagination() { BlockId = request.BlockNumber, MethodId = request.MethodId, To = request.ContractAddress });
             }
 
-
-
+            return new PaginationTransactionResponse()
+            {
+                Count = res.Count(),
+                Transactions = res.Select(c =>
+                    new Core.Models.Response.Transaction()
+                    {
+                        Method = c.MethodId,
+                        Block = (ulong)c.BlockId,
+                        From = c.From,
+                        To = c.To,
+                        TxnHash = c.TransactionHash
+                    }
+                )
+            };
         }
     }
 }

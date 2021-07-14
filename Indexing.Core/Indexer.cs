@@ -60,21 +60,24 @@ namespace IndexerCore
         }
 
 
-        public async Task IndexInRangeParallel(ulong startBlock, ulong endBlock, ulong step = 20)
+        public async Task IndexInRangeParallel(long startBlock, long endBlock, long step = 20)
         {
-            if (startBlock >= endBlock) throw new ArgumentException("Start block cannot be bigger then end block");
+            if (startBlock > endBlock) step *= -1;
 
             Logger.LogInformation($"Indexing proccess started. Step - 20\n");
 
-            var movements = (endBlock - startBlock) / step;
+            var movements = Math.Abs((endBlock - startBlock) / step);
 
-            for (ulong i = 0, j = 0; j < movements; i += step, j++)
-                await this.IndexInRange(i + startBlock, i + step + startBlock);
+            for (long i = 0, j = 0; j < movements; i += step, j++)
+                await this.IndexInRange((ulong)(i + startBlock), (ulong)(i + step + startBlock));
 
             var multRes = startBlock + step * movements;
 
-            if (multRes < endBlock)
-                await this.IndexInRange(multRes, endBlock);
+            if (startBlock < endBlock && multRes < endBlock)
+                await this.IndexInRange((ulong)multRes, (ulong)endBlock);
+
+            if (startBlock > endBlock && multRes > startBlock)
+                await this.IndexInRange((ulong)multRes, (ulong)endBlock);
 
             if (!BlockQueue.IsEmpty)
                 await this.CommitIndexedBlocks();
@@ -129,8 +132,8 @@ namespace IndexerCore
                     lastBlockRecorded = await bRepo.GetLastIndexedBlockAsync() ?? new Block() { BlockNumber = 0 };
 
                 await this.IndexInRangeParallel(
-                    (ulong)lastBlockRecorded.BlockNumber,
-                    await this.GetLatestBlockNumber(),
+                    lastBlockRecorded.BlockNumber,
+                    (long)await this.GetLatestBlockNumber(),
                     20);
 
                 await CommitIndexedBlocks();
@@ -142,6 +145,13 @@ namespace IndexerCore
         public async Task IndexInRange(ulong startBlock, ulong endBlock)
         {
             var queueSnapshot = BlockQueue.ToArray();
+
+            if(startBlock > endBlock) 
+            {
+                var c = startBlock;
+                startBlock = endBlock;
+                endBlock = c;
+            }
 
             try
             {

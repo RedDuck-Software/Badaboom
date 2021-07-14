@@ -39,11 +39,11 @@ namespace Backend.Controllers
         [HttpGet]
         public async Task<ActionResult<PaginationTransactionResponse>> GetTransactionsByContractAndMethod([FromQuery] GetFilteredTransactionRequest request)
         {
-            return _transactionService.
+            return await _transactionService.GetPaginatedFilteredTransactions(request);
         }
 
         [HttpGet]
-        public async Task<ActionResult<PaginationTransactionResponse>> Get([FromQuery] PaginationDTO pagination)
+        public ActionResult<PaginationTransactionResponse> Get([FromQuery] PaginationDTO pagination)
         {
             string json = @"
 [

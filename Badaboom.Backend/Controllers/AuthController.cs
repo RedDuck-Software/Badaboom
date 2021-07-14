@@ -93,7 +93,7 @@ namespace Backend.Controllers
 
         [HttpGet("userAddress")]
         [Badaboom.Backend.Attributes.Authorize]
-        public async Task<IActionResult> GetUserAddress()
+        public IActionResult GetUserAddress()
         {
             return Ok(new { address = CurrentUser.Address });
         }
