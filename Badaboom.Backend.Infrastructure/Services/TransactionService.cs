@@ -76,8 +76,6 @@ namespace Badaboom.Backend.Infrastructure.Services
 
         public async Task<IEnumerable<Core.Models.Response.Transaction>> GetPaginatedFilteredTransactions(GetFilteredTransactionRequest request)
         {
-
-
             IEnumerable<Call> res;
 
             using (var tRepo = new TransactionRepository(_connectionStringIndexes))
@@ -124,13 +122,13 @@ namespace Badaboom.Backend.Infrastructure.Services
 
             if (decodedInputFields is null) return false;
 
-            foreach (var field in decodedInputFields)
-            {
-                if (field.Parameter.Name == inputData.FieldName && field.Result.ToString() == inputData.Value)
-                    return true;
-            }
+            for (int i = 0; i < inputData.FieldNames.Length; i++)
+                foreach (var field in decodedInputFields)
+                    if (field.Parameter.Name == inputData.FieldNames[i])
+                        if (field.Result.ToString() != inputData.FieldValues[i])
+                            return false;
 
-            return false;
+            return true;
         }
     }
 }

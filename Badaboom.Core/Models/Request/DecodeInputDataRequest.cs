@@ -15,8 +15,8 @@ namespace Badaboom.Core.Models.Request
 
         public string MethodName { get; set; }
 
-        public string FieldName { get; set; }
-
-        public string Value { get; set; }
+        public string[] FieldNames { get; set; }
+        
+        public string[] FieldValues { get; set; }
     }
 }
