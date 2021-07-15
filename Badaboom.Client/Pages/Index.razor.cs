@@ -1,6 +1,7 @@
 ﻿using Badaboom.Core.Models.Request;
 using Badaboom.Core.Models.Response;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -26,7 +27,7 @@ namespace Badaboom.Client.Pages
 
         public async Task LoadTransactions()
         {
-            StringBuilder url = new($"https://localhost:44345/api/Transaction/GetTransactions?Count={TransactionFilter.Count}&Page={TransactionFilter.Page}");
+            StringBuilder url = new($"/Transaction/GetTransactions?Count={TransactionFilter.Count}&Page={TransactionFilter.Page}");
 
             if (TransactionFilter.BlockNumber != null)
             {

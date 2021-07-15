@@ -272,8 +272,6 @@ namespace IndexerCore
 
             return block.Transactions.Select(t =>
             {
-                string input = t.Value.HexValue;
-
                 return new Transaction
                 {
                     TransactionHash = t.TransactionHash.RemoveHashPrefix(),
@@ -285,7 +283,7 @@ namespace IndexerCore
                     {
                         From = t.From.RemoveHashPrefix(),
                         To = t.To.RemoveHashPrefix(),
-                        MethodId = GetMethodIdFromInput(input)?.FormatHex() ?? "",
+                        MethodId = GetMethodIdFromInput(t.Input)?.FormatHex() ?? "",
                         Value = t.Value?.HexValue?.FormatHex(),
                         GasPrice = t.GasPrice?.HexValue?.FormatHex(),
                         Gas = t.Gas?.HexValue?.FormatHex(),
@@ -297,7 +295,7 @@ namespace IndexerCore
 
         private string GetMethodIdFromInput(string value)
         {
-            if (value is null) return String.Empty;
+            if (string.IsNullOrEmpty(value)) return String.Empty;
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
         }
 

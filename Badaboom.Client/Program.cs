@@ -19,7 +19,11 @@ namespace Badaboom.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:44345") });
+            var apiUrlBase = builder.Configuration["BackendUrlBase"] + @"/api";
+
+            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiUrlBase) });
+
+            Console.WriteLine("url base: " + apiUrlBase);
 
             builder.Services.AddMetaMaskBlazor();
 
@@ -33,7 +37,6 @@ namespace Badaboom.Client
             var authenticationService = host.Services.GetRequiredService<IAuthenticationService>();
             await authenticationService.Initialize();
 
-            //await builder.Build().RunAsync();
             await host.RunAsync();
         }
     }

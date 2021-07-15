@@ -66,7 +66,7 @@ namespace Badaboom.Backend.Infrastructure.Services
                 }
 
                 request.Page += 1;
-
+                tries++;
             } while (tries <= maxSearchTries && res.Count < request.Count);
 
             return res;
@@ -82,7 +82,7 @@ namespace Badaboom.Backend.Infrastructure.Services
 
             using (var tRepo = new TransactionRepository(_connectionStringIndexes))
             {
-                res = await tRepo.GetCallsByAddressAndMethodAsync(new CallsPagination()
+                res = await tRepo.GetCalls(new CallsPagination()
                 {
                     BlockId = request.BlockNumber,
                     MethodId = request.MethodId,
@@ -121,6 +121,8 @@ namespace Badaboom.Backend.Infrastructure.Services
         private bool ValidateInpuParameter(Core.Models.Response.Transaction tx, DecodeInputDataRequest inputData)
         {
             var decodedInputFields = this.DecodeInputData(inputData, tx.Input);
+
+            if (decodedInputFields is null) return false;
 
             foreach (var field in decodedInputFields)
             {

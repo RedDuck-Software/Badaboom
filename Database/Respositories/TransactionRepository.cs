@@ -57,7 +57,7 @@ namespace Database.Respositories
 
         }
 
-        public async Task<IEnumerable<Call>> GetCallsByAddressAndMethodAsync(CallsPagination pagination)
+        public async Task<IEnumerable<Call>> GetCalls(CallsPagination pagination)
         {
             string method = pagination?.MethodId;
             string to = pagination?.To;
@@ -88,7 +88,7 @@ namespace Database.Respositories
                     "convert(varchar(44), c.[From], 1) as [From], " +
                     "convert(varchar(44), c.[To], 1) as [To], " +
                     "convert(varchar(10), c.[MethodId], 1) as [MethodId], " +
-                    "convert(varchar(MAX), c.[Input], 1) as [Input], " +
+                    "lower(convert(varchar(MAX), c.[Input], 1)) as [Input], " +
                     "t.BlockId, " +
                     "t.TimeStamp " +
 
