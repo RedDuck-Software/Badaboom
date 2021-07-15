@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Badaboom.Core.Models.Request
 {
@@ -15,8 +11,8 @@ namespace Badaboom.Core.Models.Request
 
         public string MethodName { get; set; }
 
-        public string[] FieldNames { get; set; }
-        
-        public string[] FieldValues { get; set; }
+        public List<string> FieldNames { get; set; }
+
+        public List<string>  FieldValues { get; set; }
     }
 }

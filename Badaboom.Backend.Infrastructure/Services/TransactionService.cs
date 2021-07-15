@@ -122,7 +122,7 @@ namespace Badaboom.Backend.Infrastructure.Services
 
             if (decodedInputFields is null) return false;
 
-            for (int i = 0; i < inputData.FieldNames.Length; i++)
+            for (int i = 0; i < inputData.FieldNames.Count; i++)
                 foreach (var field in decodedInputFields)
                     if (field.Parameter.Name == inputData.FieldNames[i])
                         if (field.Result.ToString() != inputData.FieldValues[i])

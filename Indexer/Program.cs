@@ -36,7 +36,7 @@ namespace BadaboomIndexer
             if (args.Length < 4) throw new ArgumentException("You need to provide at least 4 arguments: network type, LoggerFilePath, LoggerCriticalFilePath and BlockQueueSize");
 
             var _config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName)
+                .SetBasePath(Environment.CurrentDirectory)
                 .AddJsonFile("appsettings.json", false)
                 .AddUserSecrets<Program>()
                 .Build();
