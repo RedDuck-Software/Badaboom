@@ -14,6 +14,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Nethereum.Web3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,13 +48,13 @@ namespace Backend
             var jwtConfig = Configuration.GetSection("JWT");
             var servicesConfig = Configuration.GetSection("ServicesConfig");
 
-
             var jwtAuth = jwtConfig.Get<JWTAuth>();
             var servicesSettings = servicesConfig.Get<ServicesSettings>();
 
             services.Configure<JWTAuth>(jwtConfig);
             services.Configure<ServicesSettings>(servicesConfig);
 
+            var rpcUrl = Configuration.GetSection("RpcUrls").GetSection("ETH").Value;
 
             services.AddAuthentication(x =>
             {
@@ -80,7 +81,7 @@ namespace Backend
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ITransactionService, TransactionService>();
-
+            services.AddScoped((f) => new Web3(rpcUrl));
 
             services.AddControllers();
             services.AddSwaggerGen(c =>

@@ -57,7 +57,7 @@ namespace Database.Respositories
 
         }
 
-        public async Task<IEnumerable<Call>> GetCallsByAddressAndMethodAsync(CallsPagination pagination)
+        public async Task<IEnumerable<Call>> GetCalls(CallsPagination pagination)
         {
             string method = pagination?.MethodId;
             string to = pagination?.To;
@@ -66,7 +66,7 @@ namespace Database.Respositories
             int count = pagination?.Count ?? 1;
 
             string blockWherePaginationQuery = block == null ? "" : $"t.BlockId={block} ";
-            string toWherePaginationQuery = to == null ? "" : $"c.To=convert(binary(20),'{to}',1) ";
+            string toWherePaginationQuery = to == null ? "" : $"c.[To]=convert(binary(20),'{to}',1) ";
             string methodWherePaginationQuery = method == null ? "" : $"c.MethodId=convert(binary(4),'{method}',1) ";
 
             List<string> whereList = new List<string>();
@@ -88,7 +88,7 @@ namespace Database.Respositories
                     "convert(varchar(44), c.[From], 1) as [From], " +
                     "convert(varchar(44), c.[To], 1) as [To], " +
                     "convert(varchar(10), c.[MethodId], 1) as [MethodId], " +
-                    "convert(varchar(MAX), c.[Input], 1) as [Input], " +
+                    "lower(convert(varchar(MAX), c.[Input], 1)) as [Input], " +
                     "t.BlockId, " +
                     "t.TimeStamp " +
 
@@ -102,7 +102,7 @@ namespace Database.Respositories
                     toWherePaginationQuery +
                     methodWherePaginationQuery) +
                 "order by t.TimeStamp " +
-                $"offset {count * page} rows " +
+                $"offset {count * (page - 1)} rows " +
                 $"FETCH NEXT {count} rows only;";
 
             return await SqlConnection.QueryAsync<Call>(sql);

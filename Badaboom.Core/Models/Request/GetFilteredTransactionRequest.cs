@@ -20,6 +20,7 @@
 
         public int Page { get; set; } = 1;
 
+        public DecodeInputDataRequest DecodeInputDataInfo { get; set; }
     }
 
 }
