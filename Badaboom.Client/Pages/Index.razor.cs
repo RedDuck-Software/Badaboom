@@ -63,13 +63,13 @@ namespace Badaboom.Client.Pages
             await LoadTransactions();
         }
 
-        private async Task Filter()
+        public async Task Filter()
         {
             TransactionFilter.Page = 1;
             await LoadTransactions();
         }
 
-        private async Task Delete()
+        public async Task Delete()
         {
             TransactionFilter.Page = 1;
             await LoadTransactions();

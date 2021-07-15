@@ -1,0 +1,151 @@
+﻿@using Badaboom.Core.Models.Request
+@using Badaboom.Client.Pages
+
+<div class="card col-sm-10">
+    <div class="card-header">
+        <div class="d-flex align-items-center">
+            <h5>To Filter</h5>
+        </div>
+    </div>
+    <div class="card-body">
+        
+       @if (SelectedFilters.IsAnyFilterSelected)
+        {
+            <dl class="row">
+                @if (SelectedFilters.BlockNumber)
+                {
+                    <dt class="col-sm-6">
+                        <label>Block number</label>
+                        <div class="form-inline">
+                            <input type="text" class="form-control mb-2 mr-sm-2" @bind="TransactionFilters.BlockNumber" placeholder="Filter by block number" />
+                            <button type="button" class="btn btn-danger mb-2"
+                                    @onclick="async _ => {
+                                                  TransactionFilters.BlockNumber = null;
+                                                  await Index.Delete();
+                                                  SelectedFilters.BlockNumber = false;
+                                              }">
+                                Delete
+                            </button>
+                        </div>
+                    </dt>
+                }
+                @if (SelectedFilters.ContractAddress)
+                {
+                    <dt class="col-sm-6">
+                        <label>Contract address</label>
+                        <div class="form-inline">
+                            <input type="text" class="form-control mb-2 mr-sm-2" @bind="TransactionFilters.ContractAddress" placeholder="Filter by contract address" />
+                            <button type="button" class="btn btn-danger mb-2"
+                                    @onclick="async _ => {
+                                                  TransactionFilters.ContractAddress = null;
+                                                  await Index.Delete();
+                                                  SelectedFilters.ContractAddress = false;
+                                              }">
+                                Delete
+                            </button>
+                        </div>
+                    </dt>
+                }
+                @if (SelectedFilters.MethodId)
+                {
+                    <dt class="col-sm-6">
+                        <label>Method</label>
+                        <div class="form-inline">
+                            <input type="text" class="form-control mb-2 mr-sm-2" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
+                            <button type="button" class="btn btn-danger mb-2"
+                                    @onclick="async _ => {
+                                                  TransactionFilters.MethodId = null;
+                                                  await Index.Delete();
+                                                  SelectedFilters.MethodId = false;
+                                              }">
+                                Delete
+                            </button>
+                        </div>
+                    </dt>
+                }
+                
+            </dl>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="button" class="btn btn-primary d-flex justify-content-end" @onclick="Index.Filter">Filter</button>
+            </div>
+            <hr />
+        }
+
+        <h5>You can also add filters</h5>
+        <div class="d-grid gap-2 d-md-block">
+            @if (!SelectedFilters.BlockNumber)
+            {<button class="btn btn-primary" type="button" @onclick="_ => SelectedFilters.BlockNumber = true">Block number</button>}
+            @if (!SelectedFilters.ContractAddress)
+            {<button class="btn btn-primary" type="button" @onclick="_ => SelectedFilters.ContractAddress = true">Contract address</button>}
+            @if (!SelectedFilters.MethodId)
+            {<button class="btn btn-primary" type="button" @onclick="_ => SelectedFilters.MethodId = true">Method</button>}
+        </div>
+
+    </div>
+</div>
+
+<div>
+    <h3>Results</h3>
+    <div class="d-grid gap-2 d-md-block">
+        @if (SelectedFilters.BlockNumber)
+        {
+            <button type="button" class="btn btn-primary"
+                    @onclick="async _ => { 
+                                  TransactionFilters.BlockNumber = null; 
+                                  await Index.Delete(); 
+                                  SelectedFilters.BlockNumber = false; 
+                              }">
+                Block number 🗙
+            </button>
+        }
+        @if (SelectedFilters.ContractAddress)
+        {
+            <button type="button" class="btn btn-primary"  
+                    @onclick="async _ => {
+                                  TransactionFilters.ContractAddress = null;
+                                  await Index.Delete();
+                                  SelectedFilters.ContractAddress = false;
+                              }">
+                Contract address 🗙
+            </button>
+        }
+        @if (SelectedFilters.MethodId)
+        {
+            <button type="button" class="btn btn-primary"
+                    @onclick="async _ => {
+                                  TransactionFilters.MethodId = null;
+                                  await Index.Delete();
+                                  SelectedFilters.MethodId = false;
+                              }">
+                Method 🗙
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public GetFilteredTransactionRequest TransactionFilters { get; set; }
+
+    [Parameter]
+    public Pages.Index Index { get; set; }
+
+    static class SelectedFilters
+    {
+        public static bool BlockNumber { get; set; }
+        public static bool ContractAddress { get; set; }
+        public static bool MethodId { get; set; }
+
+        public static bool IsAnyFilterSelected
+        {
+            get
+            {
+                if (BlockNumber || ContractAddress || MethodId)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+    }
+}
