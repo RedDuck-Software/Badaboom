@@ -98,9 +98,7 @@ namespace Database.Respositories
                 "on " +
                     "c.TransactionHash=t.TransactionHash " +
                 (string.IsNullOrEmpty(resWhereStatement) ? "" : "where " +
-                    blockWherePaginationQuery +
-                    toWherePaginationQuery +
-                    methodWherePaginationQuery) +
+                    resWhereStatement) +
                 "order by t.TimeStamp " +
                 $"offset {count * (page - 1)} rows " +
                 $"FETCH NEXT {count} rows only;";

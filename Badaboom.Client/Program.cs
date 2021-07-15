@@ -19,7 +19,7 @@ namespace Badaboom.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            var apiUrlBase = builder.Configuration["BackendUrlBase"] + @"/api";
+            var apiUrlBase = builder.Configuration["BackendUrlBase"];
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiUrlBase) });
 
