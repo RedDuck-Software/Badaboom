@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Nethereum.Model;
 using Nethereum.Web3;
 using Newtonsoft.Json;
+using System.Net.Http;
 
 namespace Badaboom.Backend.Infrastructure.Services
 {
@@ -17,6 +18,16 @@ namespace Badaboom.Backend.Infrastructure.Services
         Task<IEnumerable<Core.Models.Response.Transaction>> GetPaginatedFilteredTransactions(GetFilteredTransactionRequest request);
         Task<IEnumerable<Core.Models.Response.Transaction>> GetPaginatedFilteredTransactionsWithInputParameters(GetFilteredTransactionRequest request, int maxSearchTries);
         List<Nethereum.ABI.FunctionEncoding.ParameterOutput> DecodeInputData(DecodeInputDataRequest request, string inputData);
+        Task<string> GetContractAbi(string contractAddress);
+    }
+
+    class EtherscanResponse
+    {
+        public string Status { get; set; }
+
+        public string Message { get; set; }
+
+        public string Result { get; set; }
     }
 
     public class TransactionService : ITransactionService
@@ -27,13 +38,34 @@ namespace Badaboom.Backend.Infrastructure.Services
         private readonly string _connectionString;
         private readonly Web3 _web3;
 
+        private readonly string EtherscanGetContractAbiUrl = "https://api.etherscan.io/api?module=contract&action=getabi&address={0}&apikey={1}";
+        private readonly string EtherscanApiKey;
 
-        public TransactionService(IConfiguration configuration, Web3 web3)
+        private HttpClient HttpClient { get; set; }
+
+
+        public TransactionService(IConfiguration configuration, Web3 web3, HttpClient client)
         {
             _configuration = configuration;
             _connectionString = configuration.GetConnectionString("DefaultConnection");
             _connectionStringIndexes = configuration.GetConnectionString("ETHIndexes");
+            EtherscanApiKey = configuration.GetSection("NetworkSettings").GetSection("ETH").GetSection("EtherscanApiKey").Value;
             _web3 = web3;
+            HttpClient = client;
+        }
+
+        public async Task<string> GetContractAbi(string contractAddress)
+        {
+            var res = await HttpClient.GetAsync(string.Format(EtherscanGetContractAbiUrl, contractAddress, EtherscanApiKey));
+
+            if (res.StatusCode != System.Net.HttpStatusCode.OK)
+                return null;
+
+            var content = await res.Content.ReadAsStringAsync();
+
+            var deserializedContent = JsonConvert.DeserializeObject<EtherscanResponse>(content);
+
+            return deserializedContent.Status == "1" ? deserializedContent.Result : null;
         }
 
 

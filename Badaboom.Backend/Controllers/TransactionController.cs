@@ -36,6 +36,16 @@ namespace Backend.Controllers
             _transactionService = transactionSerivice;
         }
 
+        [HttpGet("GetContractAbi")]
+        public async Task<ActionResult<string>> GetContractAbi([FromQuery] string contractAddress)
+        {
+            var res = await _transactionService.GetContractAbi(contractAddress);
+
+            if (res == null) return new NotFoundResult();
+
+            return res;
+        }
+
         [HttpPost("GetTransactions")]
         public async Task<ActionResult<PaginationTransactionResponse>> GetFilteredTransactions([FromQuery] GetFilteredTransactionRequest request)
         {

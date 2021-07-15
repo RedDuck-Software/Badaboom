@@ -18,6 +18,7 @@ using Nethereum.Web3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Backend
@@ -76,6 +77,8 @@ namespace Backend
                     ClockSkew = TimeSpan.Zero
                 };
             });
+
+            services.AddScoped(sp => new HttpClient());
 
             services.AddScoped<INonceGeneratorService, NonceGeneratorService>((factory) => new NonceGeneratorService(servicesSettings.NonceLenght));
 
