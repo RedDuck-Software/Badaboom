@@ -27,7 +27,7 @@ namespace Badaboom.Client.Pages
 
         public async Task LoadTransactions()
         {
-            StringBuilder url = new($"/Transaction/GetTransactions?Count={TransactionFilter.Count}&Page={TransactionFilter.Page}");
+            StringBuilder url = new($"/api/Transaction/GetTransactions?Count={TransactionFilter.Count}&Page={TransactionFilter.Page}");
 
             if (TransactionFilter.BlockNumber != null)
             {
@@ -51,6 +51,7 @@ namespace Badaboom.Client.Pages
                     new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 TotalPageQuantity = paginationTransactionResponse.Count;
                 Transactions = paginationTransactionResponse.Transactions;
+                StateHasChanged();
             }
             else
             {
@@ -64,13 +65,13 @@ namespace Badaboom.Client.Pages
             await LoadTransactions();
         }
 
-        private async Task Filter()
+        public async Task Filter()
         {
             TransactionFilter.Page = 1;
             await LoadTransactions();
         }
 
-        private async Task Delete()
+        public async Task Delete()
         {
             TransactionFilter.Page = 1;
             await LoadTransactions();

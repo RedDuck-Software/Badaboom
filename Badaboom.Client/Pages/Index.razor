@@ -3,53 +3,7 @@
 
 <h3>Main Page</h3>
 
-<div class="card col-sm-10">
-    <div class="card-header">
-        <div class="d-flex align-items-center">
-            <h5>To Filter</h5>
-        </div>
-    </div>
-    <div class="card-body">
-        <dl class="row">
-
-            <dt class="col-sm-6">
-                <label>Block number</label>
-                <div class="form-inline">
-                    <input type="text" class="form-control mb-2 mr-sm-2" @bind="TransactionFilter.BlockNumber" placeholder="Filter by block number" />
-                    <div class="btn-group mb-2" role="group">
-                        <button type="button" class="btn btn-primary" @onclick="Filter">Filter</button>
-                        <button type="button" class="btn btn-danger" 
-                                @onclick="async _ => { TransactionFilter.BlockNumber = null; await Delete(); }">Delete</button>
-                    </div>
-                </div>
-            </dt>
-            <dt class="col-sm-6">
-                <label>Contract address</label>
-                <div class="form-inline">
-                    <input type="text" class="form-control mb-2 mr-sm-2" @bind="TransactionFilter.ContractAddress" placeholder="Filter by contract address" />
-                    <div class="btn-group mb-2" role="group">
-                        <button type="button" class="btn btn-primary" @onclick="Filter">Filter</button>
-                        <button type="button" class="btn btn-danger" 
-                                @onclick="async _ => { TransactionFilter.ContractAddress = null; await Delete(); }">Delete</button>
-                    </div>
-                </div>
-            </dt>
-            <dt class="col-sm-6">
-                <label>Method</label>
-                <div class="form-inline">
-                    <input type="text" class="form-control mb-2 mr-sm-2" @bind="TransactionFilter.MethodId" placeholder="Filter by method" />
-                    <div class="btn-group mb-2" role="group">
-                        <button type="button" class="btn btn-primary" @onclick="Filter">Filter</button>
-                        <button type="button" class="btn btn-danger" 
-                                @onclick="async _ => { TransactionFilter.MethodId = null; await Delete(); }">Delete</button>
-                    </div>
-                </div>
-            </dt>
-        </dl>
-
-        
-    </div>
-</div>
+<Filtration TransactionFilters="TransactionFilter" Index="this"></Filtration>
 
 @if (Transactions == null)
 {
