@@ -2,12 +2,11 @@
 @using Badaboom.Client.Pages
 @using System.Text.RegularExpressions;
 
-<div class="card col-sm-10">
-    <div class="card-header">
-        <div class="d-flex align-items-center">
-            <h5>To Filter</h5>
-        </div>
+<div class="card col-sm-10 round-30">
+    <div class="d-flex align-items-center mt-3 ml-3">
+        <h4><b>To Filter</b></h4>
     </div>
+    
     <div class="card-body">
 
         @if (SelectedFilters.IsAnyFilterSelected)
@@ -16,14 +15,14 @@
                 @if (SelectedFilters.BlockNumber)
                 {
                     <dt class="col-sm-6">
-                        <label>Block number</label>
+                        <label class="clr-secondary">Block number</label>
                         <div class="form-inline">
-                            <input type="text" class="form-control mb-2 mr-sm-2" @bind="TransactionFilters.BlockNumber" placeholder="Filter by block number" />
-                            <button type="button" class="btn btn-danger mb-2"
+                            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.BlockNumber" placeholder="Filter by block number" />
+                            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                                     @onclick="async _ => {
                                                   TransactionFilters.BlockNumber = null;
-                                                  await Index.Delete();
                                                   SelectedFilters.BlockNumber = false;
+                                                  await Index.Delete();
                                               }">
                                 Delete
                             </button>
@@ -33,14 +32,14 @@
                 @if (SelectedFilters.ContractAddress)
                 {
                     <dt class="col-sm-6">
-                        <label>Contract address</label>
+                        <label class="clr-secondary">Contract address</label>
                         <div class="form-inline">
-                            <input type="text" class="form-control mb-2 mr-sm-2" @bind="TransactionFilters.ContractAddress" placeholder="Filter by contract address" />
-                            <button type="button" class="btn btn-danger mb-2"
+                            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.ContractAddress" placeholder="Filter by contract address" />
+                            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                                     @onclick="async _ => {
                                                   TransactionFilters.ContractAddress = null;
-                                                  await Index.Delete();
                                                   SelectedFilters.ContractAddress = false;
+                                                  await Index.Delete();
                                               }">
                                 Delete
                             </button>
@@ -50,14 +49,14 @@
                 @if (SelectedFilters.MethodId)
                 {
                     <dt class="col-sm-6">
-                        <label>Method</label>
+                        <label class="clr-secondary">Method</label>
                         <div class="form-inline">
-                            <input type="text" class="form-control mb-2 mr-sm-2" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
-                            <button type="button" class="btn btn-danger mb-2"
+                            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
+                            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                                     @onclick="async _ => {
                                                   TransactionFilters.MethodId = null;
-                                                  await Index.Delete();
                                                   SelectedFilters.MethodId = false;
+                                                  await Index.Delete();
                                               }">
                                 Delete
                             </button>
@@ -67,58 +66,58 @@
 
             </dl>
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <button type="button" class="btn btn-primary d-flex justify-content-end" @onclick="Index.Filter">Filter</button>
+                <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" @onclick="Index.Filter">Filter</button>
             </div>
             <hr />
         }
 
-        <h5>You can also add filters</h5>
+        <h5 class="clr-secondary">You can also add filters</h5>
         <div class="d-grid gap-2 d-md-block">
             @if (!SelectedFilters.BlockNumber)
-            {<button class="btn btn-primary" type="button" @onclick="_ => SelectedFilters.BlockNumber = true">Block number</button>}
+            {<button class="btn btn-round mr-1" type="button" @onclick="_ => SelectedFilters.BlockNumber = true">Block number</button>}
             @if (!SelectedFilters.ContractAddress)
-            {<button class="btn btn-primary" type="button" @onclick="_ => SelectedFilters.ContractAddress = true">Contract address</button>}
+            {<button class="btn btn-round ml-1 mr-1" type="button" @onclick="_ => SelectedFilters.ContractAddress = true">Contract address</button>}
             @if (!SelectedFilters.MethodId)
-            {<button class="btn btn-primary" type="button" @onclick="_ => SelectedFilters.MethodId = true">Method</button>}
+            {<button class="btn btn-round ml-1" type="button" @onclick="_ => SelectedFilters.MethodId = true">Method</button>}
         </div>
 
     </div>
 </div>
 
 <div>
-    <h3>Results</h3>
-    <div class="d-grid gap-2 d-md-block">
+    <div class="m-1 form-inline">
+    <h3 class="mt-1 mr-1">Results</h3>
         @if (SelectedFilters.BlockNumber)
         {
-            <button type="button" class="btn btn-primary"
-                    @onclick="async _ => {
-                                  TransactionFilters.BlockNumber = null;
-                                  await Index.Delete();
+            <button type="button" class="btn btn-round ml-1 mr-1"
+                    @onclick="async _ => { 
+                                  TransactionFilters.BlockNumber = null; 
                                   SelectedFilters.BlockNumber = false;
+                                  await Index.Delete(); 
                               }">
-                Block number 🗙
+                Block number <span class="clr-danger">🗙</span>
             </button>
         }
         @if (SelectedFilters.ContractAddress)
         {
-            <button type="button" class="btn btn-primary"
+            <button type="button" class="btn btn-primary"  
                     @onclick="async _ => {
                                   TransactionFilters.ContractAddress = null;
-                                  await Index.Delete();
                                   SelectedFilters.ContractAddress = false;
+                                  await Index.Delete();
                               }">
-                Contract address 🗙
+                Contract address <span class="clr-danger">🗙</span>
             </button>
         }
         @if (SelectedFilters.MethodId)
         {
-            <button type="button" class="btn btn-primary"
+            <button type="button" class="btn btn-round ml-1"
                     @onclick="async _ => {
                                   TransactionFilters.MethodId = null;
-                                  await Index.Delete();
                                   SelectedFilters.MethodId = false;
+                                  await Index.Delete();
                               }">
-                Method 🗙
+                Method <span class="clr-danger">🗙</span>
             </button>
         }
     </div>
