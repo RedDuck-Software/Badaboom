@@ -102,3 +102,35 @@ body {
     .main-table tr:hover {
         background-color: #ddd;
     }
+
+.btn-round {
+    border-radius: 30px;
+    background-color: #eff3f8;
+    color: #425466;
+}
+
+    .btn-round:hover {
+        background-color: #c8c8c8;
+    }
+
+input {
+    border-radius: 10px;
+    background-color: #eff3f8;
+    color: #425466;
+}
+
+.round-10 {
+    border-radius: 10px;
+}
+
+.round-30 {
+    border-radius: 30px;
+}
+
+.clr-secondary {
+    color: #6772e5;
+}
+
+.clr-danger {
+    color: #f56a79;
+}
