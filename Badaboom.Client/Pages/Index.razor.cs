@@ -1,5 +1,6 @@
 ﻿using Badaboom.Core.Models.Request;
 using Badaboom.Core.Models.Response;
+using Badaboom.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -14,12 +15,11 @@ namespace Badaboom.Client.Pages
     public partial class Index
     {
         [Inject]
-        public HttpClient Http { get; set; } = default!;
-
+        public HttpClient Http { get; set; }
         public IEnumerable<Transaction> Transactions { get; set; }
         public int TotalPageQuantity { get; set; }
         public GetFilteredTransactionRequest TransactionFilter { get; set; } = new GetFilteredTransactionRequest();
-
+        
         protected override async Task OnInitializedAsync()
         {
             await LoadTransactions();
@@ -39,7 +39,9 @@ namespace Badaboom.Client.Pages
             }
             if (!string.IsNullOrEmpty(TransactionFilter.MethodId))
             {
-                url.Append($"&MethodId={TransactionFilter.MethodId}");
+                string methodId = ToValidHexString(TransactionFilter.MethodId);
+
+                url.Append($"&MethodId={methodId}");
             }
             Console.WriteLine(url.ToString());
             var httpResponse = await Http.GetAsync(url.ToString());
@@ -57,6 +59,12 @@ namespace Badaboom.Client.Pages
             {
                 // handle error
             }
+        }
+        private string ToValidHexString(string value)
+        {
+            if (value.StartsWith("0x")) return value;
+
+            return HashingService.EncodeMethodSignature(value.Replace(" ", ""));
         }
 
         private async Task SelectedPage(int page)

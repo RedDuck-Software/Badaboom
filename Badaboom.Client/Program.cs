@@ -1,4 +1,5 @@
 using Badaboom.Client.Infrastructure.Services;
+using Badaboom.Core.Services;
 using MetaMask.Blazor;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;

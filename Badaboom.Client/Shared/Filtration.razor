@@ -1,5 +1,6 @@
 ﻿@using Badaboom.Core.Models.Request
 @using Badaboom.Client.Pages
+@using System.Text.RegularExpressions;
 
 <div class="card col-sm-10">
     <div class="card-header">
@@ -8,8 +9,8 @@
         </div>
     </div>
     <div class="card-body">
-        
-       @if (SelectedFilters.IsAnyFilterSelected)
+
+        @if (SelectedFilters.IsAnyFilterSelected)
         {
             <dl class="row">
                 @if (SelectedFilters.BlockNumber)
@@ -63,7 +64,7 @@
                         </div>
                     </dt>
                 }
-                
+
             </dl>
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 <button type="button" class="btn btn-primary d-flex justify-content-end" @onclick="Index.Filter">Filter</button>
@@ -90,17 +91,17 @@
         @if (SelectedFilters.BlockNumber)
         {
             <button type="button" class="btn btn-primary"
-                    @onclick="async _ => { 
-                                  TransactionFilters.BlockNumber = null; 
-                                  await Index.Delete(); 
-                                  SelectedFilters.BlockNumber = false; 
+                    @onclick="async _ => {
+                                  TransactionFilters.BlockNumber = null;
+                                  await Index.Delete();
+                                  SelectedFilters.BlockNumber = false;
                               }">
                 Block number 🗙
             </button>
         }
         @if (SelectedFilters.ContractAddress)
         {
-            <button type="button" class="btn btn-primary"  
+            <button type="button" class="btn btn-primary"
                     @onclick="async _ => {
                                   TransactionFilters.ContractAddress = null;
                                   await Index.Delete();
