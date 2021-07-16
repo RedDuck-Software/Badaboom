@@ -1,28 +1,9 @@
 ﻿@inherits LayoutComponentBase
-@inject NavigationManager NavigationManager;
-@inject IAuthenticationService AuthenticationService;
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    <NavMenu />
 
-    <div class="main">
-        <div class="top-row px-4">
-            @if (AuthenticationService.User != null)
-            {
-                <div class="alert alert-primary" role="alert" style="margin: 15px;">
-                    Addres: @AuthenticationService.User.Address
-                </div>
-                <button class="btn btn-primary" @onclick="@(_ => NavigationManager.NavigateTo("logout"))">Logout</button>
-            }
-            else
-            {
-                <button class="btn btn-primary" @onclick="@(_ => NavigationManager.NavigateTo("login"))">Login</button>
-            }
-        </div>
-        <div class="content px-4">
-            @Body
-        </div>
+    <div class="container">
+        @Body
     </div>
 </div>

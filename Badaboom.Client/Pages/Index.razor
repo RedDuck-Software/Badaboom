@@ -1,8 +1,6 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager;
 
-<h3>Main Page</h3>
-
 <Filtration TransactionFilters="TransactionFilter" Index="this"></Filtration>
 
 @if (Transactions == null)
