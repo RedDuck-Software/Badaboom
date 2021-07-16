@@ -31,14 +31,12 @@ namespace Badaboom.Client.Pages
 
         public async Task LoadTransactions()
         {
-            Console.WriteLine(JsonSerializer.Serialize(TransactionFilter));
-
-            if(TransactionFilter.MethodId != null)
-                TransactionFilter.MethodId = ToValidHexString(TransactionFilter.MethodId);
-
             Loading = true;
 
             Transactions = null;
+
+            if (TransactionFilter.MethodId != null)
+                TransactionFilter.MethodId = ToValidHexString(TransactionFilter.MethodId);
 
             var httpResponse = await Http.PostAsync("/api/Transaction/GetTransactions",
                 new StringContent(
@@ -81,7 +79,6 @@ namespace Badaboom.Client.Pages
 
         public async Task Filter()
         {
-            Console.WriteLine(JsonSerializer.Serialize(TransactionFilter));
             TransactionFilter.Page = 1;
             await LoadTransactions();
         }

@@ -141,7 +141,8 @@ namespace Badaboom.Backend.Infrastructure.Services
 
         public List<Nethereum.ABI.FunctionEncoding.ParameterOutput> DecodeInputData(DecodeInputDataRequest request, string contractAddress, string methodName, string inputData)
         {
-            var contract = _web3.Eth.GetContract(JsonConvert.SerializeObject(request.FunctionAbis), contractAddress);
+            string serializedAbi = JsonConvert.SerializeObject(request.FunctionAbis);
+            var contract = _web3.Eth.GetContract(serializedAbi, contractAddress);
 
             var func = contract.GetFunction(methodName);
 
@@ -157,7 +158,7 @@ namespace Badaboom.Backend.Infrastructure.Services
             for (int i = 0; i < request.DecodeInputDataInfo.ArgumentsNamesValues.Count; i++)
                 foreach (var field in decodedInputFields)
                     if (request.DecodeInputDataInfo.ArgumentsNamesValues.ContainsKey(field.Parameter.Name))
-                        if (field.Result.ToString() != request.DecodeInputDataInfo.ArgumentsNamesValues[field.Parameter.Name])
+                        if (field.Result.ToString().ToLower() != request.DecodeInputDataInfo.ArgumentsNamesValues[field.Parameter.Name].ToLower())
                             return false;
 
             return true;
