@@ -15,7 +15,7 @@ namespace Database.Models
         public string To { get; set; }
 
         public string MethodId { get; set; }
-        
+
         public string Input { get; set; }
 
         public Transaction Transaction { get; set; }
@@ -23,13 +23,14 @@ namespace Database.Models
         public CallTypes Type { get; set; }
 
         public long BlockId { get; set; }
-        
+
         public long TimeStamp { get; set; }
     }
 
 
     public class CallsPagination
     {
+        public int? CallIdFrom;
         public long? BlockId;
         public string MethodId;
         public string To;
@@ -40,7 +41,7 @@ namespace Database.Models
     public enum CallTypes
     {
         NO_CALL_TYPE,
-        Create, 
-        Call, 
+        Create,
+        Call,
     }
 }

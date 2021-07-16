@@ -64,10 +64,12 @@ namespace Database.Respositories
             string block = pagination?.BlockId?.ToString();
             int page = pagination?.Page ?? 1;
             int count = pagination?.Count ?? 1;
+            int? callIdFrom = pagination?.CallIdFrom;
 
-            string blockWherePaginationQuery = block == null ? "" : $"t.BlockId={block} ";
-            string toWherePaginationQuery = to == null ? "" : $"c.[To]=convert(binary(20),'{to}',1) ";
-            string methodWherePaginationQuery = method == null ? "" : $"c.MethodId=convert(binary(4),'{method}',1) ";
+            string blockWherePaginationQuery = block == null ? "" : $" t.BlockId={block} ";
+            string toWherePaginationQuery = to == null ? "" : $" c.[To]=convert(binary(20),'{to}',1) ";
+            string methodWherePaginationQuery = method == null ? "" : $" c.MethodId=convert(binary(4),'{method}',1) ";
+            string fromCallIDWherePaginationQuery = callIdFrom == null ? "" : $" c.CallId>={callIdFrom.Value} ";
 
             List<string> whereList = new List<string>();
 
@@ -76,6 +78,7 @@ namespace Database.Respositories
             pushToWhereListIfNotNull(blockWherePaginationQuery);
             pushToWhereListIfNotNull(toWherePaginationQuery);
             pushToWhereListIfNotNull(methodWherePaginationQuery);
+            pushToWhereListIfNotNull(fromCallIDWherePaginationQuery);
 
             string resWhereStatement = string.Join(" and ", whereList);
 

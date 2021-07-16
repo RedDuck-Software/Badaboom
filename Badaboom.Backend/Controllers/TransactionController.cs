@@ -63,13 +63,5 @@ namespace Backend.Controllers
                 Transactions = res.ToList()
             };
         }
-
-        private static int CountPageQuantity(IEnumerable<Transaction> enumerable, int recordsPerPage)
-        {
-            int count = enumerable.Count();
-            int additionalPage = count % recordsPerPage;
-            int pagesQuantity = count / recordsPerPage + (additionalPage > 0 ? 1 : 0);
-            return pagesQuantity;
-        }
     }
 }
