@@ -40,11 +40,13 @@ namespace Backend.Controllers
         }
 
         [HttpPost("GetTransactions")]
-        public async Task<ActionResult<PaginationTransactionResponse>> GetFilteredTransactions([FromQuery] GetFilteredTransactionRequest request)
+        public async Task<ActionResult<PaginationTransactionResponse>> GetFilteredTransactions([FromBody] GetFilteredTransactionRequest request)
         {
             IEnumerable<Transaction> res;
 
-            if (request.DecodeInputDataInfo != null)
+            if (request.DecodeInputDataInfo != null &&
+                request.DecodeInputDataInfo.ArgumentsNamesValues != null && 
+                request.DecodeInputDataInfo.ArgumentsNamesValues.Count > 0)
                 res = await _transactionService.GetPaginatedFilteredTransactionsWithInputParameters(request, 10);
             else
                 res = await _transactionService.GetPaginatedFilteredTransactions(request);

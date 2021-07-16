@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Text.Json;
+using System.Text;
 
 namespace Badaboom.Client.Shared.Filters
 {
@@ -28,7 +30,7 @@ namespace Badaboom.Client.Shared.Filters
 
         public List<Input> SelectedMethodAvailableArguments { get; set; } = new();
 
-        public List<Input> SelectedArguments { get; set; } = new();
+        public Dictionary<Input, string> SelectedArgumentsValues { get; set; } = new(new AbiInputComparer());
 
         [Inject]
         public HttpClient Http { get; set; }
@@ -36,24 +38,46 @@ namespace Badaboom.Client.Shared.Filters
 
         protected void RemoveSelectedArgument(Input arg)
         {
-            SelectedArguments.Remove(arg);
+            SelectedArgumentsValues.Remove(arg);
             SelectedMethodAvailableArguments.Add(arg);
             StateHasChanged();
+            UpdateFilteredTranscations();
         }
 
         protected void OnMethodSelected(Method selection)
         {
             SelectedMethod = selection;
             SelectedMethodAvailableArguments = selection.Inputs.ToList();
-            SelectedArguments.Clear();
+            SelectedArgumentsValues.Clear();
             StateHasChanged();
+            UpdateFilteredTranscations();
         }
 
         protected void OnArgumentSelected(Input input)
         {
-            SelectedArguments.Add(input);
+            SelectedArgumentsValues.Add(input, null);
             SelectedMethodAvailableArguments.Remove(input);
             StateHasChanged();
+            UpdateFilteredTranscations();
+        }
+
+        protected void UpdateFilteredTranscations()
+        {
+            if (SelectedMethod != null)
+                TransactionFilters.MethodId = $"{SelectedMethod.Name}({string.Join(",", SelectedMethod.Inputs.Select(v => v.Type))})";
+
+            Console.WriteLine(TransactionFilters.MethodId);
+
+            TransactionFilters.DecodeInputDataInfo = SelectedMethod == null ? null : new()
+            {
+                FunctionAbis = new Method[] { SelectedMethod },
+                ArgumentsNamesValues = SelectedArgumentsValues.Count == 0 ? null :
+                    new Dictionary<string, string>(
+                        SelectedArgumentsValues.Select(vp =>
+                            new KeyValuePair<string, string>(vp.Key.Name, vp.Value)))
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(TransactionFilters));
         }
     }
 }

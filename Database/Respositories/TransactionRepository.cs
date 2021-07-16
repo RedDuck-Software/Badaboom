@@ -96,13 +96,12 @@ namespace Database.Respositories
                     "t.TimeStamp " +
 
                 "from " +
-                    "Calls c " +
-                "inner join Transactions t " +
-                "on " +
-                    "c.TransactionHash=t.TransactionHash " +
-                (string.IsNullOrEmpty(resWhereStatement) ? "" : "where " +
-                    resWhereStatement) +
-                "order by t.TimeStamp " +
+                    "Calls c, Transactions t " +
+                "where " +
+                    "t.TransactionHash=c.TransactionHash " +
+
+                (string.IsNullOrEmpty(resWhereStatement) ? "" : " and " +  resWhereStatement) +
+                "order by c.CallId " +
                 $"offset {count * (page - 1)} rows " +
                 $"FETCH NEXT {count} rows only;";
 

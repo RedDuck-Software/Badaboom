@@ -112,6 +112,7 @@
     {
         <button type="button" class="btn btn-round ml-1 mr-1"
                 @onclick="async _ => {
+                              TransactionFilters.DecodeInputDataInfo = null;
                               TransactionFilters.ContractAddress = null;
                               TransactionFilters.MethodId = null;
                               SelectedFilters.ContractAddress = false;
@@ -158,7 +159,11 @@
 
 
             ContractMethods = JsonSerializer.Deserialize<IEnumerable<Method>>(responseString,
-            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }).Where(v => !string.IsNullOrEmpty(v.Name));
+            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }).Where(v =>
+                !string.IsNullOrEmpty(v.Name) &&
+                    v.Type?.ToLower() == "function" &&
+                    !(v.StateMutability?.ToLower() == "view"
+                    || v.StateMutability?.ToLower() == "pure"));
         }
         else
         {

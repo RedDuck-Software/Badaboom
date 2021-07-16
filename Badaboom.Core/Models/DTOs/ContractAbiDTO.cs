@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Badaboom.Core.Models.DTOs
 {
@@ -41,5 +42,20 @@ namespace Badaboom.Core.Models.DTOs
         public string Type { get; set; }
 
         public bool? Anonymous { get; set; }
+    }
+
+
+
+    public class AbiInputComparer: IEqualityComparer<Input>
+    {
+        public bool Equals(Input x, Input y)
+        {
+            return x.Name == y.Name;
+        }
+
+        public int GetHashCode([DisallowNull] Input obj)
+        {
+            return obj.GetHashCode();
+        }
     }
 }

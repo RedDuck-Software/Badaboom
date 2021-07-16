@@ -17,8 +17,8 @@
 
     @if (SelectedMethod != null)
     {
-        @if (SelectedMethodAvailableArguments.Count != 0) 
-        {  
+        @if (SelectedMethodAvailableArguments.Count != 0)
+        {
             <Dropdown TItem="Input" ReplaceInitialTip="false" OnSelected="@OnArgumentSelected">
                 <InitialTip>Select argument..</InitialTip>
                 <ChildContent>
@@ -29,14 +29,14 @@
                 </ChildContent>
             </Dropdown>
         }
-        
 
-        @foreach (var arg in SelectedArguments)
+
+        @foreach (var arg in SelectedArgumentsValues)
         {
-            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.BlockNumber" placeholder="@(arg.Name + $": {arg.Type}")" />
+            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @oninput="value => {  SelectedArgumentsValues[arg.Key] = value.Value.ToString(); UpdateFilteredTranscations(); }" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")" />
             <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                     @onclick=" _ => {
-                                  RemoveSelectedArgument(arg);
+                                  RemoveSelectedArgument(arg.Key);
                               }">
                 Delete
             </button>

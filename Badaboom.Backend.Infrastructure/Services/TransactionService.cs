@@ -17,7 +17,7 @@ namespace Badaboom.Backend.Infrastructure.Services
     {
         Task<IEnumerable<Core.Models.Response.Transaction>> GetPaginatedFilteredTransactions(GetFilteredTransactionRequest request);
         Task<IEnumerable<Core.Models.Response.Transaction>> GetPaginatedFilteredTransactionsWithInputParameters(GetFilteredTransactionRequest request, int maxSearchTries);
-        List<Nethereum.ABI.FunctionEncoding.ParameterOutput> DecodeInputData(DecodeInputDataRequest request, string inputData);
+        List<Nethereum.ABI.FunctionEncoding.ParameterOutput> DecodeInputData(DecodeInputDataRequest request, string contractAddress, string methodName, string inputData);
         Task<string> GetContractAbi(string contractAddress);
     }
 
@@ -91,7 +91,7 @@ namespace Badaboom.Backend.Infrastructure.Services
                 {
                     try
                     {
-                        if (ValidateInpuParameter(tx, request.DecodeInputDataInfo))
+                        if (ValidateInpuParameter(tx, request))
                             res.Add(tx);
                     }
                     catch (System.Exception ex) { }
@@ -139,25 +139,25 @@ namespace Badaboom.Backend.Infrastructure.Services
             );
         }
 
-        public List<Nethereum.ABI.FunctionEncoding.ParameterOutput> DecodeInputData(DecodeInputDataRequest request, string inputData)
+        public List<Nethereum.ABI.FunctionEncoding.ParameterOutput> DecodeInputData(DecodeInputDataRequest request, string contractAddress, string methodName, string inputData)
         {
-            var contract = _web3.Eth.GetContract(request.FunctionAbi, request.ContractAddress);
+            var contract = _web3.Eth.GetContract(JsonConvert.SerializeObject(request.FunctionAbis), contractAddress);
 
-            var func = contract.GetFunction(request.MethodName);
+            var func = contract.GetFunction(methodName);
 
             return func.DecodeInput(inputData);
         }
 
-        private bool ValidateInpuParameter(Core.Models.Response.Transaction tx, DecodeInputDataRequest inputData)
+        private bool ValidateInpuParameter(Core.Models.Response.Transaction tx, GetFilteredTransactionRequest request)
         {
-            var decodedInputFields = this.DecodeInputData(inputData, tx.Input);
+            var decodedInputFields = this.DecodeInputData(request.DecodeInputDataInfo, request.ContractAddress, request.DecodeInputDataInfo.FunctionAbis?.First()?.Name, tx.Input);
 
             if (decodedInputFields is null) return false;
 
-            for (int i = 0; i < inputData.ArgumentsNamesValues.Count; i++)
+            for (int i = 0; i < request.DecodeInputDataInfo.ArgumentsNamesValues.Count; i++)
                 foreach (var field in decodedInputFields)
-                    if (inputData.ArgumentsNamesValues.ContainsKey(field.Parameter.Name))
-                        if (field.Result.ToString() != inputData.ArgumentsNamesValues[field.Parameter.Name])
+                    if (request.DecodeInputDataInfo.ArgumentsNamesValues.ContainsKey(field.Parameter.Name))
+                        if (field.Result.ToString() != request.DecodeInputDataInfo.ArgumentsNamesValues[field.Parameter.Name])
                             return false;
 
             return true;
