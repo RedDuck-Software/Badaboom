@@ -31,12 +31,10 @@ namespace Badaboom.Client.Pages
 
         public async Task LoadTransactions()
         {
-            Console.WriteLine(JsonSerializer.Serialize(TransactionFilter));
+            Loading = true;
 
             if(TransactionFilter.MethodId != null)
                 TransactionFilter.MethodId = ToValidHexString(TransactionFilter.MethodId);
-
-            Loading = true;
 
             Transactions = null;
 
@@ -81,7 +79,6 @@ namespace Badaboom.Client.Pages
 
         public async Task Filter()
         {
-            Console.WriteLine(JsonSerializer.Serialize(TransactionFilter));
             TransactionFilter.Page = 1;
             await LoadTransactions();
         }

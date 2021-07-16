@@ -40,16 +40,17 @@
         </div>
     </form>
 
-        @foreach (var arg in SelectedArguments)
-        {
-            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.BlockNumber" placeholder="@(arg.Name + $": {arg.Type}")" />
+    @foreach (var arg in SelectedArgumentsValues)
+    {
+        <div class="form-inline">
+            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @oninput="value => {  SelectedArgumentsValues[arg.Key] = value.Value.ToString(); UpdateFilteredTranscations(); }" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")" />
             <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                     @onclick=" _ => {
-                                  RemoveSelectedArgument(arg);
+                                  RemoveSelectedArgument(arg.Key);
                               }">
                 Delete
             </button>
-        }
+        </div>
     }
 }
 else
