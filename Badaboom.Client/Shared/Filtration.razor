@@ -3,16 +3,17 @@
 @using System.Text.RegularExpressions
 @using System.Text.Json
 @using Badaboom.Core.Models.DTOs
-
+@using System.Net.Http.Headers
+ 
 <div class=" d-flex justify-content-center">
     <div class="card col-sm-10 round-30">
         <div class="d-flex ml-3 mt-3 h4 font-weight-bold">
             To Filter
         </div>
-    
+
         <div class="card-body">
-        
-           @if (SelectedFilters.IsAnyFilterSelected)
+
+            @if (SelectedFilters.IsAnyFilterSelected)
             {
                 <dl class="row">
                     @if (SelectedFilters.BlockNumber)
@@ -38,6 +39,13 @@
                             <label class="clr-secondary">Contract address</label>
                             <div class="form-inline">
                                 <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.ContractAddress" placeholder="Filter by contract address" />
+
+                                <button type="button" class="btn btn-round mb-2 round-10"
+                                        disabled="@(!ContractAddressRegex.IsMatch(TransactionFilters.ContractAddress ?? ""))"
+                                        @onclick="GetAbi">
+                                    Method Filters
+                                </button>
+
                                 <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                                         @onclick="async _ => {
                                                       TransactionFilters.ContractAddress = null;
@@ -66,7 +74,7 @@
                             </div>
                         </dt>
                     }
-                
+
                 </dl>
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" @onclick="Index.Filter">Filter</button>
@@ -86,6 +94,7 @@
 
         </div>
     </div>
+
 </div>
 
 
@@ -94,10 +103,10 @@
     @if (SelectedFilters.BlockNumber)
     {
         <button type="button" class="btn btn-round ml-1 mr-1"
-                @onclick="async _ => { 
-                              TransactionFilters.BlockNumber = null; 
+                @onclick="async _ => {
+                              TransactionFilters.BlockNumber = null;
                               SelectedFilters.BlockNumber = false;
-                              await Index.Delete(); 
+                              await Index.Delete();
                           }">
             Block number <span class="clr-danger">🗙</span>
         </button>
@@ -133,6 +142,9 @@
     [Parameter]
     public Pages.Index Index { get; set; }
 
+
+    public Regex ContractAddressRegex = new Regex("^0x[a-fA-F0-9]{40}$");
+
     static class SelectedFilters
     {
         public static bool BlockNumber { get; set; }
@@ -153,25 +165,36 @@
     }
 
     [Inject]
-    public HttpClient Http { get; set; }
+    public HttpClient HttpClient { get; set; }
 
-    public ContactAbiDTO ContractAbi { get; set; }
+    public IEnumerable<Method> ContractAbi { get; set; }
+
 
     public async Task GetAbi()
     {
-        var httpResponse = await Http.GetAsync($"api/Transaction/GetContractAbi?contractAddress={SelectedFilters.ContractAddress}");
+        HttpClient.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue
+        {
+            NoCache = true
+        };
+
+        var httpResponse = await HttpClient.GetAsync($"https://localhost:44345/api/Transaction/GetContractAbi?contractAddress=0x8E870D67F660D95d5be530380D0eC0bd388289E1");
 
         if (httpResponse.IsSuccessStatusCode)
+
         {
             var responseString = await httpResponse.Content.ReadAsStringAsync();
-            var contactAbi = JsonSerializer.Deserialize<ContactAbiDTO>(responseString,
-                new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
+
+            ContractAbi = JsonSerializer.Deserialize<IEnumerable<Method>>(responseString,
+            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+
+            Console.WriteLine("Contract abi :", responseString);
             StateHasChanged();
         }
         else
         {
-            // handle error
+            Console.WriteLine("Found is not found");
         }
     }
 }

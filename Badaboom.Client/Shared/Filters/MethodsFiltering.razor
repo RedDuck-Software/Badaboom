@@ -1,13 +1,11 @@
 ﻿@namespace Badaboom.Client.Shared.Filters
 @inherits MethodsFilteringBase;
 
-@if (ContractAbiJSON != null)
+@if (ContractMethods != null)
 {
     <h3>MethodsFiltering with arguments</h3>
 }
 else
 {
-    <h3>MethodsFiltering with arguments</h3>
-
+    <h3>MethodsFiltering by method signature</h3>
 }
-
