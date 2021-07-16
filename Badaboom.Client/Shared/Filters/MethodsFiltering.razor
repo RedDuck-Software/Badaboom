@@ -1,11 +1,70 @@
 ﻿@namespace Badaboom.Client.Shared.Filters
 @inherits MethodsFilteringBase;
+@using Badaboom.Client.Shared.DropdownList
+@using Badaboom.Core.Models.DTOs
 
 @if (ContractMethods != null)
 {
-    <h3>MethodsFiltering with arguments</h3>
+    <Dropdown TItem="Method" OnSelected="@OnSelected">
+        <InitialTip>Select method</InitialTip>
+        <ChildContent>
+            @foreach (var method in ContractMethods)
+            {
+                <DropdownListItem Item="@method">@method.Name</DropdownListItem>
+            }
+        </ChildContent>
+    </Dropdown>
+
+    @if (SelectedMethod != null && SelectedMethodAvailableArguments.Count != 0)
+    {
+        @if (SelectedMethodAvailableArguments.Count != 0) 
+        {  
+            <Dropdown TItem="Input" ReplaceInitialTip="false" OnSelected="@OnArgumentSelected">
+                <InitialTip>Select argument..</InitialTip>
+                <ChildContent>
+                    @foreach (var arg in SelectedMethodAvailableArguments)
+                    {
+                        <DropdownListItem Item="@arg">@arg.Name</DropdownListItem>
+                    }
+                </ChildContent>
+            </Dropdown>
+        }
+        
+
+        @foreach (var arg in SelectedArguments)
+        {
+            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.BlockNumber" placeholder="@(arg.Name + $": {arg.Type}")" />
+            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                    @onclick=" _ => {
+                                  RemoveSelectedArgument(arg);
+                              }">
+                Delete
+            </button>
+        }
+    }
+
+
 }
 else
 {
-    <h3>MethodsFiltering by method signature</h3>
+    <dt class="col-sm-6">
+        <label class="clr-secondary">Method</label>
+        <div class="form-inline">
+            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
+            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                    @onclick="async _ => {
+                        TransactionFilters.MethodId = null;
+                        SelectedFilters.MethodId = false;
+                        await Index.Delete();
+                    }">
+                Delete
+            </button>
+        </div>
+    </dt>
+
 }
+
+
+
+
+
