@@ -3,7 +3,6 @@
 @using System.Text.RegularExpressions
 @using System.Text.Json
 @using Badaboom.Core.Models.DTOs
-@using System.Net.Http.Headers
 @using Badaboom.Client.Shared.DTOs
 
 <div class=" d-flex justify-content-center">
@@ -24,11 +23,10 @@
                             <div class="form-inline">
                                 <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.BlockNumber" placeholder="Filter by block number" />
                                 <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
-                                        @onclick="async _ => {
-                                                  TransactionFilters.BlockNumber = null;
-                                                  SelectedFilters.BlockNumber = false;
-                                                  await Index.Delete();
-                                              }">
+                                        @onclick="_ => {
+                                                      TransactionFilters.BlockNumber = null;
+                                                      SelectedFilters.BlockNumber = false;
+                                                  }">
                                     Delete
                                 </button>
                             </div>
@@ -40,38 +38,43 @@
                             <label class="clr-secondary">Contract address</label>
 
                             <div class="form-inline">
-                                <input type="text" class="form-control mb-2 mr-sm-2 round-10" @onchange="(value) => {
-                                                                                                         ShowMethodFilter = false;
-                                                                                                         ContractMethods = null;
-                                                                                                         TransactionFilters.ContractAddress = value.Value.ToString();
-                                                                                                     }"
-                                       placeholder="Filter by contract address" />
+                                <input type="text" class="form-control mb-2 mr-sm-2 round-10" placeholder="Filter by contract address" 
+                                       @onchange="(value) => {
+                                                      ShowMethodFilter = false;
+                                                      ContractMethods = null;
+                                                      TransactionFilters.ContractAddress = value.Value.ToString();
+                                                  }" />
+                                <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                                        @onclick="_ => {
+                                                      TransactionFilters.ContractAddress = null;
+                                                      TransactionFilters.MethodId = null;
+                                                      SelectedFilters.ContractAddress = false;
+                                                      SelectedFilters.MethodId = false;
+                                                      ShowMethodFilter = false;
+                                                      ContractMethods = null;
+                                                  }">
+                                    Delete
+                                </button>
 
                                 <button type="button" class="btn btn-round mb-2 round-10"
                                         disabled="@(!ContractAddressRegex.IsMatch(TransactionFilters.ContractAddress ?? ""))"
                                         @onclick="GetAbi">
                                     Method Filters
                                 </button>
-
-                                <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
-                                        @onclick="async _ => {
-                                                  TransactionFilters.ContractAddress = null;
-                                                  SelectedFilters.ContractAddress = false;
-                                                  await Index.Delete();
-                                              }">
-                                    Delete
-                                </button>
                             </div>
 
+                            
+                        </dt>
+                        <dt class="col-sm-6">
                             @if (ShowMethodFilter)
                             {
                                 <Badaboom.Client.Shared.Filters.MethodsFiltering Index="Index"
                                                                                  TransactionFilters="TransactionFilters"
                                                                                  SelectedFilters="SelectedFilters"
                                                                                  ContractMethods="ContractMethods" />
-
                             }
                         </dt>
+
                     }
 
                 </dl>
@@ -94,16 +97,14 @@
 
 </div>
 
-
 <div class="m-1 form-inline">
     <h3 class="mt-1 mr-1">Results</h3>
     @if (SelectedFilters.BlockNumber)
     {
         <button type="button" class="btn btn-round ml-1 mr-1"
-                @onclick="async _ => {
+                @onclick="_ => {
                               TransactionFilters.BlockNumber = null;
                               SelectedFilters.BlockNumber = false;
-                              await Index.Delete();
                           }">
             Block number <span class="clr-danger">🗙</span>
         </button>
@@ -111,14 +112,13 @@
     @if (SelectedFilters.ContractAddress)
     {
         <button type="button" class="btn btn-round ml-1 mr-1"
-                @onclick="async _ => {
+                @onclick="_ => {
                               TransactionFilters.ContractAddress = null;
                               TransactionFilters.MethodId = null;
                               SelectedFilters.ContractAddress = false;
                               SelectedFilters.MethodId = false;
                               ShowMethodFilter = false;
                               ContractMethods = null;
-                              await Index.Delete();
                           }">
             Contract address <span class="clr-danger">🗙</span>
         </button>
@@ -127,19 +127,17 @@
 
 @code {
     [Parameter]
-    public GetFilteredTransactionRequest TransactionFilters { get; set; }
-
-    public SelectedFiltersDTO SelectedFilters { get; set; } = new();
-
-    [Parameter]
     public Pages.Index Index { get; set; }
 
-
-    public Regex ContractAddressRegex = new Regex("^0x[a-fA-F0-9]{40}$");
-
+    [Parameter]
+    public GetFilteredTransactionRequest TransactionFilters { get; set; }
 
     [Inject]
     public HttpClient HttpClient { get; set; }
+
+    public Regex ContractAddressRegex = new Regex("^0x[a-fA-F0-9]{40}$");
+
+    public SelectedFiltersDTO SelectedFilters { get; set; } = new();
 
     public IEnumerable<Method> ContractMethods { get; set; }
 
@@ -155,7 +153,6 @@
 
         {
             var responseString = await httpResponse.Content.ReadAsStringAsync();
-
 
             ContractMethods = JsonSerializer.Deserialize<IEnumerable<Method>>(responseString,
             new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }).Where(v => !string.IsNullOrEmpty(v.Name));
