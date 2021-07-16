@@ -13,7 +13,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using static System.Net.WebRequestMethods;
 
 namespace Backend.Controllers
 {
@@ -22,19 +21,12 @@ namespace Backend.Controllers
     [EnableCors("AllowAll")]
     public class TransactionController : BaseController
     {
-        //private readonly ApplicationDbContext context;
-
-        //public TransactionController(ApplicationDbContext context)
-        //{
-        //    this.context = context;
-        //}
-        private ITransactionService _transactionService;
+        private readonly ITransactionService _transactionService;
 
         public TransactionController(ITransactionService transactionSerivice)
         {
             _transactionService = transactionSerivice;
         }
-
 
 
         [HttpGet("GetContractAbi")]

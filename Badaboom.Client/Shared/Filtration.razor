@@ -64,6 +64,21 @@
                     </dt>
                 }
 
+                <dt class="col-sm-6">
+                        <label class="clr-secondary">Contract address</label>
+                        <div class="form-inline">
+                            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.ContractAddress" placeholder="Filter by contract address" />
+                            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                                    @onclick="async _ => {
+                                                  TransactionFilters.ContractAddress = null;
+                                                  SelectedFilters.ContractAddress = false;
+                                                  await Index.Delete();
+                                              }">
+                                Delete
+                            </button>
+                        </div>
+                    </dt>
+
             </dl>
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" @onclick="Index.Filter">Filter</button>
