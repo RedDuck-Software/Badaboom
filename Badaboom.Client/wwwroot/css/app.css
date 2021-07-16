@@ -4,10 +4,6 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
-a, .btn-link {
-    color: #0366d6;
-}
-
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;
@@ -49,11 +45,21 @@ a, .btn-link {
         top: 0.5rem;
     }
 
+@media (min-width: 768px) {
+
+    .navbar-toggler {
+        display: none;
+    }
+}
+
+
 .hash-width {
     max-width: 170px;
 }
 
 body {
+    padding-top: 50px;
+    padding-bottom: 20px;
     background: #f9f9f9;
 }
 
@@ -131,6 +137,18 @@ input {
     color: #6772e5;
 }
 
+.bclr-secondary {
+    background-color: #6772e5;
+}
+
 .clr-danger {
     color: #f56a79;
+}
+
+.text-clr-light {
+    color: #ffffff;
+}
+
+.mr-6 {
+    margin-right: 6rem!important
 }

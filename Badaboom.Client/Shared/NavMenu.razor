@@ -1,27 +1,53 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
-    <a class="navbar-brand" href="">Badaboom.Client</a>
-    <button class="navbar-toggler" @onclick="ToggleNavMenu">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-</div>
+﻿@inject NavigationManager NavigationManager;
+@inject IAuthenticationService AuthenticationService;
+<nav class="navbar navbar-expand-lg fixed-top" style="background: #f9f9f9;">
+    <div class="container">
+        <a class="navbar-brand"><h2 class="clr-secondary font-weight-bold">Badaboom</h2></a>
+        <button class="navbar-toggler" @onclick="ToggleNavMenu" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="@NavMenuCssClass navbar-collapse" @onclick="CollapseNavMenu">
+            <ul class="nav justify-content-center mt-1">
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <ul class="nav flex-column">
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Main
-            </NavLink>
-        </li>
-    </ul>
-</div>
+                <li class="nav-item">
+                    <a class="nav-link h5 font-weight-bold clr-secondary" href="#">Feauters</a>
+                </li>
+                <li class="nav-item ml-5 mr-5">
+                    <a class="nav-link h5 font-weight-bold clr-secondary" href="#">Pricing</a>
+                </li>
+                <li class="nav-item mr-6">
+                    <a class="nav-link h5 font-weight-bold clr-secondary" href="#">Explorer</a>
+                </li>
 
-@code {
-    private bool collapseNavMenu = true;
+            </ul>
+            <form class="d-flex">
+                @if (AuthenticationService.User != null)
+                {
+                    <button class="btn bclr-secondary round-10 text-clr-light" @onclick="@(_ => NavigationManager.NavigateTo("logout"))"><b>Logout</b></button>
+                }
+                else
+                {
+                    <button class="btn bclr-secondary round-10 text-clr-light" @onclick="@(_ => NavigationManager.NavigateTo("login"))"><b>Login</b></button>
+                }
+            </form>
 
-    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+        </div>
+    </div>
+</nav>
 
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}
+
+
+@code { bool collapseNavMenu = true;
+
+            string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+            void ToggleNavMenu()
+            {
+                collapseNavMenu = !collapseNavMenu;
+            }
+
+            void CollapseNavMenu()
+            {
+                collapseNavMenu = true;
+            } }
