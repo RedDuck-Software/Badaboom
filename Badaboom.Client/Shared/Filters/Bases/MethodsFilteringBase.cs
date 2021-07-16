@@ -1,14 +1,11 @@
 ﻿using Badaboom.Core.Models.DTOs;
 using Microsoft.AspNetCore.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Badaboom.Client.Shared.Filters
 {
-    public partial class MethodsFilteringBase 
+    public class MethodsFilteringBase : ComponentBase
     {
         [Parameter]
         public string ContractAbiJSON { get; set; }
