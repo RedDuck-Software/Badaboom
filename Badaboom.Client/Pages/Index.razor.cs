@@ -33,6 +33,8 @@ namespace Badaboom.Client.Pages
         {
             Loading = true;
 
+            Transactions = null;
+
             var httpResponse = await Http.PostAsync("/api/Transaction/GetTransactions",
                 new StringContent(
                     JsonSerializer.Serialize(TransactionFilter),
