@@ -5,7 +5,7 @@
 
 @if (Transactions == null)
 {
-    <p><em>Loading ...</em></p>
+    <p class="ml-1">Loading <span class="spinner-border spinner-border-sm ml-1" /></p>
 }
 else if (Transactions.Count() == 0)
 {
@@ -39,7 +39,7 @@ else
         {
             <tr>
                 <td>
-                    <NavLink class="nav-link hash-width text-truncate" @onclick="@(_ => NavigationManager.NavigateTo($"details/{row.TxnHash}"))">
+                    <NavLink class="nav-link hash-width text-truncate" href="@($"details/{row.TxnHash}")">
                         @row.TxnHash
                     </NavLink>
                 </td>

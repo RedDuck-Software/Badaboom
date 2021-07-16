@@ -2,8 +2,6 @@
 using Badaboom.Core.Models.Response;
 using Badaboom.Core.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Configuration;
-using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
@@ -16,9 +14,15 @@ namespace Badaboom.Client.Pages
     {
         [Inject]
         public HttpClient Http { get; set; }
+
         public IEnumerable<Transaction> Transactions { get; set; }
+
         public int TotalPageQuantity { get; set; }
+
         public GetFilteredTransactionRequest TransactionFilter { get; set; } = new GetFilteredTransactionRequest();
+
+        public bool Loading { get; set; }
+
 
         protected override async Task OnInitializedAsync()
         {
@@ -27,6 +31,8 @@ namespace Badaboom.Client.Pages
 
         public async Task LoadTransactions()
         {
+            Loading = true;
+
             var httpResponse = await Http.PostAsync("/api/Transaction/GetTransactions",
                 new StringContent(
                     JsonSerializer.Serialize(TransactionFilter),
@@ -47,10 +53,15 @@ namespace Badaboom.Client.Pages
             {
                 // handle error
             }
+
+            Loading = false;
         }
         private string ToValidHexString(string value)
         {
-            if (value.StartsWith("0x")) return value;
+            if (value.StartsWith("0x"))
+            {
+                return value;
+            }
 
             return HashingService.EncodeMethodSignature(value.Replace(" ", ""));
         }

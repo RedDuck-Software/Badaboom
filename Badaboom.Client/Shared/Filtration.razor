@@ -32,11 +32,11 @@
                             </div>
                         </dt>
                     }
+
                     @if (SelectedFilters.ContractAddress)
                     {
                         <dt class="col-sm-6">
                             <label class="clr-secondary">Contract address</label>
-
                             <div class="form-inline">
                                 <input type="text" class="form-control mb-2 mr-sm-2 round-10" placeholder="Filter by contract address" 
                                        @onchange="(value) => {
@@ -62,8 +62,6 @@
                                     Method Filters
                                 </button>
                             </div>
-
-                            
                         </dt>
                         <dt class="col-sm-6">
                             @if (ShowMethodFilter)
@@ -74,12 +72,18 @@
                                                                                  ContractMethods="ContractMethods" />
                             }
                         </dt>
-
                     }
-
                 </dl>
+
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" @onclick="Index.Filter">Filter</button>
+                    <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" 
+                            @onclick="Index.Filter">
+                        @if (Index.Loading)
+                        {
+                            <span class="spinner-border spinner-border-sm mt-1 mr-1"></span>
+                        }
+                        Filter
+                    </button>
                 </div>
                 <hr />
             }
@@ -91,10 +95,8 @@
                 @if (!SelectedFilters.ContractAddress)
                 {<button class="btn btn-round ml-1 mr-1" type="button" @onclick="_ => SelectedFilters.ContractAddress = true">Contract address</button>}
             </div>
-
         </div>
     </div>
-
 </div>
 
 <div class="m-1 form-inline">
@@ -109,6 +111,7 @@
             Block number <span class="clr-danger">🗙</span>
         </button>
     }
+
     @if (SelectedFilters.ContractAddress)
     {
         <button type="button" class="btn btn-round ml-1 mr-1"
