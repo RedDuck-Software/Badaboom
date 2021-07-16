@@ -5,63 +5,66 @@
 
 @if (ContractMethods != null)
 {
-    <Dropdown TItem="Method" OnSelected="@OnMethodSelected">
-        <InitialTip>Select method</InitialTip>
-        <ChildContent>
-            @foreach (var method in ContractMethods)
-            {
-                <DropdownListItem Item="@method">@method.Name</DropdownListItem>
-            }
-        </ChildContent>
-    </Dropdown>
-
-    @if (SelectedMethod != null)
-    {
-        @if (SelectedMethodAvailableArguments.Count != 0)
-        {
-            <Dropdown TItem="Input" ReplaceInitialTip="false" OnSelected="@OnArgumentSelected">
-                <InitialTip>Select argument..</InitialTip>
+    <label class="clr-secondary">Function</label>
+    <form class="form-row">
+        <div class="col-4">
+            <Dropdown TItem="Method" OnSelected="@OnMethodSelected" 
+                      AdditionalClass="btn-block">
+                <InitialTip>Select method</InitialTip>
                 <ChildContent>
-                    @foreach (var arg in SelectedMethodAvailableArguments)
+                    @foreach (var method in ContractMethods)
                     {
-                        <DropdownListItem Item="@arg">@arg.Name</DropdownListItem>
+                        <DropdownListItem Item="@method">@method.Name</DropdownListItem>
                     }
                 </ChildContent>
             </Dropdown>
-        }
+        </div>
+        <div class="col-4">
+            @if (SelectedMethod != null)
+            {
+                @if (SelectedMethodAvailableArguments.Count != 0) 
+                {  
+                    <Dropdown TItem="Input" OnSelected="@OnArgumentSelected"
+                              ReplaceInitialTip="false"
+                              AdditionalClass="ml-1">
+                        <InitialTip>Select argument</InitialTip>
+                        <ChildContent>
+                            @foreach (var arg in SelectedMethodAvailableArguments)
+                            {
+                                <DropdownListItem Item="@arg">@arg.Name</DropdownListItem>
+                            }
+                        </ChildContent>
+                    </Dropdown>
+                }
+            }
+        </div>
+    </form>
 
-
-        @foreach (var arg in SelectedArgumentsValues)
+        @foreach (var arg in SelectedArguments)
         {
-            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @oninput="value => {  SelectedArgumentsValues[arg.Key] = value.Value.ToString(); UpdateFilteredTranscations(); }" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")" />
+            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.BlockNumber" placeholder="@(arg.Name + $": {arg.Type}")" />
             <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                     @onclick=" _ => {
-                                  RemoveSelectedArgument(arg.Key);
+                                  RemoveSelectedArgument(arg);
                               }">
                 Delete
             </button>
         }
     }
-
-
 }
 else
 {
-    <dt class="col-sm-6">
-        <label class="clr-secondary">Method signature</label>
-        <div class="form-inline">
-            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
-            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
-                    @onclick="async _ => {
-                        TransactionFilters.MethodId = null;
-                        SelectedFilters.MethodId = false;
-                        await Index.Delete();
-                    }">
-                Delete
-            </button>
-        </div>
-    </dt>
-
+    <label class="clr-secondary">Method signature</label>
+    <div class="form-inline">
+        <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
+        <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                @onclick="async _ => {
+                              TransactionFilters.MethodId = null;
+                              SelectedFilters.MethodId = false;
+                          }">
+            Delete
+        </button>
+    </div>
 }
 
 

@@ -1,8 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Components.Web
 @typeparam TItem
 <div class="dropdown">
-    <button class="btn btn-primary dropdown-toggle mr-4" data-toggle="dropdown" type="button" @onclick="e => this.show=!this.show "
-            aria-haspopup="true" aria-expanded="false">
+    <button type="button" class="btn btn-round round-10 dropdown-toggle mb-2 @AdditionalClass" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false" @onclick="e => this.show=!this.show">
         @Tip
     </button>
     <CascadingValue name="Dropdown" Value="@this">
@@ -14,9 +14,14 @@
 
 @code {
     [Parameter]
+    public string AdditionalClass { get; set; } = "";
+
+    [Parameter]
     public RenderFragment InitialTip { get; set; }
+
     [Parameter]
     public RenderFragment ChildContent { get; set; }
+
     [Parameter]
     public EventCallback<TItem> OnSelected { get; set; }
 
@@ -31,7 +36,9 @@
     public async Task HandleSelect(TItem item, RenderFragment<TItem> contentFragment)
     {
         if (ReplaceInitialTip)
+        {
             this.Tip = contentFragment.Invoke(item);
+        }
 
         this.show = false;
 
