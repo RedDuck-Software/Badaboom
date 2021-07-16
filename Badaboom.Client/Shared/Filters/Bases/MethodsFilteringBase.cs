@@ -8,8 +8,6 @@ namespace Badaboom.Client.Shared.Filters
     public class MethodsFilteringBase : ComponentBase
     {
         [Parameter]
-        public string ContractAbiJSON { get; set; }
-
         public ContactAbiDTO ContractAbi { get; set; } 
 
         [Inject]

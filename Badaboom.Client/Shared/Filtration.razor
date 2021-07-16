@@ -1,6 +1,8 @@
 ﻿@using Badaboom.Core.Models.Request
 @using Badaboom.Client.Pages
-@using System.Text.RegularExpressions;
+@using System.Text.RegularExpressions
+@using System.Text.Json
+@using Badaboom.Core.Models.DTOs
 
 <div class=" d-flex justify-content-center">
     <div class="card col-sm-10 round-30">
@@ -147,6 +149,29 @@
                 }
                 return false;
             }
+        }
+    }
+
+    [Inject]
+    public HttpClient Http { get; set; }
+
+    public ContactAbiDTO ContractAbi { get; set; }
+
+    public async Task GetAbi()
+    {
+        var httpResponse = await Http.GetAsync($"api/Transaction/GetContractAbi?contractAddress={SelectedFilters.ContractAddress}");
+
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            var responseString = await httpResponse.Content.ReadAsStringAsync();
+            var contactAbi = JsonSerializer.Deserialize<ContactAbiDTO>(responseString,
+                new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+            StateHasChanged();
+        }
+        else
+        {
+            // handle error
         }
     }
 }
