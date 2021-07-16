@@ -6,7 +6,7 @@
     <div class="d-flex align-items-center mt-3 ml-3">
         <h4><b>To Filter</b></h4>
     </div>
-    
+
     <div class="card-body">
 
         @if (SelectedFilters.IsAnyFilterSelected)
@@ -64,21 +64,6 @@
                     </dt>
                 }
 
-                <dt class="col-sm-6">
-                        <label class="clr-secondary">Contract address</label>
-                        <div class="form-inline">
-                            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.ContractAddress" placeholder="Filter by contract address" />
-                            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
-                                    @onclick="async _ => {
-                                                  TransactionFilters.ContractAddress = null;
-                                                  SelectedFilters.ContractAddress = false;
-                                                  await Index.Delete();
-                                              }">
-                                Delete
-                            </button>
-                        </div>
-                    </dt>
-
             </dl>
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" @onclick="Index.Filter">Filter</button>
@@ -101,21 +86,21 @@
 
 <div>
     <div class="m-1 form-inline">
-    <h3 class="mt-1 mr-1">Results</h3>
+        <h3 class="mt-1 mr-1">Results</h3>
         @if (SelectedFilters.BlockNumber)
         {
             <button type="button" class="btn btn-round ml-1 mr-1"
-                    @onclick="async _ => { 
-                                  TransactionFilters.BlockNumber = null; 
+                    @onclick="async _ => {
+                                  TransactionFilters.BlockNumber = null;
                                   SelectedFilters.BlockNumber = false;
-                                  await Index.Delete(); 
+                                  await Index.Delete();
                               }">
                 Block number <span class="clr-danger">🗙</span>
             </button>
         }
         @if (SelectedFilters.ContractAddress)
         {
-            <button type="button" class="btn btn-round ml-1 mr-1"  
+            <button type="button" class="btn btn-round ml-1 mr-1"
                     @onclick="async _ => {
                                   TransactionFilters.ContractAddress = null;
                                   SelectedFilters.ContractAddress = false;

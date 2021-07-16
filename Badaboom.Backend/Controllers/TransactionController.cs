@@ -39,7 +39,7 @@ namespace Backend.Controllers
             return res;
         }
 
-        [HttpGet("GetTransactions")]
+        [HttpPost("GetTransactions")]
         public async Task<ActionResult<PaginationTransactionResponse>> GetFilteredTransactions([FromQuery] GetFilteredTransactionRequest request)
         {
             IEnumerable<Transaction> res;

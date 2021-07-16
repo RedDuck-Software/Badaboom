@@ -19,7 +19,7 @@ namespace Badaboom.Client.Pages
         public IEnumerable<Transaction> Transactions { get; set; }
         public int TotalPageQuantity { get; set; }
         public GetFilteredTransactionRequest TransactionFilter { get; set; } = new GetFilteredTransactionRequest();
-        
+
         protected override async Task OnInitializedAsync()
         {
             await LoadTransactions();
@@ -27,24 +27,12 @@ namespace Badaboom.Client.Pages
 
         public async Task LoadTransactions()
         {
-            StringBuilder url = new($"/api/Transaction/GetTransactions?Count={TransactionFilter.Count}&Page={TransactionFilter.Page}");
-
-            if (TransactionFilter.BlockNumber != null)
-            {
-                url.Append($"&BlockNumber={TransactionFilter.BlockNumber}");
-            }
-            if (!string.IsNullOrEmpty(TransactionFilter.ContractAddress))
-            {
-                url.Append($"&ContractAddress={TransactionFilter.ContractAddress}");
-            }
-            if (!string.IsNullOrEmpty(TransactionFilter.MethodId))
-            {
-                string methodId = ToValidHexString(TransactionFilter.MethodId);
-
-                url.Append($"&MethodId={methodId}");
-            }
-            Console.WriteLine(url.ToString());
-            var httpResponse = await Http.GetAsync(url.ToString());
+            var httpResponse = await Http.PostAsync("/api/Transaction/GetTransactions",
+                new StringContent(
+                    JsonSerializer.Serialize(TransactionFilter),
+                    Encoding.UTF8,
+                    "application/json")
+                );
 
             if (httpResponse.IsSuccessStatusCode)
             {
