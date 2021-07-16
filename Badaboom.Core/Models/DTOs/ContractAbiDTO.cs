@@ -28,7 +28,7 @@ namespace Badaboom.Core.Models.DTOs
         public string Type { get; set; }
     }
 
-    public class Method
+    public class ContactAbiDTO
     {
         [JsonProperty("constant")]
         public bool Constant { get; set; }
