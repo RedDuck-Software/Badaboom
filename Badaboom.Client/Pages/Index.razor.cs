@@ -33,10 +33,10 @@ namespace Badaboom.Client.Pages
         {
             Loading = true;
 
-            Transactions = null;
-
-            if (TransactionFilter.MethodId != null)
+            if(TransactionFilter.MethodId != null)
                 TransactionFilter.MethodId = ToValidHexString(TransactionFilter.MethodId);
+
+            Transactions = null;
 
             var httpResponse = await Http.PostAsync("/api/Transaction/GetTransactions",
                 new StringContent(

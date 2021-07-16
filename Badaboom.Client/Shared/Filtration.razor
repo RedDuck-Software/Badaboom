@@ -60,6 +60,10 @@
                                         disabled="@(!ContractAddressRegex.IsMatch(TransactionFilters.ContractAddress ?? ""))"
                                         @onclick="GetAbi">
                                     Method Filters
+                                    @if (Loading)
+                                    {
+                                        <span class="spinner-border spinner-border-sm mt-1 ml-1"></span>
+                                    }
                                 </button>
                             </div>
                         </dt>
@@ -147,9 +151,12 @@
 
     public bool ShowMethodFilter { get; set; }
 
+    public bool Loading { get; set; }
+
 
     public async Task GetAbi()
     {
+        Loading = true;
 
         var httpResponse = await HttpClient.GetAsync($"api/Transaction/GetContractAbi?contractAddress={TransactionFilters.ContractAddress}");
 
@@ -170,6 +177,8 @@
             Console.WriteLine("ABI is not found");
             // todo: hande error
         }
+
+        Loading = false;
 
         ShowMethodFilter = true;
     }
