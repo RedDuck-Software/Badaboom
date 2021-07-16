@@ -5,7 +5,7 @@
 
 @if (ContractMethods != null)
 {
-    <Dropdown TItem="Method" OnSelected="@OnSelected">
+    <Dropdown TItem="Method" OnSelected="@OnMethodSelected">
         <InitialTip>Select method</InitialTip>
         <ChildContent>
             @foreach (var method in ContractMethods)
@@ -15,7 +15,7 @@
         </ChildContent>
     </Dropdown>
 
-    @if (SelectedMethod != null && SelectedMethodAvailableArguments.Count != 0)
+    @if (SelectedMethod != null)
     {
         @if (SelectedMethodAvailableArguments.Count != 0) 
         {  
@@ -48,7 +48,7 @@
 else
 {
     <dt class="col-sm-6">
-        <label class="clr-secondary">Method</label>
+        <label class="clr-secondary">Method signature</label>
         <div class="form-inline">
             <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
             <button type="button" class="btn btn-round mb-2 round-10 clr-danger"

@@ -16,60 +16,65 @@
 
             @if (SelectedFilters.IsAnyFilterSelected)
             {
-            <dl class="row">
-                @if (SelectedFilters.BlockNumber)
-                {
-                    <dt class="col-sm-6">
-                        <label class="clr-secondary">Block number</label>
-                        <div class="form-inline">
-                            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.BlockNumber" placeholder="Filter by block number" />
-                            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
-                                    @onclick="async _ => {
-                                                      TransactionFilters.BlockNumber = null;
-                                                      SelectedFilters.BlockNumber = false;
-                                                      await Index.Delete();
-                                                  }">
-                                Delete
-                            </button>
-                        </div>
-                    </dt>
-                }
-                @if (SelectedFilters.ContractAddress)
-                {
-                    <dt class="col-sm-6">
-                        <label class="clr-secondary">Contract address</label>
+                <dl class="row">
+                    @if (SelectedFilters.BlockNumber)
+                    {
+                        <dt class="col-sm-6">
+                            <label class="clr-secondary">Block number</label>
+                            <div class="form-inline">
+                                <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.BlockNumber" placeholder="Filter by block number" />
+                                <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                                        @onclick="async _ => {
+                                                  TransactionFilters.BlockNumber = null;
+                                                  SelectedFilters.BlockNumber = false;
+                                                  await Index.Delete();
+                                              }">
+                                    Delete
+                                </button>
+                            </div>
+                        </dt>
+                    }
+                    @if (SelectedFilters.ContractAddress)
+                    {
+                        <dt class="col-sm-6">
+                            <label class="clr-secondary">Contract address</label>
 
-                        <div class="form-inline">
-                            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.ContractAddress" placeholder="Filter by contract address" />
+                            <div class="form-inline">
+                                <input type="text" class="form-control mb-2 mr-sm-2 round-10" @onchange="(value) => {
+                                                                                                         ShowMethodFilter = false;
+                                                                                                         ContractMethods = null;
+                                                                                                         TransactionFilters.ContractAddress = value.Value.ToString();
+                                                                                                     }"
+                                       placeholder="Filter by contract address" />
 
-                            <button type="button" class="btn btn-round mb-2 round-10"
-                                    disabled="@(!ContractAddressRegex.IsMatch(TransactionFilters.ContractAddress ?? ""))"
-                                    @onclick="GetAbi">
-                                Method Filters
-                            </button>
+                                <button type="button" class="btn btn-round mb-2 round-10"
+                                        disabled="@(!ContractAddressRegex.IsMatch(TransactionFilters.ContractAddress ?? ""))"
+                                        @onclick="GetAbi">
+                                    Method Filters
+                                </button>
 
-                            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
-                                    @onclick="async _ => {
-                                                      TransactionFilters.ContractAddress = null;
-                                                      SelectedFilters.ContractAddress = false;
-                                                      await Index.Delete();
-                                                  }">
-                                Delete
-                            </button>
-                        </div>
+                                <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                                        @onclick="async _ => {
+                                                  TransactionFilters.ContractAddress = null;
+                                                  SelectedFilters.ContractAddress = false;
+                                                  await Index.Delete();
+                                              }">
+                                    Delete
+                                </button>
+                            </div>
 
-                        @if (ShowMethodFilter)
-                        {
-                            <Badaboom.Client.Shared.Filters.MethodsFiltering Index="Index"
-                                                                             TransactionFilters="TransactionFilters"
-                                                                             SelectedFilters="SelectedFilters"
-                                                                             ContractMethods="ContractMethods" />
+                            @if (ShowMethodFilter)
+                            {
+                                <Badaboom.Client.Shared.Filters.MethodsFiltering Index="Index"
+                                                                                 TransactionFilters="TransactionFilters"
+                                                                                 SelectedFilters="SelectedFilters"
+                                                                                 ContractMethods="ContractMethods" />
 
-                        }
-                    </dt>
-                }
+                            }
+                        </dt>
+                    }
 
-            </dl>
+                </dl>
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" @onclick="Index.Filter">Filter</button>
                 </div>
@@ -110,7 +115,9 @@
                               TransactionFilters.ContractAddress = null;
                               TransactionFilters.MethodId = null;
                               SelectedFilters.ContractAddress = false;
-                              SelectedFilters.MethodId= false;
+                              SelectedFilters.MethodId = false;
+                              ShowMethodFilter = false;
+                              ContractMethods = null;
                               await Index.Delete();
                           }">
             Contract address <span class="clr-danger">🗙</span>
@@ -129,7 +136,6 @@
 
 
     public Regex ContractAddressRegex = new Regex("^0x[a-fA-F0-9]{40}$");
-
 
 
     [Inject]
@@ -153,15 +159,13 @@
 
             ContractMethods = JsonSerializer.Deserialize<IEnumerable<Method>>(responseString,
             new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }).Where(v => !string.IsNullOrEmpty(v.Name));
-
-
-            Console.WriteLine("Contract abi :", responseString);
-
-            ShowMethodFilter = true;
         }
         else
         {
-            Console.WriteLine("Found is not found");
+            Console.WriteLine("ABI is not found");
+            // todo: hande error
         }
+
+        ShowMethodFilter = true;
     }
 }

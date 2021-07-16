@@ -41,16 +41,16 @@ namespace Badaboom.Client.Shared.Filters
             StateHasChanged();
         }
 
-        protected void OnSelected(Method selection)
+        protected void OnMethodSelected(Method selection)
         {
             SelectedMethod = selection;
             SelectedMethodAvailableArguments = selection.Inputs.ToList();
+            SelectedArguments.Clear();
             StateHasChanged();
         }
 
         protected void OnArgumentSelected(Input input)
         {
-            Console.WriteLine(SelectedMethod);
             SelectedArguments.Add(input);
             SelectedMethodAvailableArguments.Remove(input);
             StateHasChanged();
