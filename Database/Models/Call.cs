@@ -30,7 +30,7 @@ namespace Database.Models
 
     public class CallsPagination
     {
-        public int? CallIdFrom;
+        public long? CallIdFrom;
         public long? BlockId;
         public string MethodId;
         public string To;

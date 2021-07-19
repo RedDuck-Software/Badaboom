@@ -57,19 +57,19 @@ namespace Database.Respositories
 
         }
 
-        public async Task<IEnumerable<Call>> GetCalls(CallsPagination pagination)
+        public async Task<(IEnumerable<Call>, int?)> GetCalls(CallsPagination pagination, bool isCountCalculatedNeded)
         {
             string method = pagination?.MethodId;
             string to = pagination?.To;
             string block = pagination?.BlockId?.ToString();
             int page = pagination?.Page ?? 1;
             int count = pagination?.Count ?? 1;
-            int? callIdFrom = pagination?.CallIdFrom;
+            long? callIdFrom = pagination?.CallIdFrom;
 
             string blockWherePaginationQuery = block == null ? "" : $" t.BlockId={block} ";
             string toWherePaginationQuery = to == null ? "" : $" c.[To]=convert(binary(20),'{to}',1) ";
             string methodWherePaginationQuery = method == null ? "" : $" c.MethodId=convert(binary(4),'{method}',1) ";
-            string fromCallIDWherePaginationQuery = callIdFrom == null ? "" : $" c.CallId>={callIdFrom.Value} ";
+            string fromCallIDWherePaginationQuery = callIdFrom == null ? "" : $" c.CallId<={callIdFrom.Value} ";
 
             List<string> whereList = new List<string>();
 
@@ -105,7 +105,28 @@ namespace Database.Respositories
                 $"offset {count * (page - 1)} rows " +
                 $"FETCH NEXT {count} rows only;";
 
-            return await SqlConnection.QueryAsync<Call>(sql);
+
+            var result = await SqlConnection.QueryAsync<Call>(sql);
+
+            if (isCountCalculatedNeded)
+            {
+                int totalCount = 10_000;
+
+                if ((whereList.Count > 0 && callIdFrom == null) || (whereList.Count > 1 && callIdFrom != null))
+                {
+                    var sql2 =
+                    $"SELECT COUNT(*) " +
+                       "FROM [dbo].[Calls] c, [dbo].[Transactions] t " +
+                      "WHERE t.TransactionHash = c.TransactionHash" +
+                    (string.IsNullOrEmpty(resWhereStatement) ? "" : " and " + resWhereStatement);
+
+                    totalCount = await SqlConnection.QuerySingleAsync<int>(sql2);
+                }
+
+                return (result, totalCount);
+            }
+
+            return (result, null);
         }
     }
 }

@@ -23,6 +23,8 @@ namespace Badaboom.Client.Pages
 
         public bool Loading { get; set; }
 
+        public long CallId { get; set; }
+
 
         protected override async Task OnInitializedAsync()
         {
@@ -33,7 +35,7 @@ namespace Badaboom.Client.Pages
         {
             Loading = true;
 
-            if(TransactionFilter.MethodId != null)
+            if (TransactionFilter.MethodId != null)
                 TransactionFilter.MethodId = ToValidHexString(TransactionFilter.MethodId);
 
             Transactions = null;
@@ -50,7 +52,20 @@ namespace Badaboom.Client.Pages
                 var responseString = await httpResponse.Content.ReadAsStringAsync();
                 var paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
                     new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                TotalPageQuantity = paginationTransactionResponse.Count;
+
+                int totalCount = paginationTransactionResponse.Count;
+
+                if (totalCount != 0)
+                {
+                    TotalPageQuantity = totalCount / TransactionFilter.Count + (totalCount % TransactionFilter.Count != 0 ? 1 : 0);
+                }
+                else
+                {
+                    TotalPageQuantity = 2;
+                }
+
+
+
                 Transactions = paginationTransactionResponse.Transactions;
                 StateHasChanged();
             }

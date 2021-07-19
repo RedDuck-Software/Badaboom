@@ -8,6 +8,8 @@
 
         public long? BlockNumberTo { get; set; }
 
+        public long? CallId { get; set; }
+
 
         public string ContractAddress { get; set; }
 

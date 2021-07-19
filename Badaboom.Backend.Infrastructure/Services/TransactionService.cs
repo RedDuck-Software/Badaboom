@@ -15,8 +15,8 @@ namespace Badaboom.Backend.Infrastructure.Services
 {
     public interface ITransactionService
     {
-        Task<IEnumerable<Core.Models.Response.Transaction>> GetPaginatedFilteredTransactions(GetFilteredTransactionRequest request);
-        Task<IEnumerable<Core.Models.Response.Transaction>> GetPaginatedFilteredTransactionsWithInputParameters(GetFilteredTransactionRequest request, int maxSearchTries);
+        Task<PaginationTransactionResponse> GetPaginatedFilteredTransactions(GetFilteredTransactionRequest request, bool isCountCalculatedNeded = true);
+        Task<PaginationTransactionResponse> GetPaginatedFilteredTransactionsWithInputParameters(GetFilteredTransactionRequest request, int maxSearchTries);
         List<Nethereum.ABI.FunctionEncoding.ParameterOutput> DecodeInputData(DecodeInputDataRequest request, string contractAddress, string methodName, string inputData);
         Task<string> GetContractAbi(string contractAddress);
     }
@@ -69,7 +69,7 @@ namespace Badaboom.Backend.Infrastructure.Services
         }
 
 
-        public async Task<IEnumerable<Core.Models.Response.Transaction>> GetPaginatedFilteredTransactionsWithInputParameters(GetFilteredTransactionRequest request, int maxSearchTries)
+        public async Task<PaginationTransactionResponse> GetPaginatedFilteredTransactionsWithInputParameters(GetFilteredTransactionRequest request, int maxSearchTries)
         {
             if (request.DecodeInputDataInfo == null || request.ContractAddress == null)
                 throw new System.ArgumentException("Contract address cannot be empty if DecodeInputDataInfo specified");
@@ -83,11 +83,11 @@ namespace Badaboom.Backend.Infrastructure.Services
 
             do
             {
-                var txs = await this.GetPaginatedFilteredTransactions(request);
+                var txs = await this.GetPaginatedFilteredTransactions(request, false);
 
-                if (txs == null || !txs.Any()) break;
+                if (txs == null || !txs.Transactions.Any()) break;
 
-                foreach (var tx in txs)
+                foreach (var tx in txs.Transactions)
                 {
                     try
                     {
@@ -101,14 +101,18 @@ namespace Badaboom.Backend.Infrastructure.Services
                 tries++;
             } while (tries <= maxSearchTries && res.Count < request.Count);
 
-            return res;
+            return new PaginationTransactionResponse() 
+            {
+                Count = 0,
+                Transactions = res
+            };
         }
 
 
 
-        public async Task<IEnumerable<Core.Models.Response.Transaction>> GetPaginatedFilteredTransactions(GetFilteredTransactionRequest request)
+        public async Task<PaginationTransactionResponse> GetPaginatedFilteredTransactions(GetFilteredTransactionRequest request, bool isCountCalculatedNeded = true)
         {
-            IEnumerable<Call> res;
+            (IEnumerable<Call> transactions, int? totalCount) res;
 
             using (var tRepo = new TransactionRepository(_connectionStringIndexes))
             {
@@ -118,12 +122,15 @@ namespace Badaboom.Backend.Infrastructure.Services
                     MethodId = request.MethodId,
                     To = request.ContractAddress,
                     Page = request.Page,
-                    Count = request.Count
-                });
+                    Count = request.Count,
+                    CallIdFrom = request.CallId
+                }, isCountCalculatedNeded);
             }
 
-
-            return res.Select(c =>
+            return new PaginationTransactionResponse()
+            {
+                Count = res.totalCount ?? 0,
+                Transactions = res.transactions.Select(c =>
                 {
                     return new Core.Models.Response.Transaction()
                     {
@@ -134,9 +141,10 @@ namespace Badaboom.Backend.Infrastructure.Services
                         TxnHash = c.TransactionHash,
                         Age = (ulong)c.TimeStamp,
                         Input = c.Input,
+                        CallId = c.CallId
                     };
-                }
-            );
+                })
+            };
         }
 
         public List<Nethereum.ABI.FunctionEncoding.ParameterOutput> DecodeInputData(DecodeInputDataRequest request, string contractAddress, string methodName, string inputData)
