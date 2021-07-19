@@ -57,9 +57,20 @@ namespace BadaboomIndexer
             if (!File.Exists(args[1]))
                 File.Create(args[1]);
 
-
             if (!File.Exists(args[2]))
                 File.Create(args[2]);
+
+
+            var addressesToIndexFilePath = Path.Combine(Environment.CurrentDirectory, "AddressesToIndex.txt");
+
+            List<string> addressesList = null;
+
+            if(File.Exists(addressesToIndexFilePath))
+            {
+                addressesList = File.ReadAllLines(addressesToIndexFilePath).Select(x=>x.Trim()).ToList();
+                ConsoleColor.Magenta.WriteLine("\nIndexing only selected addresses");
+            }
+
 
             var Logger = new LoggerConfiguration()
                                 .Enrich.FromLogContext()
@@ -88,7 +99,6 @@ namespace BadaboomIndexer
             if (blockQueueSize < 1) throw new ArgumentException("BlockQueueSize must be greater than zero");
 
             var t = rpcProvider.GetNextRpcUrl();
-
 
             var indexer = new Indexer(
                 tracer,

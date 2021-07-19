@@ -11,6 +11,10 @@ namespace Database.Respositories
     {
         public TransactionRepository(string connectionString) : base(connectionString) { }
 
+        public async Task<bool> ContainsTransactionAsync(Transaction tx)
+        => await SqlConnection.ExecuteScalarAsync<bool>($"select count(1) from Transactions where TransactionHash=convert(binary(32),{tx.TransactionHash},2)");
+
+
 
         public async Task RemoveBlockTransftions(Block block)
         {
