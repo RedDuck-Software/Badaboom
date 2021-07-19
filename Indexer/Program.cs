@@ -35,18 +35,14 @@ namespace BadaboomIndexer
         {
             if (args.Length < 6) throw new ArgumentException("You need to provide at least 6 arguments: network type, LoggerFilePath, LoggerCriticalFilePath, RPC url, bool:indexInnerCalls and BlockQueueSize");
 
-            var _config = new ConfigurationBuilder()
+            var config = new ConfigurationBuilder()
                 .SetBasePath(Environment.CurrentDirectory)
                 .AddJsonFile("appsettings.json", false)
                 .AddUserSecrets<Program>()
                 .Build();
 
 
-            var conn = new ConnectionStringsHelperService(_config);
-
-            var inuraPrivateKeys = _config["InfuraApiKeys"].Split(",").Select(s => s.Trim()).ToList();
-
-            if (inuraPrivateKeys.Count() == 0) throw new ArgumentException("You must provide at least one private key to use Infura rpc provider");
+            var conn = new ConnectionStringsHelperService(config);
 
             var rpcUrl = args[3];
 
@@ -61,7 +57,7 @@ namespace BadaboomIndexer
                 File.Create(args[2]);
 
 
-            bool loadingInnerCalls = Convert.ToBoolean(args[4]);
+            var loadingInnerCalls = Convert.ToBoolean(args[4]);
 
             var addressesToIndexFilePath = Path.Combine(Environment.CurrentDirectory, "AddressesToIndex.txt");
 
@@ -89,9 +85,6 @@ namespace BadaboomIndexer
                 })
                 .BuildServiceProvider();
 
-            serviceProvider
-                   .GetService<ILoggerFactory>();
-
             var logger = serviceProvider.GetService<ILoggerFactory>()
                   .CreateLogger<Program>();
 
@@ -115,11 +108,9 @@ namespace BadaboomIndexer
 
             var endBlock = args.Length > 7 ? long.Parse(args[7]) : (long)await indexer.GetLatestBlockNumber();
 
-            await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
+            await indexer.IndexInRangeParallel(startBlock, endBlock, 50);
 
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
-
-            ConsoleColor.DarkMagenta.WriteLine("\n\nStarting getting new blocks...\n\n");
         }
     }
 }
