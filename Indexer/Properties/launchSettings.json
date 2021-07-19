@@ -2,7 +2,7 @@
   "profiles": {
     "Badaboom-indexer": {
       "commandName": "Project",
-      "commandLineArgs": "bsc \"D:\\Log.log\" \"D:\\LogCritical.log\" \"https://bsc.getblock.io/?api_key=7f0baa21-3b1a-482c-a74a-05edd6f1c5c7\" true 100 0 1000000"
+      "commandLineArgs": "eth \"D:\\Log.log\" \"D:\\LogCritical.log\" \"https://bsc.getblock.io/?api_key=7f0baa21-3b1a-482c-a74a-05edd6f1c5c7\" true 1 7000000"
     }
   }
 }

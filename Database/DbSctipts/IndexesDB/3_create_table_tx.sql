@@ -23,7 +23,7 @@ create table [Calls] (
 
 	[MethodId] binary(4) NOT NULL,
 	
-	[Input] varbinary NOT NULL,
+	[Input] varbinary(MAX) NOT NULL,
 
 	[GasUsed] binary(8) NOT NULL,
 

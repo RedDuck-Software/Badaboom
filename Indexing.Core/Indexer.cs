@@ -37,7 +37,7 @@ namespace IndexerCore
             QueueSize = queueSize;
             Logger = logger;
             IndexInnerCalls = indexInnerCalls;
-            AddressesToIndex = addressesToIndex == null || addressesToIndex.Count() == 0 ? null : addressesToIndex.Select(v => v.FormatHex());
+            AddressesToIndex = addressesToIndex == null || addressesToIndex.Count() == 0 ? null : addressesToIndex.Select(v => v.FormatHex().ToLower());
             ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).Where(v => v != CallTypes.NO_CALL_TYPE.ToString().ToLower()).ToArray();
         }
 
@@ -96,18 +96,7 @@ namespace IndexerCore
                 catch (Exception ex)
                 {
                     Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
-
-                    foreach (var block in blockQueueList)
-                    {
-                        try
-                        {
-                            await bRepo.RemoveBlockAsync(block);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.LogCritical($"Error while removing block {block.BlockNumber}. ex: " + e.Message);
-                        }
-                    }
+                    Environment.Exit(1);
                 }
             }
 
@@ -167,7 +156,7 @@ namespace IndexerCore
             {
                 Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
 
-                System.Environment.Exit(1);
+                Environment.Exit(1);
             }
         }
 
@@ -178,8 +167,10 @@ namespace IndexerCore
             try
             {
                 var txs = (await GetBlockTransactions(blockNubmer)).ToList().Where(v => AddressesToIndex == null ? true :
-                            AddressesToIndex.Contains(v.RawTransaction.To ?? "")
-                            || AddressesToIndex.Contains(v.RawTransaction.From ?? "")).ToList();
+                            AddressesToIndex.Contains(v.RawTransaction?.To?.ToLower() ?? "")
+                            || AddressesToIndex.Contains(v.RawTransaction?.From?.ToLower() ?? "")).ToList();
+
+                var txsToSave = new List<Transaction>();
 
                 if (!txs.Any())
                 {
@@ -192,16 +183,16 @@ namespace IndexerCore
                         if (!await ContainsTransactions(tx))
                         {
                             await IndexTransaction(tx);
+                            txsToSave.Add(tx);
                         }
                         else
                         {
                             Logger.LogWarning($"Tx with 0x{tx.TransactionHash} is already indexed");
-                            txs.Remove(tx);
                         }
                     }
                 }
 
-                currentBlock.Transactions = txs.ToList();
+                currentBlock.Transactions = txsToSave.ToList();
                 BlockQueue.Enqueue(currentBlock);
 
                 Logger.LogInformation($"Block {blockNubmer} added to InsertBlockQueue");
