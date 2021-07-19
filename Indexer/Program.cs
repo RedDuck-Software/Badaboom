@@ -33,7 +33,7 @@ namespace BadaboomIndexer
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
-            if (args.Length < 4) throw new ArgumentException("You need to provide at least 4 arguments: network type, LoggerFilePath, LoggerCriticalFilePath and BlockQueueSize");
+            if (args.Length < 6) throw new ArgumentException("You need to provide at least 6 arguments: network type, LoggerFilePath, LoggerCriticalFilePath, RPC url, bool:indexInnerCalls and BlockQueueSize");
 
             var _config = new ConfigurationBuilder()
                 .SetBasePath(Environment.CurrentDirectory)
@@ -48,9 +48,9 @@ namespace BadaboomIndexer
 
             if (inuraPrivateKeys.Count() == 0) throw new ArgumentException("You must provide at least one private key to use Infura rpc provider");
 
-            var rpcProvider = new InfuraProvider(inuraPrivateKeys, args[0]);
+            var rpcUrl = args[3];
 
-            var web3 = new Web3Geth(rpcProvider.GetNextRpcUrl());
+            var web3 = new Web3Geth(rpcUrl);
 
             var tracer = new GethWeb3Tracer(web3);
 
@@ -61,13 +61,15 @@ namespace BadaboomIndexer
                 File.Create(args[2]);
 
 
+            bool loadingInnerCalls = Convert.ToBoolean(args[4]);
+
             var addressesToIndexFilePath = Path.Combine(Environment.CurrentDirectory, "AddressesToIndex.txt");
 
-            List<string> addressesList = null;
+            List<string> addressesToIndexList = null;
 
             if(File.Exists(addressesToIndexFilePath))
             {
-                addressesList = File.ReadAllLines(addressesToIndexFilePath).Select(x=>x.Trim()).ToList();
+                addressesToIndexList = File.ReadAllLines(addressesToIndexFilePath).Select(x=>x.Trim()).ToList();
                 ConsoleColor.Magenta.WriteLine("\nIndexing only selected addresses");
             }
 
@@ -94,11 +96,9 @@ namespace BadaboomIndexer
                   .CreateLogger<Program>();
 
 
-            var blockQueueSize = Convert.ToInt32(args[3]);
+            var blockQueueSize = Convert.ToInt32(args[5]);
 
             if (blockQueueSize < 1) throw new ArgumentException("BlockQueueSize must be greater than zero");
-
-            var t = rpcProvider.GetNextRpcUrl();
 
             var indexer = new Indexer(
                 tracer,
@@ -106,13 +106,14 @@ namespace BadaboomIndexer
                     args[0] == "bsc" ?
                     conn.BscDbName :
                     conn.EthDbName,
-                rpcProvider,
-                blockQueueSize
+                blockQueueSize,
+                loadingInnerCalls,
+                addressesToIndexList
             );
 
-            var startBlock = args.Length > 4 ? long.Parse(args[4]) : 0;
+            var startBlock = args.Length > 6 ? long.Parse(args[6]) : 0;
 
-            var endBlock = args.Length > 5 ? long.Parse(args[5]) : (long)await indexer.GetLatestBlockNumber();
+            var endBlock = args.Length > 7 ? long.Parse(args[7]) : (long)await indexer.GetLatestBlockNumber();
 
             await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
 

@@ -28,14 +28,15 @@ namespace IndexerCore
 
         public IEnumerable<string> AddressesToIndex { get; set; }
 
+        public bool IndexInnerCalls { get; }
 
-        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, InfuraProvider rpcProvider, int queueSize, IEnumerable<string> addressesToIndex = null)
+        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, int queueSize, bool indexInnerCalls, IEnumerable<string> addressesToIndex = null)
         {
             _web3Tracer = web3Tracer;
             _connectionString = dbConnectionString;
             QueueSize = queueSize;
-            _rpcProvider = rpcProvider;
             Logger = logger;
+            IndexInnerCalls = indexInnerCalls;
             AddressesToIndex = addressesToIndex == null || addressesToIndex.Count() == 0 ? null : addressesToIndex.Select(v => v.FormatHex());
             ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).Where(v => v != CallTypes.NO_CALL_TYPE.ToString().ToLower()).ToArray();
         }
@@ -46,17 +47,11 @@ namespace IndexerCore
             {
                 return (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
+                Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
 
-                if (_rpcProvider.IsAllTokensUsed)
-                {
-                    Logger.LogError("All api keys are already used. Sleep for 24h to make them available again");
-                    _rpcProvider.Reset();
-                }
-
-                return await GetLatestBlockNumber();
+                throw ex;
             }
         }
 
@@ -173,15 +168,6 @@ namespace IndexerCore
                 Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
 
                 System.Environment.Exit(1);
-
-                /*BlockQueue.Clear();
-
-                _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
-
-                if (_rpcProvider.IsAllTokensUsed)
-                    _rpcProvider.Reset();
-
-                await IndexInRange(startBlock, endBlock);*/
             }
         }
 
@@ -197,7 +183,7 @@ namespace IndexerCore
 
                 if (!txs.Any())
                 {
-                    Logger.LogWarning($"no transactions in block {blockNubmer}. Skipping");
+                    Logger.LogWarning($"no transactions to index in block {blockNubmer}. Skipping");
                 }
                 else
                 {
@@ -205,10 +191,6 @@ namespace IndexerCore
                     {
                         if (!await ContainsTransactions(tx))
                         {
-                            if ()
-                            {
-
-                            }
                             await IndexTransaction(tx);
                         }
                         else
@@ -231,11 +213,11 @@ namespace IndexerCore
             }
         }
 
-        private async Task<Transaction> IndexTransaction(Transaction tx, bool indexInnerCalls = false)
+        private async Task<Transaction> IndexTransaction(Transaction tx)
         {
             IEnumerable<Web3Tracer.Models.TraceResult> trace = null;
 
-            if (indexInnerCalls)
+            if (IndexInnerCalls)
             {
                 try
                 {
@@ -249,7 +231,7 @@ namespace IndexerCore
                 }
             }
 
-            if (trace is null || indexInnerCalls == false)
+            if (trace is null || !IndexInnerCalls )
             {
                 tx.Calls.Add(new Call()
                 {
@@ -267,7 +249,7 @@ namespace IndexerCore
                 return tx;
             }
 
-            if (indexInnerCalls)
+            if (IndexInnerCalls)
                 foreach (var t in trace)
                     IndexCall(t, tx);
 
@@ -298,13 +280,6 @@ namespace IndexerCore
             });
         }
 
-
-        private async Task<bool> ContainsBlock(Block block)
-        {
-            using var bRepo = new BlocksRepository(_connectionString);
-            return await bRepo.ContainsBlockAsync(block);
-        }
-
         private async Task<bool> ContainsTransactions(Transaction tx)
         {
             using var tRepo = new TransactionRepository(_connectionString);
@@ -323,7 +298,7 @@ namespace IndexerCore
                     TimeStamp = (int)block.Timestamp.ToUlong(),
                     BlockId = (int)blockNubmer,
                     Calls = new List<Call>(),
-                    GasPrice = t.Gas?.HexValue?.FormatHex(),
+                    GasPrice = t.GasPrice?.HexValue?.FormatHex(),
                     RawTransaction = new RawTransaction
                     {
                         From = t.From.RemoveHashPrefix(),
@@ -344,7 +319,7 @@ namespace IndexerCore
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
         }
 
-        private readonly InfuraProvider _rpcProvider;
+        private readonly string _rpcUrl;
 
         private readonly IWeb3Tracer _web3Tracer;
 
