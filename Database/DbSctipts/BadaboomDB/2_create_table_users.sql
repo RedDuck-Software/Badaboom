@@ -17,5 +17,5 @@ create table [RefreshTokens] (
 	
 	[Created] DateTime NOT NULL,
 	
-	[CreatedByIp] varchar(15) NULL,
+	[CreatedByIp] varchar(25) NULL,
 );
