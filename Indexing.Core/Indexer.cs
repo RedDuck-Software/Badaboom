@@ -36,7 +36,7 @@ namespace IndexerCore
             QueueSize = queueSize;
             _rpcProvider = rpcProvider;
             Logger = logger;
-            AddressesToIndex = addressesToIndex == null || addressesToIndex.Count() == 0 ? null : addressesToIndex;
+            AddressesToIndex = addressesToIndex == null || addressesToIndex.Count() == 0 ? null : addressesToIndex.Select(v => v.FormatHex());
             ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).Where(v => v != CallTypes.NO_CALL_TYPE.ToString().ToLower()).ToArray();
         }
 
@@ -191,7 +191,9 @@ namespace IndexerCore
 
             try
             {
-                var txs = (await GetBlockTransactions(blockNubmer)).ToList().Where(v => AddressesToIndex == null ? true : AddressesToIndex.Contains(v.TransactionHash)).ToList();
+                var txs = (await GetBlockTransactions(blockNubmer)).ToList().Where(v => AddressesToIndex == null ? true :
+                            AddressesToIndex.Contains(v.RawTransaction.To ?? "")
+                            || AddressesToIndex.Contains(v.RawTransaction.From ?? "")).ToList();
 
                 if (!txs.Any())
                 {
@@ -203,6 +205,10 @@ namespace IndexerCore
                     {
                         if (!await ContainsTransactions(tx))
                         {
+                            if ()
+                            {
+
+                            }
                             await IndexTransaction(tx);
                         }
                         else
