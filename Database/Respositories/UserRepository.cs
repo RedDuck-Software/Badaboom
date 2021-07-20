@@ -42,7 +42,8 @@ namespace Database.Respositories
                             "UserId, " +
                             "convert(varchar(42), Address, 1) as Address," +
                             "Nonce " +
-                      "from Users u " +
+                            "ArgumentFunctionRequestsLeft " +
+                      "from Users " +
                       "where " +
                             $"Address=convert(binary(20),'{address}',1);";
 
