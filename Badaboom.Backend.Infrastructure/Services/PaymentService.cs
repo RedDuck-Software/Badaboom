@@ -12,6 +12,8 @@ namespace Badaboom.Backend.Infrastructure.Services
     {
         // method: add purchase to a transaction history (in future +table)
 
+        string GetWalletAddress();
+
         decimal PurchaseCost(ProductType productType, int quantity);
 
         bool ValidatePurchase(string txhash, decimal amountToSend); // use only after making payment
@@ -36,6 +38,9 @@ namespace Badaboom.Backend.Infrastructure.Services
             _configuration = configuration;
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
+
+        public string GetWalletAddress()
+            => _configuration.GetSection("NetworkSettings").GetSection("ETH")["WaletAddress"];
 
         public bool ValidatePurchase(string txhash, decimal amountToSend)
         {
