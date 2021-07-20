@@ -58,17 +58,38 @@ namespace Database.Respositories
             foreach (var tx in txs)
                 calls = calls.Concat(tx.Calls).AsList();
 
-            var insertValuesBlocks = string.Join(' ', blocks.Select(b => getInsertBlocksSql(valueNamesForBlocks, getRowStringForBlocks(b)))).Replace("''", "NULL");
-            var insertValuesTxs = string.Join(' ', txs.Select(t => getInsertTransactionSql(valueNamesForTxs, getRowStringForTx(t)))).Replace("''", "NULL");
-            var insertValuesCalls = string.Join(' ', calls.Select(c => getInsertCallSql(valueNamesForCalls, getRowStringForCall(c))));
+            foreach (var block in blocks)
+            {
+                var insertValuesBlocks = getInsertBlocksSql(valueNamesForBlocks, getRowStringForBlocks(block)).Replace("''", "NULL"); ; //string.Join(' ', ))
 
-            var sql = "begin tran " + 
-                (string.IsNullOrEmpty(insertValuesBlocks) ? "" : insertValuesBlocks) +
-                (string.IsNullOrEmpty(insertValuesTxs) ? "" : insertValuesTxs) +
-                (string.IsNullOrEmpty(insertValuesCalls) ? "" : insertValuesCalls)
-                    .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL") + " commit tran ";
+                var sql = "begin tran " +
+                    (string.IsNullOrEmpty(insertValuesBlocks) ? "" : insertValuesBlocks)
+                        .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL") + " commit tran ";
 
-            await SqlConnection.ExecuteAsync(sql, commandTimeout: TimeSpan.FromHours(2).Seconds);
+                await SqlConnection.ExecuteAsync(sql, commandTimeout: TimeSpan.FromHours(2).Seconds);
+            }
+
+            foreach (var tx in txs)
+            {
+                var insertValuesTxs = getInsertTransactionSql(valueNamesForTxs, getRowStringForTx(tx)).Replace("''", "NULL");
+
+                var sql = "begin tran " +
+                    (string.IsNullOrEmpty(insertValuesTxs) ? "" : insertValuesTxs)
+                        .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL") + " commit tran ";
+
+                await SqlConnection.ExecuteAsync(sql, commandTimeout: TimeSpan.FromHours(2).Seconds);
+            }
+
+            foreach (var call in calls)
+            {
+                var insertValuesCalls = getInsertCallSql(valueNamesForCalls, getRowStringForCall(call));
+
+                var sql = "begin tran " +
+                    (string.IsNullOrEmpty(insertValuesCalls) ? "" : insertValuesCalls)
+                        .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL") + " commit tran ";
+
+                await SqlConnection.ExecuteAsync(sql, commandTimeout: TimeSpan.FromHours(2).Seconds);
+            }
         }
 
 
