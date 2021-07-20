@@ -290,8 +290,10 @@ namespace IndexerCore
                     BlockId = (int)blockNubmer,
                     Calls = new List<Call>(),
                     GasPrice = t.GasPrice?.HexValue?.FormatHex(),
+                    Nonce = ((int)t.Nonce.Value),
                     RawTransaction = new RawTransaction
                     {
+                       
                         From = t.From.RemoveHashPrefix(),
                         To = t.To.RemoveHashPrefix(),
                         MethodId = GetMethodIdFromInput(t.Input)?.FormatHex() ?? "",

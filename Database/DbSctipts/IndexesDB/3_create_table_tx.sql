@@ -6,6 +6,8 @@ create table [Transactions](
 	[TimeStamp] INT NULL,
 
 	[GasPrice] binary(8) NULL,
+
+	[Nonce] int not NULL,
 );
 
 create table [Calls] (
