@@ -101,7 +101,7 @@ namespace Database.Respositories
                     "t.TransactionHash=c.TransactionHash " +
 
                 (string.IsNullOrEmpty(resWhereStatement) ? "" : " and " +  resWhereStatement) +
-                "order by c.CallId " +
+                "order by c.CallId desc " +
                 $"offset {count * (page - 1)} rows " +
                 $"FETCH NEXT {count} rows only;";
 
