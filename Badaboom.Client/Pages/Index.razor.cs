@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Badaboom.Client.Pages
 {
@@ -24,6 +25,8 @@ namespace Badaboom.Client.Pages
         public bool Loading { get; set; }
 
         public long CallId { get; set; }
+
+        int maximumPages = 1;
 
 
         protected override async Task OnInitializedAsync()
@@ -53,6 +56,8 @@ namespace Badaboom.Client.Pages
                 var paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
                     new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
+                Transactions = paginationTransactionResponse.Transactions;
+
                 int totalCount = paginationTransactionResponse.Count;
 
                 if (totalCount != 0)
@@ -61,12 +66,14 @@ namespace Badaboom.Client.Pages
                 }
                 else
                 {
-                    TotalPageQuantity = 2;
+                    if (Transactions.Count() == TransactionFilter.Count && TotalPageQuantity == TransactionFilter.Page)
+                    {
+                        maximumPages += 1;
+                    }
+
+                    TotalPageQuantity = maximumPages;
                 }
 
-
-
-                Transactions = paginationTransactionResponse.Transactions;
                 StateHasChanged();
             }
             else
@@ -76,6 +83,7 @@ namespace Badaboom.Client.Pages
 
             Loading = false;
         }
+
         private string ToValidHexString(string value)
         {
             if (value.StartsWith("0x"))
@@ -94,6 +102,8 @@ namespace Badaboom.Client.Pages
 
         public async Task Filter()
         {
+            maximumPages = 1;
+            TotalPageQuantity = 1;
             TransactionFilter.Page = 1;
             await LoadTransactions();
         }

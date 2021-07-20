@@ -7,10 +7,6 @@
 {
     <p class="ml-1">Loading <span class="spinner-border spinner-border-sm ml-1" /></p>
 }
-else if (Transactions.Count() == 0)
-{
-    <p><em>Maybe your filters are wrong ...</em></p>
-}
 else
 {
 <table class="main-table">
@@ -24,40 +20,59 @@ else
             <th>To</th>
         </tr>
     </thead>
-    <tfoot>
-        <tr>
-            <td colspan="8" class="justify-content-center">
-                <Pagination TotaPagesQuantity="TotalPageQuantity"
-                            CurrentPage="TransactionFilter.Page"
-                            Radius="2"
-                            SelectedPage="SelectedPage" />
-            </td>
-        </tr>
-    </tfoot>
+
     <tbody>
-        @foreach (var row in Transactions)
+        @if (Transactions.Count() == 0)
         {
-            <tr>
-                <td>
-                    <NavLink class="nav-link hash-width text-truncate" href="@($"details/{row.TxnHash}")">
-                        @row.TxnHash
-                    </NavLink>
-                </td>
-                <td>@row.Method</td>
-                <td>@row.Block</td>
-                <td>@DateTimeOffset.FromUnixTimeSeconds((long)@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
-                <td>
-                    <NavLink class="nav-link hash-width text-truncate" href="@row.From">
-                        @row.From
-                    </NavLink>
-                </td>
-                <td>
-                    <NavLink class="nav-link hash-width text-truncate" href="@row.To">
-                        @row.To
-                    </NavLink>
-                </td>
-            </tr>
+            @if (TransactionFilter.Page == 1)
+            {
+                <tr><td colspan="6" class="justify-content-center p-2"><em>Maybe your filters are wrong ...</em></td></tr>
+            }
+            @if (TransactionFilter.Page != 1)
+            {
+                <tr><td colspan="6" class="justify-content-center p-2"><em>End of the list, come back</em></td></tr>
+            }
+        }
+        else
+        { 
+            @foreach (var row in Transactions)// tr td column=6
+            {
+                <tr>
+                    <td>
+                        <NavLink class="nav-link hash-width text-truncate" href="@($"details/{row.TxnHash}")">
+                            @row.TxnHash
+                        </NavLink>
+                    </td>
+                    <td>@row.Method</td>
+                    <td>@row.Block</td>
+                    <td>@DateTimeOffset.FromUnixTimeSeconds((long)@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
+                    <td>
+                        <NavLink class="nav-link hash-width text-truncate" href="@row.From">
+                            @row.From
+                        </NavLink>
+                    </td>
+                    <td>
+                        <NavLink class="nav-link hash-width text-truncate" href="@row.To">
+                            @row.To
+                        </NavLink>
+                    </td>
+                </tr>
+            }
         }
     </tbody>
+
+    @if (!(Transactions.Count() == 0 && TransactionFilter.Page == 1))
+    { 
+        <tfoot>
+            <tr>
+                <td colspan="6" class="justify-content-center">
+                    <Pagination TotaPagesQuantity="TotalPageQuantity"
+                                CurrentPage="TransactionFilter.Page"
+                                Radius="2"
+                                SelectedPage="SelectedPage" />
+                </td>
+            </tr>
+        </tfoot>
+    }
 </table>
 }
