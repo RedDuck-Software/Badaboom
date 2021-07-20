@@ -60,6 +60,7 @@ namespace Database.Respositories
         public async Task<(IEnumerable<Call>, int?)> GetCalls(CallsPagination pagination, bool isCountCalculatedNeded)
         {
             string method = pagination?.MethodId;
+            string from = pagination?.From;
             string to = pagination?.To;
             string block = pagination?.BlockId?.ToString();
             int page = pagination?.Page ?? 1;
@@ -67,6 +68,7 @@ namespace Database.Respositories
             long? callIdFrom = pagination?.CallIdFrom;
 
             string blockWherePaginationQuery = block == null ? "" : $" t.BlockId={block} ";
+            string fromWherePaginationQuery = from == null ? "" : $" c.[From]=convert(binary(20),'{from}',1) ";
             string toWherePaginationQuery = to == null ? "" : $" c.[To]=convert(binary(20),'{to}',1) ";
             string methodWherePaginationQuery = method == null ? "" : $" c.MethodId=convert(binary(4),'{method}',1) ";
             string fromCallIDWherePaginationQuery = callIdFrom == null ? "" : $" c.CallId<={callIdFrom.Value} ";
@@ -76,6 +78,7 @@ namespace Database.Respositories
             void pushToWhereListIfNotNull(string value) { if (!string.IsNullOrEmpty(value)) whereList.Add(value); };
 
             pushToWhereListIfNotNull(blockWherePaginationQuery);
+            pushToWhereListIfNotNull(fromWherePaginationQuery);
             pushToWhereListIfNotNull(toWherePaginationQuery);
             pushToWhereListIfNotNull(methodWherePaginationQuery);
             pushToWhereListIfNotNull(fromCallIDWherePaginationQuery);

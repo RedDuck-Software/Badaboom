@@ -4,6 +4,7 @@
 @using System.Text.Json
 @using Badaboom.Core.Models.DTOs
 @using Badaboom.Client.Shared.DTOs
+@using Badaboom.Client.Shared.Filters
 
 <div class=" d-flex justify-content-center">
     <div class="card col-sm-10 round-30">
@@ -18,19 +19,14 @@
                 <dl class="row">
                     @if (SelectedFilters.BlockNumber)
                     {
-                        <dt class="col-sm-6">
-                            <label class="clr-secondary">Block number</label>
-                            <div class="form-inline">
-                                <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.BlockNumber" placeholder="Filter by block number" />
-                                <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
-                                        @onclick="_ => {
-                                                      TransactionFilters.BlockNumber = null;
-                                                      SelectedFilters.BlockNumber = false;
-                                                  }">
-                                    Delete
-                                </button>
-                            </div>
-                        </dt>
+                        <FilterBlock Label="Block number"
+                                     Type="number"
+                                     PlaceHolder="Filter by block number"
+                                     OnInput="v => TransactionFilters.BlockNumber = long.Parse(v.Value.ToString())"
+                                     OnClick="_ => {
+                                                  TransactionFilters.BlockNumber = null;
+                                                  SelectedFilters.BlockNumber = false;
+                                              }"/>
                     }
 
                     @if (SelectedFilters.ContractAddress)
@@ -77,6 +73,28 @@
                             }
                         </dt>
                     }
+
+                    @if (SelectedFilters.From)
+                    {
+                        <FilterBlock Label="From Address" 
+                                     PlaceHolder="Filter by «from»"
+                                     OnInput="v => TransactionFilters.From = v.Value.ToString()"
+                                     OnClick="_ => {
+                                                  TransactionFilters.From = null;
+                                                  SelectedFilters.From = false;
+                                              }"/>
+                    }
+
+                    @if (SelectedFilters.To)
+                    {
+                        <FilterBlock Label="To Address" 
+                                     PlaceHolder="Filter by «to»"
+                                     OnInput="v => TransactionFilters.ContractAddress = v.Value.ToString()"
+                                     OnClick="_ => {
+                                                  TransactionFilters.ContractAddress = null;
+                                                  SelectedFilters.To = false;
+                                              }"/>
+                    }
                 </dl>
 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -97,7 +115,11 @@
                 @if (!SelectedFilters.BlockNumber)
                 {<button class="btn btn-round mr-1" type="button" @onclick="_ => SelectedFilters.BlockNumber = true">Block number</button>}
                 @if (!SelectedFilters.ContractAddress)
-                {<button class="btn btn-round ml-1 mr-1" type="button" @onclick="_ => SelectedFilters.ContractAddress = true">Contract address</button>}
+                {<button class="btn btn-round ml-1 mr-1" type="button" disabled="@( SelectedFilters.To )" @onclick="_ => SelectedFilters.ContractAddress = true">Contract address</button>}
+                @if (!SelectedFilters.From)
+                {<button class="btn btn-round ml-1 mr-1" type="button" @onclick="_ => SelectedFilters.From = true">«From» Address</button>}
+                @if (!SelectedFilters.To)
+                {<button class="btn btn-round ml-1 mr-1" type="button" disabled="@( SelectedFilters.ContractAddress )" @onclick="_ => SelectedFilters.To = true">«To» Address</button>}
             </div>
         </div>
     </div>
@@ -107,30 +129,49 @@
     <h3 class="mt-1 mr-1">Results</h3>
     @if (SelectedFilters.BlockNumber)
     {
-        <button type="button" class="btn btn-round ml-1 mr-1"
-                @onclick="_ => {
-                              TransactionFilters.BlockNumber = null;
-                              SelectedFilters.BlockNumber = false;
-                          }">
-            Block number <span class="clr-danger">🗙</span>
-        </button>
+        <FilterButton OnClick="_ => {
+                                   TransactionFilters.BlockNumber = null;
+                                   SelectedFilters.BlockNumber = false;
+                               }">
+            By block number <span class="clr-danger">🗙</span>
+        </FilterButton>
     }
 
     @if (SelectedFilters.ContractAddress)
     {
-        <button type="button" class="btn btn-round ml-1 mr-1"
-                @onclick="async _ => {
-                              TransactionFilters.DecodeInputDataInfo = null;
-                              TransactionFilters.ContractAddress = null;
-                              TransactionFilters.MethodId = null;
-                              SelectedFilters.ContractAddress = false;
-                              SelectedFilters.MethodId = false;
-                              ShowMethodFilter = false;
-                              ContractMethods = null;
-                          }">
-            Contract address <span class="clr-danger">🗙</span>
-        </button>
+        <FilterButton OnClick="async _ => {
+                                   TransactionFilters.DecodeInputDataInfo = null;
+                                   TransactionFilters.ContractAddress = null;
+                                   TransactionFilters.MethodId = null;
+                                   SelectedFilters.ContractAddress = false;
+                                   SelectedFilters.MethodId = false;
+                                   ShowMethodFilter = false;
+                                   ContractMethods = null;
+                               }">
+            By contract address <span class="clr-danger">🗙</span>
+        </FilterButton>
     }
+
+    @if (SelectedFilters.From)
+    {
+        <FilterButton OnClick="_ => {
+                                   TransactionFilters.From = null;
+                                   SelectedFilters.From = false;
+                               }">
+            By «from» <span class="clr-danger">🗙</span>
+        </FilterButton>
+    }
+
+    @if (SelectedFilters.To)
+    {
+        <FilterButton OnClick="_ => {
+                                  TransactionFilters.ContractAddress = null;
+                                  SelectedFilters.To = false;
+                              }">
+            By «to» <span class="clr-danger">🗙</span>
+        </FilterButton>
+    }
+
 </div>
 
 @code {

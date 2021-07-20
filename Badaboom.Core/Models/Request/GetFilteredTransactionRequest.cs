@@ -10,6 +10,7 @@
 
         public long? CallId { get; set; }
 
+        public string From { get; set; }
 
         public string ContractAddress { get; set; }
 

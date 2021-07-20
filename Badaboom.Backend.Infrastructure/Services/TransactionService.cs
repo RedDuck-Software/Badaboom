@@ -120,6 +120,7 @@ namespace Badaboom.Backend.Infrastructure.Services
                 {
                     BlockId = request.BlockNumber,
                     MethodId = request.MethodId,
+                    From = request.From,
                     To = request.ContractAddress,
                     Page = request.Page,
                     Count = request.Count,

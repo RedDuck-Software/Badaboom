@@ -33,6 +33,7 @@ namespace Database.Models
         public long? CallIdFrom;
         public long? BlockId;
         public string MethodId;
+        public string From;
         public string To;
         public int Count;
         public int Page;
