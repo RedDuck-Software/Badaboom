@@ -41,7 +41,7 @@ namespace Database.Respositories
             var sql = "select " +
                             "UserId, " +
                             "convert(varchar(42), Address, 1) as Address," +
-                            "Nonce " +
+                            "Nonce, " +
                             "ArgumentFunctionRequestsLeft " +
                       "from Users " +
                       "where " +
