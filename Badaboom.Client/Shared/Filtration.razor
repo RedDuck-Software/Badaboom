@@ -47,6 +47,7 @@
                                                       SelectedFilters.ContractAddress = false;
                                                       SelectedFilters.MethodId = false;
                                                       ShowMethodFilter = false;
+                                                      IsAbiAvailable = false;
                                                       ContractMethods = null;
                                                   }">
                                     Delete
@@ -97,16 +98,32 @@
                     }
                 </dl>
 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" 
-                            @onclick="Index.Filter">
-                        @if (Index.Loading)
-                        {
-                            <span class="spinner-border spinner-border-sm mt-1 mr-1"></span>
-                        }
-                        Filter
-                    </button>
-                </div>
+                @if (IsAbiAvailable)
+                {
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" 
+                                @onclick="FilterPro">
+                            @if (Index.Loading)
+                            {
+                                <span class="spinner-border spinner-border-sm mt-1 mr-1"></span>
+                            }
+                            Filter <span class="clr-danger"> (Pro)</span>
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" 
+                                @onclick="Index.Filter">
+                            @if (Index.Loading)
+                            {
+                                <span class="spinner-border spinner-border-sm mt-1 mr-1"></span>
+                            }
+                            Filter
+                        </button>
+                    </div>
+                }
                 <hr />
             }
 
@@ -146,6 +163,7 @@
                                    SelectedFilters.ContractAddress = false;
                                    SelectedFilters.MethodId = false;
                                    ShowMethodFilter = false;
+                                   IsAbiAvailable = false;
                                    ContractMethods = null;
                                }">
             By contract address <span class="clr-danger">🗙</span>
@@ -201,6 +219,8 @@
 
     public bool ShowMethodFilter { get; set; }
 
+    public bool IsAbiAvailable { get; set; }
+
     public bool Loading { get; set; }
 
 
@@ -221,15 +241,73 @@
                     v.Type?.ToLower() == "function" &&
                     !(v.StateMutability?.ToLower() == "view"
                     || v.StateMutability?.ToLower() == "pure"));
+
+            IsAbiAvailable = true;
         }
         else
         {
             Console.WriteLine("ABI is not found");
+            IsAbiAvailable = false;
             // todo: hande error
         }
 
         Loading = false;
 
         ShowMethodFilter = true;
+    }
+
+    [Inject]
+    public MetaMask.Blazor.MetaMaskService MetaMaskService { get; set; } = default!;
+
+    [Inject]
+    public IHttpService _httpService { get; set; }
+
+
+    public async Task FilterPro()
+    {
+        // api: get quanity of requests
+        // return false if zero requests -> make purchase
+        bool isAvaibleUse = false;
+
+        if (!isAvaibleUse) // buy requests
+        {
+            if (!await MetaMaskService.IsSiteConnected())
+            {
+                Console.WriteLine("Please login to use the filter(pro)");
+                return;
+            }
+
+            string toAddress = await GetWalletAddress();
+
+            // check price -> return 0.1m Eth (test value, coz method not implemented)
+            decimal ethCost = 0.1m;
+
+            System.Numerics.BigInteger weiValue = Nethereum.Web3.Web3.Convert.ToWei(ethCost);
+
+            string txnHash;
+
+            try
+            {
+                txnHash = await MetaMaskService.SendTransaction(toAddress, weiValue);
+            }
+            catch (MetaMask.Blazor.Exceptions.UserDeniedException)
+            {
+                System.Console.WriteLine($"User Denied");
+                return;
+            }
+
+            System.Console.WriteLine($"TX Hash: {txnHash}");
+        }
+    }
+
+    private async Task<string> GetWalletAddress()
+    {
+        var walletAddress = await _httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend");
+        return walletAddress.walletAddress;
+    }
+
+    private class WalletAddress
+    {
+        public string walletAddress { get; set; }
     }
 }

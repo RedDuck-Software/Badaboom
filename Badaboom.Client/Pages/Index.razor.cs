@@ -8,6 +8,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Linq;
+using Badaboom.Client.Infrastructure.Services;
+using Nethereum.Web3;
+using Nethereum.Web3.Accounts;
+using MetaMask.Blazor;
+using System.Numerics;
 
 namespace Badaboom.Client.Pages
 {
@@ -15,6 +20,9 @@ namespace Badaboom.Client.Pages
     {
         [Inject]
         public HttpClient Http { get; set; }
+
+        [Inject]
+        public Microsoft.Extensions.Configuration.IConfiguration Config { get; set; }
 
         public IEnumerable<Transaction> Transactions { get; set; }
 
@@ -107,5 +115,6 @@ namespace Badaboom.Client.Pages
             TransactionFilter.Page = 1;
             await LoadTransactions();
         }
+
     }
 }
