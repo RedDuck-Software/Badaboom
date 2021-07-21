@@ -277,7 +277,7 @@
                 return;
             }
 
-            string toAddress = await GetWalletAddress();
+            string toAddress = await GetWalletAddress(); // generate ex if auth token ends
 
             // check price -> return 0.1m Eth (test value, coz method not implemented)
             decimal ethCost = 0.1m;
@@ -289,6 +289,16 @@
             try
             {
                 txnHash = await MetaMaskService.SendTransaction(toAddress, weiValue);
+
+                if (await CheckIsSuccessTransaction(txnHash))
+                {
+                    Console.WriteLine("(Transaction status code success)");
+                }
+                else
+                {
+                    Console.WriteLine("(There is something wrong with your transaction)");
+                    return;
+                }
             }
             catch (MetaMask.Blazor.Exceptions.UserDeniedException)
             {
@@ -309,5 +319,35 @@
     private class WalletAddress
     {
         public string walletAddress { get; set; }
+    }
+
+    private async Task<bool> CheckIsSuccessTransaction(string txnHash)
+    {
+        int maxCicle = 18 * 2;
+        int cicle = 0;
+        Console.WriteLine($"Wait between 5 and 180 seconds, we check your transaction");
+        while (cicle < maxCicle)
+        {
+            Nethereum.Web3.Web3 web3 = new("https://ropsten.infura.io/v3/89b011b73e644d77a85bad2a0cbe4e61");
+            var transaction = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txnHash);
+
+            await Task.Delay(5_000);
+
+            try
+            {
+                if (transaction.Status.Value == 1)
+                {
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("(Pending)");
+            }
+
+            cicle++;
+        }
+
+        return false;
     }
 }
