@@ -1,5 +1,6 @@
 ﻿using BackendCore.Services;
 using Badaboom.Backend.Infrastructure.Services;
+using Badaboom.Core.Models.Enums;
 using Badaboom.Core.Models.Request;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -16,13 +17,13 @@ namespace Badaboom.Backend.Controllers
     [Badaboom.Backend.Attributes.Authorize]
     public class PaymentController : BaseController
     {
-        private readonly IUserService _userService;
         private readonly IPaymentService _paymentService;
 
 
-        public PaymentController(IUserService userService, IPaymentService paymentService)
+        public PaymentController(
+            IPaymentService paymentService
+            )
         {
-            _userService = userService;
             _paymentService = paymentService;
         }
 
@@ -36,12 +37,31 @@ namespace Badaboom.Backend.Controllers
         [HttpPost("purchase")]
         public async Task<IActionResult> Purchase([FromBody] PurchaseRequest request)
         {
-            //decimal cost = _paymentService.PurchaseCost(request.ProductType, request.Quantity);
-            decimal costTest = 0.01m;
+            bool transactionIsValid = await _paymentService.ValidatePurchase(request.TxnHash, CurrentUser.Address, 0.1m); //hardcode - shoud get price from method
 
+            if (transactionIsValid)
+            {
+                await _paymentService.SetProduct(CurrentUser.Address, ProductType.ArgumentFunctionRequests, request.Quantity);
+                return Ok(new { message = $"{request.Quantity} requests added successfully." });
+            }
+            else
+            {
+                return BadRequest(new { message = "You sent incorrect data." });
+            }
+        }
 
+        [HttpPost("checkPosibilityUsingFunction")]
+        public async Task<IActionResult> CheckPosibilityUsingFunction([FromBody] ProductRequest request)
+        {
+            int quantity = await _paymentService.CheckQuantity(request.ProductType, CurrentUser.Address);
+            return Ok(new { Quantity = quantity });
+        }
 
-            return BadRequest(new { message = "not implemeted" });
+        [HttpPost("useProduct")]
+        public async Task<IActionResult> UseProduct([FromBody] ProductRequest request) // use only after "CheckPosibilityUsingFunction" 
+        {
+            await _paymentService.SetProduct(CurrentUser.Address, request.ProductType, -1);
+            return Ok();
         }
     }
 }

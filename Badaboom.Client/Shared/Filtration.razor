@@ -265,9 +265,12 @@
 
     public async Task FilterPro()
     {
-        // api: get quanity of requests
-        // return false if zero requests -> make purchase
-        bool isAvaibleUse = false;
+        int quantity = (await _httpService.Post<ResponseQuantity>("/api/Payment/checkPosibilityUsingFunction",
+        new ProductRequest() { ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests })).Quantity;
+
+        Console.WriteLine("quantity: {0}", quantity);
+
+        bool isAvaibleUse = quantity > 0;
 
         if (!isAvaibleUse) // buy requests
         {
@@ -293,6 +296,13 @@
                 if (await CheckIsSuccessTransaction(txnHash))
                 {
                     Console.WriteLine("(Transaction status code success)");
+
+                    await _httpService.Post<PurchaseRequest>("/api/payment/purchase", new PurchaseRequest()
+                    {
+                        ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests,
+                        Quantity = 10,
+                        TxnHash = txnHash
+                    });
                 }
                 else
                 {
@@ -308,17 +318,19 @@
 
             System.Console.WriteLine($"TX Hash: {txnHash}");
         }
+        else
+        {
+            await _httpService.Post("/api/Payment/useProduct",
+                new ProductRequest() { ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests });
+
+            await Index.Filter();
+        }
     }
 
     private async Task<string> GetWalletAddress()
     {
         var walletAddress = await _httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend");
         return walletAddress.walletAddress;
-    }
-
-    private class WalletAddress
-    {
-        public string walletAddress { get; set; }
     }
 
     private async Task<bool> CheckIsSuccessTransaction(string txnHash)
@@ -350,4 +362,15 @@
 
         return false;
     }
+
+    private class WalletAddress
+    {
+        public string walletAddress { get; set; }
+    }
+
+    private class ResponseQuantity
+    {
+        public int Quantity { get; set; }
+    }
+
 }

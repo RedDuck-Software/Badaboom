@@ -1,8 +1,10 @@
 ﻿using Badaboom.Core.Models.Enums;
+using Database.Respositories;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,35 +18,43 @@ namespace Badaboom.Backend.Infrastructure.Services
 
         decimal PurchaseCost(ProductType productType, int quantity);
 
-        bool ValidatePurchase(string txhash, decimal amountToSend); // use only after making payment
+        Task<bool> ValidatePurchase(string txhash, string from, decimal amountToSend); // use only after making payment
         
-        bool AddPurchase(ProductType productType, int quantity);
-        
-        int CheckQuantity(ProductType productType, string address);
-        
-        bool UseProduct(ProductType productType);
+        Task SetProduct(string address, ProductType productType, int quantity);
+
+        Task<int> CheckQuantity(ProductType productType, string address);
     }
 
     public class PaymentService : IPaymentService
     {
         private readonly IConfiguration _configuration;
         private readonly string _connectionString;
+        private readonly HttpClient _httpClient;
 
 
         public PaymentService(
-            IConfiguration configuration
+            IConfiguration configuration,
+            HttpClient httpClient
             )
         {
             _configuration = configuration;
             _connectionString = configuration.GetConnectionString("DefaultConnection");
+            _httpClient = httpClient;
         }
 
         public string GetWalletAddress()
             => _configuration.GetSection("NetworkSettings").GetSection("ETH")["WaletAddress"];
 
-        public bool ValidatePurchase(string txhash, decimal amountToSend)
+        public async Task<bool> ValidatePurchase(string txhash, string from, decimal amountToSend)
         {
-            throw new NotImplementedException();
+            Nethereum.Web3.Web3 web3 = new("https://ropsten.infura.io/v3/89b011b73e644d77a85bad2a0cbe4e61");
+            var transaction = await web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(txhash);
+
+            bool _value = Nethereum.Web3.Web3.Convert.ToWei(amountToSend) == transaction.Value.Value;
+            bool _from = from.ToLower() == transaction.From.ToLower();
+            bool _to = GetWalletAddress().ToLower() == transaction.To.ToLower();
+
+            return (_value && _from && _to);
         }
 
         public decimal PurchaseCost(ProductType productType, int quantity)
@@ -52,19 +62,27 @@ namespace Badaboom.Backend.Infrastructure.Services
             throw new NotImplementedException();
         }
 
-        public bool AddPurchase(ProductType productType, int quantity)
+        public async Task SetProduct(string address, ProductType productType, int quantity)
         {
-            throw new NotImplementedException();
+            if (productType == ProductType.ArgumentFunctionRequests)
+            {
+                using (var uRepo = new PeymentRepository(_connectionString))
+                    await uRepo.SetArgumentFunctionRequests(address, quantity);
+            }
         }
 
-        public int CheckQuantity(ProductType productType, string address)
+        public async Task<int> CheckQuantity(ProductType productType, string address)
         {
-            throw new NotImplementedException();
-        }
+            int result = default;
 
-        public bool UseProduct(ProductType productType)
-        {
-            throw new NotImplementedException();
+            if (productType == ProductType.ArgumentFunctionRequests)
+            {
+                using var uRepo = new PeymentRepository(_connectionString) ;
+                    
+                result = await uRepo.CheckQuantityArgumentFunctionRequests(address);
+            }
+
+            return result;
         }
     }
 }

@@ -2,12 +2,8 @@
 
 namespace Badaboom.Core.Models.Request
 {
-    public class PurchaseRequest
+    public class ProductRequest
     {
-        public string TxnHash { get; set; }
-
         public ProductType ProductType { get; set; }
-
-        public int Quantity { get; set; }
     }
 }

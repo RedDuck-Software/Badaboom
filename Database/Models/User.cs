@@ -13,7 +13,7 @@ namespace Database.Models
 
         public string Nonce { get; set; }
 
-        public int ArgumentFunctionRequestsLeft { get; set; }
+        public int ArgumentFunctionRequests { get; set; }
 
         [JsonIgnore]
         public List<RefreshToken> RefreshTokens { get; set; }

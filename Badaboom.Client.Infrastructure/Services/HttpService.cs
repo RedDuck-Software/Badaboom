@@ -18,6 +18,7 @@ namespace Badaboom.Client.Infrastructure.Services
         public HttpClient HttpClient { get; init; }
         Task<T> Get<T>(string uri);
         Task<T> Post<T>(string uri, object value);
+        Task Post(string uri, object value);
     }
 
     public class HttpService : IHttpService
@@ -53,6 +54,13 @@ namespace Badaboom.Client.Infrastructure.Services
             return await sendRequest<T>(request);
         }
 
+        public async Task Post(string uri, object value)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = new StringContent(JsonSerializer.Serialize(value), Encoding.UTF8, "application/json");
+            await sendRequest(request);
+        }
+
         // helper methods
 
         private async Task<T> sendRequest<T>(HttpRequestMessage request)
@@ -82,6 +90,33 @@ namespace Badaboom.Client.Infrastructure.Services
             }
 
             return await response.Content.ReadFromJsonAsync<T>();
+        }
+
+        private async Task sendRequest(HttpRequestMessage request)
+        {
+            // add jwt auth header if user is logged in and request is to the api url
+            var user = await _localStorageService.GetItem<User>("user");
+            var isApiUrl = !request.RequestUri.IsAbsoluteUri;
+            if (user != null && isApiUrl)
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", user.AuthToken);
+            }
+
+            using var response = await HttpClient.SendAsync(request);
+
+            // auto logout on 401 response
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _navigationManager.NavigateTo("logout");
+                return;
+            }
+
+            // throw exception on error response
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                throw new Exception(error["message"]);
+            }
         }
     }
 }
