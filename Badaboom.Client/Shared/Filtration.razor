@@ -23,10 +23,10 @@
                                      Type="number"
                                      PlaceHolder="Filter by block number"
                                      OnInput="v => TransactionFilters.BlockNumber = long.Parse(v.Value.ToString())"
-                                     OnClick="_ => {
+                                     OnClick="@(_ => {
                                                   TransactionFilters.BlockNumber = null;
                                                   SelectedFilters.BlockNumber = false;
-                                              }"/>
+                                              })"/>
                     }
 
                     @if (SelectedFilters.ContractAddress)
@@ -35,13 +35,13 @@
                             <label class="clr-secondary">Contract address</label>
                             <div class="form-inline">
                                 <input type="text" class="form-control mb-2 mr-sm-2 round-10" placeholder="Filter by contract address" 
-                                       @onchange="(value) => {
+                                       @onchange="@((value) => {
                                                       ShowMethodFilter = false;
                                                       ContractMethods = null;
                                                       TransactionFilters.ContractAddress = value.Value.ToString();
-                                                  }" />
+                                                  })" />
                                 <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
-                                        @onclick="_ => {
+                                        @onclick="@(_ => {
                                                       TransactionFilters.ContractAddress = null;
                                                       TransactionFilters.MethodId = null;
                                                       SelectedFilters.ContractAddress = false;
@@ -49,7 +49,7 @@
                                                       ShowMethodFilter = false;
                                                       IsAbiAvailable = false;
                                                       ContractMethods = null;
-                                                  }">
+                                                  })">
                                     Delete
                                 </button>
 
@@ -80,10 +80,10 @@
                         <FilterBlock Label="From Address" 
                                      PlaceHolder="Filter by «from»"
                                      OnInput="v => TransactionFilters.From = v.Value.ToString()"
-                                     OnClick="_ => {
+                                     OnClick="@(_ => {
                                                   TransactionFilters.From = null;
                                                   SelectedFilters.From = false;
-                                              }"/>
+                                              })"/>
                     }
 
                     @if (SelectedFilters.To)
@@ -91,10 +91,10 @@
                         <FilterBlock Label="To Address" 
                                      PlaceHolder="Filter by «to»"
                                      OnInput="v => TransactionFilters.ContractAddress = v.Value.ToString()"
-                                     OnClick="_ => {
+                                     OnClick="@(_ => {
                                                   TransactionFilters.ContractAddress = null;
                                                   SelectedFilters.To = false;
-                                              }"/>
+                                              })"/>
                     }
                 </dl>
 
@@ -103,7 +103,7 @@
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" 
                                 @onclick="FilterPro">
-                            @if (Index.Loading)
+                            @if (Loading)
                             {
                                 <span class="spinner-border spinner-border-sm mt-1 mr-1"></span>
                             }
@@ -244,12 +244,10 @@
 
             IsAbiAvailable = true;
         }
-        else
-        {
-            Console.WriteLine("ABI is not found");
-            IsAbiAvailable = false;
-            // todo: hande error
-        }
+         
+        Console.WriteLine("ABI is not found");
+        IsAbiAvailable = false;
+        // todo: hande error
 
         Loading = false;
 
@@ -265,14 +263,14 @@
 
     public async Task FilterPro()
     {
-        int quantity = (await _httpService.Post<ResponseQuantity>("/api/Payment/checkPosibilityUsingFunction",
+        int quantity = (await _httpService.Post<ResponseQuantity>("/api/Payment/checkPossibilityUsingFunction",
         new ProductRequest() { ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests })).Quantity;
 
         Console.WriteLine("quantity: {0}", quantity);
 
-        bool isAvaibleUse = quantity > 0;
+        bool isAvailableUse = quantity > 0;
 
-        if (!isAvaibleUse) // buy requests
+        if (!isAvailableUse) // buy requests
         {
             if (!await MetaMaskService.IsSiteConnected())
             {
@@ -318,13 +316,11 @@
 
             System.Console.WriteLine($"TX Hash: {txnHash}");
         }
-        else
-        {
-            await _httpService.Post("/api/Payment/useProduct",
-                new ProductRequest() { ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests });
 
-            await Index.Filter();
-        }
+        await _httpService.Post("/api/Payment/useProduct",
+            new ProductRequest() { ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests });
+        
+        await Index.Filter();
     }
 
     private async Task<string> GetWalletAddress()
@@ -335,10 +331,10 @@
 
     private async Task<bool> CheckIsSuccessTransaction(string txnHash)
     {
-        int maxCicle = 18 * 2;
-        int cicle = 0;
+        int maxCycle = 18 * 2;
+        int cycle = 0;
         Console.WriteLine($"Wait between 5 and 180 seconds, we check your transaction");
-        while (cicle < maxCicle)
+        while (cycle < maxCycle)
         {
             Nethereum.Web3.Web3 web3 = new("https://ropsten.infura.io/v3/89b011b73e644d77a85bad2a0cbe4e61");
             var transaction = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txnHash);
@@ -357,7 +353,7 @@
                 Console.WriteLine("(Pending)");
             }
 
-            cicle++;
+            cycle++;
         }
 
         return false;
@@ -372,5 +368,4 @@
     {
         public int Quantity { get; set; }
     }
-
 }

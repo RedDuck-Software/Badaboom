@@ -50,15 +50,15 @@ namespace Badaboom.Backend.Controllers
             }
         }
 
-        [HttpPost("checkPosibilityUsingFunction")]
-        public async Task<IActionResult> CheckPosibilityUsingFunction([FromBody] ProductRequest request)
+        [HttpPost("checkPossibilityUsingFunction")]
+        public async Task<IActionResult> CheckPossibilityUsingFunction([FromBody] ProductRequest request)
         {
             int quantity = await _paymentService.CheckQuantity(request.ProductType, CurrentUser.Address);
             return Ok(new { Quantity = quantity });
         }
 
         [HttpPost("useProduct")]
-        public async Task<IActionResult> UseProduct([FromBody] ProductRequest request) // use only after "CheckPosibilityUsingFunction" 
+        public async Task<IActionResult> UseProduct([FromBody] ProductRequest request) // use only after "CheckPossibilityUsingFunction" 
         {
             await _paymentService.SetProduct(CurrentUser.Address, request.ProductType, -1);
             return Ok();
