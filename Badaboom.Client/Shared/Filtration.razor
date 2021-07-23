@@ -244,10 +244,12 @@
 
             IsAbiAvailable = true;
         }
-         
-        Console.WriteLine("ABI is not found");
-        IsAbiAvailable = false;
-        // todo: hande error
+        else
+        {
+            Console.WriteLine("ABI is not found");
+            IsAbiAvailable = false;
+            // todo: hande error
+        }
 
         Loading = false;
 
@@ -319,7 +321,7 @@
 
         await _httpService.Post("/api/Payment/useProduct",
             new ProductRequest() { ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests });
-        
+
         await Index.Filter();
     }
 
@@ -348,7 +350,7 @@
                     return true;
                 }
             }
-            catch (Exception)
+            catch (NullReferenceException)
             {
                 Console.WriteLine("(Pending)");
             }
