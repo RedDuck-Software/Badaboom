@@ -37,6 +37,11 @@ namespace Badaboom.Backend.Controllers
         [HttpPost("purchase")]
         public async Task<IActionResult> Purchase([FromBody] PurchaseRequest request)
         {
+            if (request.Quantity <= 0)
+            {
+                return BadRequest(new { message = $"The number of units of the product to purchase must be greater than 0" });
+            }
+
             bool transactionIsValid = await _paymentService.ValidatePurchase(request.TxnHash, CurrentUser.Address, 0.1m); //hardcode - shoud get price from method
 
             if (transactionIsValid)
@@ -53,15 +58,8 @@ namespace Badaboom.Backend.Controllers
         [HttpPost("checkPossibilityUsingFunction")]
         public async Task<IActionResult> CheckPossibilityUsingFunction([FromBody] ProductRequest request)
         {
-            int quantity = await _paymentService.CheckQuantity(request.ProductType, CurrentUser.Address);
-            return Ok(new { Quantity = quantity });
-        }
-
-        [HttpPost("useProduct")]
-        public async Task<IActionResult> UseProduct([FromBody] ProductRequest request) // use only after "CheckPossibilityUsingFunction" 
-        {
-            await _paymentService.SetProduct(CurrentUser.Address, request.ProductType, -1);
-            return Ok();
+            int? quantity = await _paymentService.CheckQuantity(request.ProductType, CurrentUser.Address);
+            return Ok(new { Quantity = quantity ?? 0 });
         }
     }
 }

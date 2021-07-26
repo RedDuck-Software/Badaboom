@@ -1,5 +1,6 @@
 ﻿using Badaboom.Backend.Controllers;
 using Badaboom.Backend.Infrastructure.Services;
+using Badaboom.Core.Models.Enums;
 using Badaboom.Core.Models.Request;
 using Badaboom.Core.Models.Response;
 using Microsoft.AspNetCore.Authorization;
@@ -22,10 +23,15 @@ namespace Backend.Controllers
     public class TransactionController : BaseController
     {
         private readonly ITransactionService _transactionService;
+        private readonly IPaymentService _paymentService;
 
-        public TransactionController(ITransactionService transactionSerivice)
+        public TransactionController(
+            ITransactionService transactionSerivice,
+            IPaymentService paymentService
+            )
         {
             _transactionService = transactionSerivice;
+            _paymentService = paymentService;
         }
 
 
@@ -46,12 +52,27 @@ namespace Backend.Controllers
                 request.DecodeInputDataInfo.ArgumentsNamesValues != null && 
                 request.DecodeInputDataInfo.ArgumentsNamesValues.Count > 0)
             {
-                return await _transactionService.GetPaginatedFilteredTransactionsWithInputParameters(request, 10);
+                return BadRequest(new { message = "To use pro functions, call another endpoint." });
             }
             else
             {
                 return await _transactionService.GetPaginatedFilteredTransactions(request);
             }
+        }
+
+        [HttpPost("getTransactionsByArgument")]
+        [Badaboom.Backend.Attributes.Authorize]
+        public async Task<ActionResult<PaginationTransactionResponse>> GetFilteredTransactionsByArgument([FromBody] GetFilteredTransactionRequest request)
+        {
+            int? quantity = CurrentUser.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()];
+
+            if (quantity == null)
+            {
+                return BadRequest(new { message = "Not enough requests to filter" });
+            }
+
+            await _paymentService.SetProduct(CurrentUser.Address, ProductType.ArgumentFunctionRequests, -1);
+            return await _transactionService.GetPaginatedFilteredTransactionsWithInputParameters(request, 10);
         }
     }
 }
