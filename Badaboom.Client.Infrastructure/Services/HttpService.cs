@@ -17,8 +17,9 @@ namespace Badaboom.Client.Infrastructure.Services
     {
         public HttpClient HttpClient { get; init; }
         Task<T> Get<T>(string uri);
+        Task<string> Get(string uri);
         Task<T> Post<T>(string uri, object value);
-        Task Post(string uri, object value);
+        Task<string> Post(string uri, object value);
     }
 
     public class HttpService : IHttpService
@@ -41,6 +42,12 @@ namespace Badaboom.Client.Infrastructure.Services
             _configuration = configuration;
         }
 
+        public async Task<string> Get(string uri)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            return await sendRequest(request);
+        }
+
         public async Task<T> Get<T>(string uri)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
@@ -54,11 +61,11 @@ namespace Badaboom.Client.Infrastructure.Services
             return await sendRequest<T>(request);
         }
 
-        public async Task Post(string uri, object value)
+        public async Task<string> Post(string uri, object value)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, uri);
             request.Content = new StringContent(JsonSerializer.Serialize(value), Encoding.UTF8, "application/json");
-            await sendRequest(request);
+            return await sendRequest(request);
         }
 
         // helper methods
@@ -92,7 +99,7 @@ namespace Badaboom.Client.Infrastructure.Services
             return await response.Content.ReadFromJsonAsync<T>();
         }
 
-        private async Task sendRequest(HttpRequestMessage request)
+        private async Task<string> sendRequest(HttpRequestMessage request)
         {
             // add jwt auth header if user is logged in and request is to the api url
             var user = await _localStorageService.GetItem<User>("user");
@@ -108,7 +115,7 @@ namespace Badaboom.Client.Infrastructure.Services
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 _navigationManager.NavigateTo("logout");
-                return;
+                return default;
             }
 
             // throw exception on error response
@@ -117,6 +124,8 @@ namespace Badaboom.Client.Infrastructure.Services
                 var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
                 throw new Exception(error["message"]);
             }
+
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }
