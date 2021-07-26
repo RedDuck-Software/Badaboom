@@ -22,7 +22,7 @@ namespace Badaboom.Backend.Infrastructure.Services
         
         Task SetProduct(string address, ProductType productType, int quantity);
 
-        Task<int> CheckQuantity(ProductType productType, string address);
+        Task<int?> CheckQuantity(ProductType productType, string address);
     }
 
     public class PaymentService : IPaymentService
@@ -62,24 +62,36 @@ namespace Badaboom.Backend.Infrastructure.Services
             throw new NotImplementedException();
         }
 
-        public async Task SetProduct(string address, ProductType productType, int quantity)
+        public async Task SetProduct(string address, ProductType productType, int quantity) // нельзя вызвать если currentQuantity == null и quantity == -1
         {
-            if (productType == ProductType.ArgumentFunctionRequests)
+            using var pRepo = new PeymentRepository(_connectionString);
+
+            int? currentQuantity = await pRepo.CheckQuantityArgumentFunctionRequests(address, productType.ToString());
+
+
+            if (currentQuantity == null) // 2 requests
             {
-                using (var uRepo = new PeymentRepository(_connectionString))
-                    await uRepo.SetArgumentFunctionRequests(address, quantity);
+                await pRepo.AddUserProduct(address, productType.ToString(), quantity);
+            }
+            else if (currentQuantity <= 1 && quantity == -1) // 1 requests
+            {
+                await pRepo.DeleteUserProduct(address, productType.ToString());
+            }
+            else
+            {
+                await pRepo.UpdateProductQuantity(address, productType.ToString(), (int)currentQuantity + quantity);
             }
         }
 
-        public async Task<int> CheckQuantity(ProductType productType, string address)
+        public async Task<int?> CheckQuantity(ProductType productType, string address)
         {
-            int result = default;
+            int? result = default;
 
             if (productType == ProductType.ArgumentFunctionRequests)
             {
-                using var uRepo = new PeymentRepository(_connectionString) ;
+                using var pRepo = new PeymentRepository(_connectionString);
                     
-                result = await uRepo.CheckQuantityArgumentFunctionRequests(address);
+                result = await pRepo.CheckQuantityArgumentFunctionRequests(address, productType.ToString());
             }
 
             return result;
