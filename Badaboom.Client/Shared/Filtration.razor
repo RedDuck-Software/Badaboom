@@ -5,6 +5,7 @@
 @using Badaboom.Core.Models.DTOs
 @using Badaboom.Client.Shared.DTOs
 @using Badaboom.Client.Shared.Filters
+@using Badaboom.Core.Models.Enums
 
 <div class=" d-flex justify-content-center">
     <div class="card col-sm-10 round-30">
@@ -47,7 +48,6 @@
                                                       SelectedFilters.ContractAddress = false;
                                                       SelectedFilters.MethodId = false;
                                                       ShowMethodFilter = false;
-                                                      IsAbiAvailable = false;
                                                       ContractMethods = null;
                                                   })">
                                     Delete
@@ -70,7 +70,8 @@
                                 <Badaboom.Client.Shared.Filters.MethodsFiltering Index="Index"
                                                                                  TransactionFilters="TransactionFilters"
                                                                                  SelectedFilters="SelectedFilters"
-                                                                                 ContractMethods="ContractMethods" />
+                                                                                 ContractMethods="ContractMethods"
+                                                                                 Callback="@(() => StateHasChanged())"/>
                             }
                         </dt>
                     }
@@ -98,10 +99,11 @@
                     }
                 </dl>
 
-                @if (IsAbiAvailable)
+                @if (IsProFiltering)
                 {
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" 
+                    <div class="d-grid gap-2 d-flex justify-content-end">
+                        <label class="btn-round clr-danger mb-0 mr-2 text-center" style="padding: 5px 10px;">Requests remainded: @Quantity</label>
+                        <button type="button" class="btn btn-round clr-secondary" 
                                 @onclick="FilterPro">
                             @if (Loading)
                             {
@@ -163,7 +165,6 @@
                                    SelectedFilters.ContractAddress = false;
                                    SelectedFilters.MethodId = false;
                                    ShowMethodFilter = false;
-                                   IsAbiAvailable = false;
                                    ContractMethods = null;
                                }">
             By contract address <span class="clr-danger">🗙</span>
@@ -211,6 +212,18 @@
     [Inject]
     public HttpClient HttpClient { get; set; }
 
+    [Inject]
+    public MetaMask.Blazor.MetaMaskService MetaMaskService { get; set; } = default!;
+
+    [Inject]
+    public IHttpService _httpService { get; set; }
+
+    [Inject]
+    public IAuthenticationService _authService { get; set; }
+
+    [Inject]
+    public ILocalStorageService _localStorageService { get; set; }
+
     public Regex ContractAddressRegex = new Regex("^0x[a-fA-F0-9]{40}$");
 
     public SelectedFiltersDTO SelectedFilters { get; set; } = new();
@@ -219,9 +232,27 @@
 
     public bool ShowMethodFilter { get; set; }
 
-    public bool IsAbiAvailable { get; set; }
-
     public bool Loading { get; set; }
+
+    public bool IsProFiltering
+        => (Index.TransactionFilter.DecodeInputDataInfo != null &&
+            Index.TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues != null &&
+            Index.TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues.Count > 0);
+
+    public int Quantity
+    {
+        get
+        {
+            if (_authService.User.AvailableProduct.ContainsKey(ProductType.ArgumentFunctionRequests.ToString()))
+            {
+                return  _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()];
+            }
+            else
+            {
+                return default;
+            }
+        }
+    }
 
 
     public async Task GetAbi()
@@ -241,13 +272,10 @@
                     v.Type?.ToLower() == "function" &&
                     !(v.StateMutability?.ToLower() == "view"
                     || v.StateMutability?.ToLower() == "pure"));
-
-            IsAbiAvailable = true;
         }
         else
         {
             Console.WriteLine("ABI is not found");
-            IsAbiAvailable = false;
             // todo: hande error
         }
 
@@ -256,31 +284,24 @@
         ShowMethodFilter = true;
     }
 
-    [Inject]
-    public MetaMask.Blazor.MetaMaskService MetaMaskService { get; set; } = default!;
-
-    [Inject]
-    public IHttpService _httpService { get; set; }
-
-
     public async Task FilterPro()
     {
-        int quantity = (await _httpService.Post<ResponseQuantity>("/api/Payment/checkPossibilityUsingFunction",
-        new ProductRequest() { ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests })).Quantity;
+        if (_authService.User == null)
+        {
+            await _authService.Logout();
+        }
 
-        Console.WriteLine("quantity: {0}", quantity);
+        if (!await MetaMaskService.IsSiteConnected())
+        {
+            Console.WriteLine("Please login to use the filter(pro)");
+            return;
+        }
 
-        bool isAvailableUse = quantity > 0;
+        bool isAvailableUse = Quantity > 0;
 
         if (!isAvailableUse) // buy requests
         {
-            if (!await MetaMaskService.IsSiteConnected())
-            {
-                Console.WriteLine("Please login to use the filter(pro)");
-                return;
-            }
-
-            string toAddress = await GetWalletAddress(); // generate ex if auth token ends
+            string toAddress = (await _httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend")).walletAddress; // generate ex if auth token ends
 
             // check price -> return 0.1m Eth (test value, coz method not implemented)
             decimal ethCost = 0.1m;
@@ -299,10 +320,21 @@
 
                     await _httpService.Post<PurchaseRequest>("/api/payment/purchase", new PurchaseRequest()
                     {
-                        ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests,
+                        ProductType = ProductType.ArgumentFunctionRequests,
                         Quantity = 10,
                         TxnHash = txnHash
                     });
+
+                    if (_authService.User.AvailableProduct.ContainsKey(ProductType.ArgumentFunctionRequests.ToString()))
+                    {
+                        _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()] += 10; // quantity hardcode
+                    }
+                    else
+                    { 
+                        _authService.User.AvailableProduct.Add(ProductType.ArgumentFunctionRequests.ToString(), 10); // quantity hardcode
+                    }
+
+                    await _localStorageService.SetItem("user", _authService.User);
                 }
                 else
                 {
@@ -319,16 +351,15 @@
             System.Console.WriteLine($"TX Hash: {txnHash}");
         }
 
-        await _httpService.Post("/api/Payment/useProduct",
-            new ProductRequest() { ProductType = Core.Models.Enums.ProductType.ArgumentFunctionRequests });
-
         await Index.Filter();
-    }
 
-    private async Task<string> GetWalletAddress()
-    {
-        var walletAddress = await _httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend");
-        return walletAddress.walletAddress;
+
+        if (Quantity > 0)
+        {
+            _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()]--;
+
+            await _localStorageService.SetItem("user", _authService.User);
+        }
     }
 
     private async Task<bool> CheckIsSuccessTransaction(string txnHash)
@@ -368,6 +399,6 @@
 
     private class ResponseQuantity
     {
-        public int Quantity { get; set; }
+        public int? Quantity { get; set; }
     }
 }

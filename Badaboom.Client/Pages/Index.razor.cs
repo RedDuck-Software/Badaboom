@@ -24,6 +24,9 @@ namespace Badaboom.Client.Pages
         [Inject]
         public Microsoft.Extensions.Configuration.IConfiguration Config { get; set; }
 
+        [Inject]
+        public IHttpService _httpService { get; set; }
+
         public IEnumerable<Transaction> Transactions { get; set; }
 
         public int TotalPageQuantity { get; set; }
@@ -51,19 +54,33 @@ namespace Badaboom.Client.Pages
 
             Transactions = null;
 
-            var httpResponse = await Http.PostAsync("/api/Transaction/GetTransactions",
-                new StringContent(
-                    JsonSerializer.Serialize(TransactionFilter),
-                    Encoding.UTF8,
-                    "application/json")
-                );
+            PaginationTransactionResponse paginationTransactionResponse;
 
-            if (httpResponse.IsSuccessStatusCode)
+            if (TransactionFilter.DecodeInputDataInfo != null &&
+                TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues != null &&
+                TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues.Count > 0)
             {
-                var responseString = await httpResponse.Content.ReadAsStringAsync();
-                var paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
-                    new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                paginationTransactionResponse = await _httpService.Post<PaginationTransactionResponse>("/api/Transaction/getTransactionsByArgument", TransactionFilter);
+            }
+            else
+            {
+                HttpResponseMessage httpResponse = await Http.PostAsync("/api/Transaction/GetTransactions",
+                    new StringContent(
+                        JsonSerializer.Serialize(TransactionFilter),
+                        Encoding.UTF8,
+                        "application/json")
+                    );
 
+                var responseString = await httpResponse.Content.ReadAsStringAsync();
+
+                paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
+                    new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            }
+
+            System.Console.WriteLine(paginationTransactionResponse != null);
+
+            if (paginationTransactionResponse != null)
+            {
                 Transactions = paginationTransactionResponse.Transactions;
 
                 int totalCount = paginationTransactionResponse.Count;

@@ -26,6 +26,9 @@ namespace Badaboom.Client.Shared.Filters
         [Parameter]
         public Pages.Index Index { get; set; }
 
+        [Parameter]
+        public Action Callback { get; set; }
+
         public Method SelectedMethod { get; set; }
 
         public List<Input> SelectedMethodAvailableArguments { get; set; } = new();
@@ -73,9 +76,11 @@ namespace Badaboom.Client.Shared.Filters
                 FunctionAbis = new Method[] { SelectedMethod },
                 ArgumentsNamesValues = SelectedArgumentsValues.Count == 0 ? null :
                     new Dictionary<string, string>(
-                        SelectedArgumentsValues.Select(vp =>
+                        SelectedArgumentsValues.Where(x => !string.IsNullOrEmpty(x.Value)).Select(vp =>
                             new KeyValuePair<string, string>(vp.Key.Name, vp.Value)))
             };
+
+            Callback();
 
             Console.WriteLine(JsonSerializer.Serialize(TransactionFilters));
         }
