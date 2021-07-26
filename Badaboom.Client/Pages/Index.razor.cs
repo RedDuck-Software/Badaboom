@@ -54,7 +54,7 @@ namespace Badaboom.Client.Pages
 
             Transactions = null;
 
-            PaginationTransactionResponse paginationTransactionResponse;
+            PaginationTransactionResponse paginationTransactionResponse = new();
 
             if (TransactionFilter.DecodeInputDataInfo != null &&
                 TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues != null &&
