@@ -41,13 +41,29 @@ namespace Database.Respositories
             var sql = "select " +
                             "UserId, " +
                             "convert(varchar(42), Address, 1) as Address," +
-                            "Nonce, " +
-                            "ArgumentFunctionRequests " +
+                            "Nonce " +
                       "from Users " +
                       "where " +
                             $"Address=convert(binary(20),'{address}',1);";
 
-            return await SqlConnection.QuerySingleOrDefaultAsync<User>(sql);
+            User user = await SqlConnection.QuerySingleOrDefaultAsync<User>(sql);
+
+            if (user is null)
+            {
+                return user;
+            }
+
+            var sql1 = "SELECT p.ApiEndpoint, up.Quantity " +
+                         "FROM Products p " +
+                        "INNER JOIN UsersProducts up " +
+                           "ON up.ProductId = p.Id " +
+                       $"WHERE up.UserId = {user.UserId};";
+
+            Dictionary<string, int> response = (await SqlConnection.QueryAsync<(string, int)>(sql1)).ToDictionary(x => x.Item1, x => x.Item2);
+
+            user.AvailableProduct = response;
+
+            return user;
         }
 
         public async Task AddNewRefreshToken(RefreshToken newToken)
