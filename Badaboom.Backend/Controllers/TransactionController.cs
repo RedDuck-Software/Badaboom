@@ -14,6 +14,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using Badaboom.Backend.Attributes;
 
 namespace Backend.Controllers
 {
@@ -62,16 +63,9 @@ namespace Backend.Controllers
 
         [HttpPost("getTransactionsByArgument")]
         [Badaboom.Backend.Attributes.Authorize]
+        [Purchase(ProductType.ArgumentFunctionRequests)]
         public async Task<ActionResult<PaginationTransactionResponse>> GetFilteredTransactionsByArgument([FromBody] GetFilteredTransactionRequest request)
         {
-            int? quantity = CurrentUser.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()];
-
-            if (quantity == null)
-            {
-                return BadRequest(new { message = "Not enough requests to filter" });
-            }
-
-            await _paymentService.SetProduct(CurrentUser.Address, ProductType.ArgumentFunctionRequests, -1);
             return await _transactionService.GetPaginatedFilteredTransactionsWithInputParameters(request, 10);
         }
     }
