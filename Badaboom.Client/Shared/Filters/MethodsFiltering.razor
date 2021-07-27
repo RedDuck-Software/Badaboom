@@ -43,7 +43,11 @@
     @foreach (var arg in SelectedArgumentsValues)
     {
         <div class="form-inline">
-            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="@CurrentValue" @oninput="value => {  SelectedArgumentsValues[arg.Key] = value.Value.ToString(); UpdateFilteredTranscations(); }" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")" />
+            <input type="text" class="form-control mb-2 mr-sm-2 round-10" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")"
+                   @oninput="@(value => { 
+                                   SelectedArgumentsValues[arg.Key] = value.Value.ToString().ReplaceAll(new[] { " ", "\t", "\n" }, ""); 
+                                   UpdateFilteredTranscations(); 
+                               })" />
             <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                     @onclick=" _ => {
                                   RemoveSelectedArgument(arg.Key);
@@ -66,20 +70,4 @@ else
             Delete
         </button>
     </div>
-}
-
-@code {
-    private string currentValue;
-
-    public string CurrentValue
-    {
-        get
-        {
-            return currentValue;
-        }
-        set
-        {
-            currentValue = value.Replace(" ", "");
-        }
-    }
 }
