@@ -1,7 +1,8 @@
 ﻿<dt class="col-sm-6">
     <label class="clr-secondary">@Label</label>
     <div class="form-inline">
-        <input type="@Type" class="form-control mb-2 mr-sm-2 round-10" @oninput="OnInput" placeholder="@PlaceHolder" />
+        <input type="@Type" class="form-control mb-2 mr-sm-2 round-10" placeholder="@PlaceHolder" 
+              @bind="@CurrentValue" @oninput="OnInput" />
         <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                 @onclick="OnClick">
             Delete
@@ -24,4 +25,18 @@
 
     [Parameter]
     public string Label { get; set; }
+
+    private string currentValue;
+
+    public string CurrentValue
+    {
+        get
+        {
+            return currentValue;
+        }
+        set
+        {
+            currentValue = value.Replace(" ", "");
+        }
+    }
 }

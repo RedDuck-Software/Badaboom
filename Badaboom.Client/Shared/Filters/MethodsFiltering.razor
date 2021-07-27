@@ -43,7 +43,7 @@
     @foreach (var arg in SelectedArgumentsValues)
     {
         <div class="form-inline">
-            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @oninput="value => {  SelectedArgumentsValues[arg.Key] = value.Value.ToString(); UpdateFilteredTranscations(); }" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")" />
+            <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="@CurrentValue" @oninput="value => {  SelectedArgumentsValues[arg.Key] = value.Value.ToString(); UpdateFilteredTranscations(); }" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")" />
             <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                     @onclick=" _ => {
                                   RemoveSelectedArgument(arg.Key);
@@ -57,7 +57,7 @@ else
 {
     <label class="clr-secondary">Method signature</label>
     <div class="form-inline">
-        <input type="text" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
+        <input type="number" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
         <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                 @onclick="async _ => {
                               TransactionFilters.MethodId = null;
@@ -68,9 +68,18 @@ else
     </div>
 }
 
+@code {
+    private string currentValue;
 
-
-
-
-
-
+    public string CurrentValue
+    {
+        get
+        {
+            return currentValue;
+        }
+        set
+        {
+            currentValue = value.Replace(" ", "");
+        }
+    }
+}

@@ -36,10 +36,10 @@
                             <label class="clr-secondary">Contract address</label>
                             <div class="form-inline">
                                 <input type="text" class="form-control mb-2 mr-sm-2 round-10" placeholder="Filter by contract address" 
-                                       @onchange="@((value) => {
-                                                      ShowMethodFilter = false;
-                                                      ContractMethods = null;
-                                                      TransactionFilters.ContractAddress = value.Value.ToString();
+                                       @bind="@CurrentValue"
+                                       @oninput="@((value) => {
+                                                       ShowMethodFilter = false;
+                                                       ContractMethods = null;
                                                   })" />
                                 <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
                                         @onclick="@(_ => {
@@ -243,7 +243,7 @@
     {
         get
         {
-            if (_authService.User.AvailableProduct.ContainsKey(ProductType.ArgumentFunctionRequests.ToString()))
+            if (_authService.User != null && _authService.User.AvailableProduct.ContainsKey(ProductType.ArgumentFunctionRequests.ToString()))
             {
                 return  _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()];
             }
@@ -251,6 +251,20 @@
             {
                 return default;
             }
+        }
+    }
+
+    private string currentValue;
+
+    public string CurrentValue
+    {
+        get
+        {
+            return TransactionFilters.ContractAddress;
+        }
+        set
+        {
+            TransactionFilters.ContractAddress = value.Replace(" ", "");
         }
     }
 
@@ -330,7 +344,7 @@
                         _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()] += 10; // quantity hardcode
                     }
                     else
-                    { 
+                    {
                         _authService.User.AvailableProduct.Add(ProductType.ArgumentFunctionRequests.ToString(), 10); // quantity hardcode
                     }
 
