@@ -319,10 +319,9 @@
         {
             string toAddress = (await _httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend")).walletAddress; // generate ex if auth token ends
 
-            // check price -> return 0.1m Eth (test value, coz method not implemented)
-            decimal ethCost = 0.1m;
+            var pricePerItem = long.Parse(await _httpService.Get($"/api/Payment/pricePerItem?ProductType={ProductType.ArgumentFunctionRequests}"));
 
-            System.Numerics.BigInteger weiValue = Nethereum.Web3.Web3.Convert.ToWei(ethCost);
+            System.Numerics.BigInteger weiValue = pricePerItem * 10; // quantity hardcode
 
             string txnHash;
 

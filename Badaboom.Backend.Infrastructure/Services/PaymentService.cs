@@ -17,6 +17,8 @@ namespace Badaboom.Backend.Infrastructure.Services
 
         string GetWalletAddress();
 
+        Task<long> GetPricePerItem(ProductType productType);
+
         Task<BigInteger> PurchaseCost(ProductType productType, int quantity);
 
         Task<bool> ValidatePurchase(string txhash, string from, BigInteger amountToSend); // use only after making payment
@@ -46,6 +48,15 @@ namespace Badaboom.Backend.Infrastructure.Services
         public string GetWalletAddress()
             => _configuration.GetSection("NetworkSettings").GetSection("ETH")["WaletAddress"];
 
+        public async Task<long> GetPricePerItem(ProductType productType)
+        {
+            using var pRepo = new PeymentRepository(_connectionString);
+
+            long pricePerItem = await pRepo.GetProductPrice(productType.ToString());
+
+            return pricePerItem;
+        }
+
         public async Task<bool> ValidatePurchase(string txhash, string from, BigInteger amountToSend)
         {
             Nethereum.Web3.Web3 web3 = new("https://ropsten.infura.io/v3/89b011b73e644d77a85bad2a0cbe4e61");
@@ -60,9 +71,7 @@ namespace Badaboom.Backend.Infrastructure.Services
 
         public async Task<BigInteger> PurchaseCost(ProductType productType, int quantity)
         {
-            using var pRepo = new PeymentRepository(_connectionString);
-
-            long pricePerItem = await pRepo.GetProductPrice(productType.ToString());
+            long pricePerItem = await GetPricePerItem(productType);
 
             return pricePerItem * quantity;
         }

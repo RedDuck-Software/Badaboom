@@ -64,5 +64,13 @@ namespace Badaboom.Backend.Controllers
             int? quantity = await _paymentService.CheckQuantity(request.ProductType, CurrentUser.Address);
             return Ok(new { Quantity = quantity ?? 0 });
         }
+
+        [HttpGet("pricePerItem")]
+        public async Task<IActionResult> GetPricePerItem([FromQuery] ProductRequest request)
+        {
+            long pricePerItem = await _paymentService.GetPricePerItem(request.ProductType);
+
+            return Ok(pricePerItem);
+        }
     }
 }
