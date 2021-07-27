@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations;
 using Badaboom.Client.Infrastructure.Services;
 using Badaboom.Client.Infrastructure.Helpers;
 using Badaboom.Client.Infrastructure.Models;
+using Badaboom.Client.Shared;
 
 namespace Badaboom.Client.Pages
 {
@@ -23,6 +24,9 @@ namespace Badaboom.Client.Pages
         [Inject]
         public NavigationManager NavigationManager { get; set; } = default!;
         public bool Loading { get; set; }
+
+        [CascadingParameter]
+        public MainLayout MainLayout { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -101,6 +105,7 @@ namespace Badaboom.Client.Pages
                 await AuthenticationService.Connect(selectedAddress);
                 var returnUrl = NavigationManager.QueryString("returnUrl") ?? "";
                 NavigationManager.NavigateTo(returnUrl);
+                MainLayout.Rerender();
             }
             catch (Exception ex)
             {
