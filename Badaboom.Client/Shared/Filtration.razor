@@ -103,20 +103,20 @@
                 {
                     <div class="d-grid gap-2 d-flex justify-content-end">
                         <label class="btn-round clr-danger mb-0 mr-2 text-center" style="padding: 5px 10px;">Requests remainded: @Quantity</label>
-                        <button type="button" class="btn btn-round clr-secondary" 
+                        <button type="button" class="btn btn-round clr-secondary" disabled="@Index.Loading" 
                                 @onclick="FilterPro">
                             @if (Index.Loading)
                             {
                                 <span class="spinner-border spinner-border-sm mt-1 mr-1"></span>
                             }
-                            Filter <span class="clr-danger"> (Pro)</span>
+                            Filter <span class="clr-danger"> (Pro) </span>
                         </button>
                     </div>
                 }
                 else
                 {
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" 
+                        <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" disabled="@Index.Loading"
                                 @onclick="Index.Filter">
                             @if (Index.Loading)
                             {
@@ -192,7 +192,7 @@
     }
 
     <div class="d-flex justify-content-end col font-weight-bold">
-        <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary p-2" disabled="@IsProFiltering"
+        <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary p-2" disabled="@(IsProFiltering || Index.Loading)"
                 @onclick="Index.Filter">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise font-weight-bold" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
@@ -309,7 +309,9 @@
             return;
         }
 
+        Index.Loading = true;
 
+        StateHasChanged();
 
         bool isAvailableUse = Quantity > 0;
 
@@ -353,12 +355,14 @@
                 else
                 {
                     Console.WriteLine("(There is something wrong with your transaction)");
+                    Index.Loading = false;
                     return;
                 }
             }
             catch (MetaMask.Blazor.Exceptions.UserDeniedException)
             {
                 System.Console.WriteLine($"User Denied");
+                Index.Loading = false;
                 return;
             }
 
@@ -367,13 +371,14 @@
 
         await Index.Filter();
 
-
         if (Quantity > 0)
         {
             _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()]--;
 
             await _localStorageService.SetItem("user", _authService.User);
         }
+
+        Index.Loading = false;
     }
 
     private async Task<bool> CheckIsSuccessTransaction(string txnHash)
