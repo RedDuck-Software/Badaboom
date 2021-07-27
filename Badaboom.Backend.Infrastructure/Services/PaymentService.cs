@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,9 +17,9 @@ namespace Badaboom.Backend.Infrastructure.Services
 
         string GetWalletAddress();
 
-        decimal PurchaseCost(ProductType productType, int quantity);
+        Task<BigInteger> PurchaseCost(ProductType productType, int quantity);
 
-        Task<bool> ValidatePurchase(string txhash, string from, decimal amountToSend); // use only after making payment
+        Task<bool> ValidatePurchase(string txhash, string from, BigInteger amountToSend); // use only after making payment
         
         Task SetProduct(string address, ProductType productType, int quantity);
 
@@ -45,35 +46,39 @@ namespace Badaboom.Backend.Infrastructure.Services
         public string GetWalletAddress()
             => _configuration.GetSection("NetworkSettings").GetSection("ETH")["WaletAddress"];
 
-        public async Task<bool> ValidatePurchase(string txhash, string from, decimal amountToSend)
+        public async Task<bool> ValidatePurchase(string txhash, string from, BigInteger amountToSend)
         {
             Nethereum.Web3.Web3 web3 = new("https://ropsten.infura.io/v3/89b011b73e644d77a85bad2a0cbe4e61");
             var transaction = await web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(txhash);
 
-            bool _value = Nethereum.Web3.Web3.Convert.ToWei(amountToSend) == transaction.Value.Value;
+            bool _value = amountToSend == transaction.Value.Value;
             bool _from = from.ToLower() == transaction.From.ToLower();
             bool _to = GetWalletAddress().ToLower() == transaction.To.ToLower();
 
             return (_value && _from && _to);
         }
 
-        public decimal PurchaseCost(ProductType productType, int quantity)
+        public async Task<BigInteger> PurchaseCost(ProductType productType, int quantity)
         {
-            throw new NotImplementedException();
+            using var pRepo = new PeymentRepository(_connectionString);
+
+            long pricePerItem = await pRepo.GetProductPrice(productType.ToString());
+
+            return pricePerItem * quantity;
         }
 
-        public async Task SetProduct(string address, ProductType productType, int quantity) // нельзя вызвать если currentQuantity == null и quantity == -1
+        public async Task SetProduct(string address, ProductType productType, int quantity)
         {
             using var pRepo = new PeymentRepository(_connectionString);
 
             int? currentQuantity = await pRepo.CheckQuantityArgumentFunctionRequests(address, productType.ToString());
 
 
-            if (currentQuantity == null) // 2 requests
+            if (currentQuantity == null)
             {
                 await pRepo.AddUserProduct(address, productType.ToString(), quantity);
             }
-            else if (currentQuantity <= 1 && quantity == -1) // 1 requests
+            else if (currentQuantity <= 1 && quantity == -1)
             {
                 await pRepo.DeleteUserProduct(address, productType.ToString());
             }

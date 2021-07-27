@@ -337,7 +337,7 @@
                     await _httpService.Post<PurchaseRequest>("/api/payment/purchase", new PurchaseRequest()
                     {
                         ProductType = ProductType.ArgumentFunctionRequests,
-                        Quantity = 10,
+                        Quantity = 10, // quantity hardcode
                         TxnHash = txnHash
                     });
 

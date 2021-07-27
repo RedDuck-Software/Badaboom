@@ -43,9 +43,9 @@ namespace Database.Respositories
         public async Task AddUserProduct(string address, string productType, int quantity)
         {
             var sql = "SELECT u.UserId, p.Id " +
-                         "FROM Users u, Products p " +
-                       $"WHERE u.Address = convert(binary(20), '{address}', 1) " +
-                         $"AND p.ApiEndpoint = '{productType}';";
+                        "FROM Users u, Products p " +
+                      $"WHERE u.Address = convert(binary(20), '{address}', 1) " +
+                        $"AND p.ApiEndpoint = '{productType}';";
 
             (int UserId, int ProductId) response = await SqlConnection.QuerySingleAsync<(int, int)>(sql);
 
@@ -58,15 +58,24 @@ namespace Database.Respositories
         public async Task DeleteUserProduct(string address, string productType)
         {
             var sql = "DELETE FROM UsersProducts " +
-                                  "FROM Users u " +
-                            "INNER JOIN UsersProducts up " +
-                                    "ON u.UserId = up.UserId " +
-                            "INNER JOIN Products p " +
-                                    "ON up.ProductId = p.Id " +
-                                $"WHERE u.Address = convert(binary(20), '{address}', 1) " +
-                                  $"AND p.ApiEndpoint = '{productType}';";
+                             "FROM Users u " +
+                       "INNER JOIN UsersProducts up " +
+                               "ON u.UserId = up.UserId " +
+                       "INNER JOIN Products p " +
+                               "ON up.ProductId = p.Id " +
+                           $"WHERE u.Address = convert(binary(20), '{address}', 1) " +
+                             $"AND p.ApiEndpoint = '{productType}';";
 
             await SqlConnection.ExecuteAsync(sql);
+        }
+
+        public async Task<long> GetProductPrice(string productType)
+        {
+            var sql = "SELECT p.Price " +
+                        "FROM Products p " +
+                      $"WHERE p.ApiEndpoint = '{productType}';";
+
+            return await SqlConnection.QuerySingleOrDefaultAsync<long>(sql);
         }
     }
 }

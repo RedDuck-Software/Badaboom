@@ -42,7 +42,10 @@ namespace Badaboom.Backend.Controllers
                 return BadRequest(new { message = $"The number of units of the product to purchase must be greater than 0" });
             }
 
-            bool transactionIsValid = await _paymentService.ValidatePurchase(request.TxnHash, CurrentUser.Address, 0.1m); //hardcode - shoud get price from method
+            bool transactionIsValid = await _paymentService.ValidatePurchase(
+                request.TxnHash, 
+                CurrentUser.Address, 
+                await _paymentService.PurchaseCost(ProductType.ArgumentFunctionRequests, 10)); // quantity hardcode
 
             if (transactionIsValid)
             {
