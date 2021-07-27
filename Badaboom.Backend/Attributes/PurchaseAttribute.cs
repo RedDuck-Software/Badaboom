@@ -14,19 +14,13 @@ namespace Badaboom.Backend.Attributes
     public class PurchaseAttribute : Attribute, IAsyncAuthorizationFilter
     {
         private readonly ProductType endpoint;
-        //private readonly IPaymentService _paymentService;
 
         public PurchaseAttribute(
-            ProductType endpoint //,
-            //IPaymentService paymentService
+            ProductType endpoint
             )
         {
             this.endpoint = endpoint;
-            //_paymentService = paymentService;
         }
-
-        [Inject]
-        public IPaymentService PaymentService { get; set; }
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
@@ -41,7 +35,9 @@ namespace Badaboom.Backend.Attributes
             }
             else
             {
-                await PaymentService.SetProduct(user.Address, ProductType.ArgumentFunctionRequests, -1);
+                var paymentService = context.HttpContext.RequestServices.GetService(typeof(IPaymentService)) as PaymentService;
+
+                await paymentService.SetProduct(user.Address, ProductType.ArgumentFunctionRequests, -1);
             }
         }
     }
