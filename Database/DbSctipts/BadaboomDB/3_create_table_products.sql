@@ -3,5 +3,5 @@
 
 	[Price] BIGINT NOT NULL,
 
-	[ApiEndpoint] VARCHAR(100) NOT NULL
+	[ApiEndpoint] VARCHAR(100) NOT NULL UNIQUE
 );
