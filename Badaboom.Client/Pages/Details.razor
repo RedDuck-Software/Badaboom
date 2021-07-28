@@ -4,6 +4,7 @@
 @using Nethereum.Web3;
 @using System.Globalization;
 @using Badaboom.Client.Infrastructure.Models;
+@using System.Text.Json;
 
 @if (IsHashAddressValid && transactionDetails == null)
 {
@@ -14,137 +15,196 @@ else if (IsHashAddressValid)
     <div class="card">
         <div class="card-header">
             <div class="d-flex align-items-center">
-                <h5>Transaction Details</h5>
+                <h5 class="col-6">Transaction Details</h5>
+                <div class="col-6 btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary @(CurrentPage == DisplayPage.Overview ? "active" : "")"
+                            @onclick="@(() => CurrentPage = DisplayPage.Overview)">Overview</button>
+                    <button type="button" class="btn btn-outline-primary @(CurrentPage == DisplayPage.InternalTxns ? "active" : "")"
+                            @onclick="@(async () => {
+                                            CurrentPage = DisplayPage.InternalTxns;
+                                            if (IsHashAddressValid && InternalTxns.Count == 0) { await InitializeInternalTxn(); }
+                                        })">
+                        Internal Txns
+                    </button>
+                    <button type="button" disabled
+                            class="btn btn-outline-primary @(CurrentPage == DisplayPage.State ? "active" : "")"
+                            @onclick="@(() => CurrentPage = DisplayPage.State)">State</button>
+                </div>
             </div>
         </div>
         <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">
-                    Transaction Hash
-                </dt>
-                <dd class="col-sm-9">
-                    <NavLink href="@("https://etherscan.io/tx/" + transactionDetails.TransactionHash)">@transactionDetails.TransactionHash</NavLink> 
-                </dd>
-                <dt class="col-sm-3">
-                    Status
-                </dt>
-                <dd class="col-sm-9">
-                    @if (transactionReceipt.Status.Value == 1)
+            @if (CurrentPage == DisplayPage.Overview)
+            {
+                <dl class="row">
+                    <dt class="col-sm-3">
+                        Transaction Hash
+                    </dt>
+                    <dd class="col-sm-9">
+                        <NavLink href="@("https://etherscan.io/tx/" + transactionDetails.TransactionHash)">@transactionDetails.TransactionHash</NavLink> 
+                    </dd>
+                    <dt class="col-sm-3">
+                        Status
+                    </dt>
+                    <dd class="col-sm-9">
+                        @if (transactionReceipt.Status.Value == 1)
+                        {
+                            <div class="alert alert-success" role="alert">
+                                Success
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                Fail
+                            </div>
+                        }
+                    </dd>
+                    <dt class="col-sm-3">
+                        Block
+                    </dt>
+                    <dd class="col-sm-9">
+                        <NavLink href="@("https://etherscan.io/block/" + transactionDetails.BlockNumber)">@transactionDetails.BlockNumber</NavLink>
+                    </dd>
+                    <dt class="col-sm-3">
+                        Timestamp
+                    </dt>
+                    <dd class="col-sm-9">
+                        @DateTimeOffset.FromUnixTimeSeconds(Timestamp).ToString("yyyy-MM-dd HH:mm:ss")
+                    </dd>
+                    <dt class="col-sm-3">
+                        From
+                    </dt>
+                    <dd class="col-sm-9">
+                        <NavLink href="@("https://etherscan.io/address/" + transactionDetails.From)">@transactionDetails.From</NavLink>
+                    </dd>
+                    <dt class="col-sm-3">
+                        To
+                    </dt>
+                    <dd class="col-sm-9">
+                        <NavLink href="@("https://etherscan.io/address/" + transactionDetails.To)">@transactionDetails.To</NavLink>
+                    </dd>
+                    <dt class="col-sm-3">
+                        Value
+                    </dt>
+                    <dd class="col-sm-9">
+                        @EthValue Ether ($@Math.Round(EthValue * EthPriceAtSpecificTime, 2))
+                    </dd>
+                    <dt class="col-sm-3">
+                        Transaction Fee
+                    </dt>
+                    <dd class="col-sm-9">
+                        @TransactionFee ($@Math.Round(TransactionFee * EthPriceAtSpecificTime, 2))
+                    </dd>
+                    <dt class="col-sm-3">
+                        Gas Price
+                    </dt>
+                    <dd class="col-sm-9">
+                        @GasPriceEth Ether (@((int)(GasPriceEth * 1_000_000_000)) Gwei)
+                    </dd>
+                    <dt class="col-sm-3">
+                        Transaction Ether Price
+                    </dt>
+                    <dd class="col-sm-9">
+                        $@EthPriceAtSpecificTime/Ether
+                    </dd>
+                    <dt class="col-sm-3">
+                        Curent Ether Price
+                    </dt>
+                    <dd class="col-sm-9">
+                        $@CurrentEthPrice/Ether
+                    </dd>
+                    <dt class="col-sm-3">
+                        Input Data
+                    </dt>
+                    @if (InputData.MethodId.Length <= 2)
                     {
-                        <div class="alert alert-success" role="alert">
-                            Success
-                        </div>
+                        <dd class="col-sm-9">
+                            0x
+                        </dd>
                     }
                     else
                     {
-                        <div class="alert alert-danger" role="alert">
-                            Fail
-                        </div>
+                        if (DisplayInputSetings == DisplayInput.DefaultView)
+                        {
+                            <dd class="col-sm-9">
+                                MethodID: @InputData.MethodId<br />
+                                @for (int i = 0; i < InputData.Parametrs.Count; i++)
+                                {
+                                    @($"[{i}]: 0x{InputData.Parametrs[i]}") <br />
+                                }
+
+                            </dd>
+                        }
+                        else if (DisplayInputSetings == DisplayInput.Original)
+                        {
+                            <dd class="col-sm-9">
+                                <div style="max-width: 500px;">@transactionDetails.Input</div>
+                            </dd>
+                        }
+
+                        <dt class="col-sm-3" />
+                        <dd class="col-sm-9">
+                            <div class="dropdown dropup">
+                                <button class="btn btn-primary dropdown-toggle mr-4"
+                                        data-toggle="dropdown"
+                                        type="button"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        @onclick="e => this.show=!this.show">
+                                    View Input As
+                                </button>
+                                <ul class="dropdown-menu @(show? "show":"")" aria-labelledby="dropdownMenuButton1" @onclick="_ => this.show = false">
+                                    <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.Original">Original</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.DefaultView">Default view</a></li>
+                                </ul>
+                            </div>
+                        </dd>
                     }
-                </dd>
-                <dt class="col-sm-3">
-                    Block
-                </dt>
-                <dd class="col-sm-9">
-                    <NavLink href="@("https://etherscan.io/block/" + transactionDetails.BlockNumber)">@transactionDetails.BlockNumber</NavLink>
-                </dd>
-                <dt class="col-sm-3">
-                    Timestamp
-                </dt>
-                <dd class="col-sm-9">
-                    @DateTimeOffset.FromUnixTimeSeconds(Timestamp).ToString("yyyy-MM-dd HH:mm:ss")
-                </dd>
-                <dt class="col-sm-3">
-                    From
-                </dt>
-                <dd class="col-sm-9">
-                    <NavLink href="@("https://etherscan.io/address/" + transactionDetails.From)">@transactionDetails.From</NavLink>
-                </dd>
-                <dt class="col-sm-3">
-                    To
-                </dt>
-                <dd class="col-sm-9">
-                    <NavLink href="@("https://etherscan.io/address/" + transactionDetails.To)">@transactionDetails.To</NavLink>
-                </dd>
-                <dt class="col-sm-3">
-                    Value
-                </dt>
-                <dd class="col-sm-9">
-                    @EthValue Ether ($@Math.Round(EthValue * EthPriceAtSpecificTime, 2))
-                </dd>
-                <dt class="col-sm-3">
-                    Transaction Fee
-                </dt>
-                <dd class="col-sm-9">
-                    @TransactionFee ($@Math.Round(TransactionFee * EthPriceAtSpecificTime, 2))
-                </dd>
-                <dt class="col-sm-3">
-                    Gas Price
-                </dt>
-                <dd class="col-sm-9">
-                    @GasPriceEth Ether (@((int)(GasPriceEth * 1_000_000_000)) Gwei)
-                </dd>
-                <dt class="col-sm-3">
-                    Transaction Ether Price
-                </dt>
-                <dd class="col-sm-9">
-                    $@EthPriceAtSpecificTime/Ether
-                </dd>
-                <dt class="col-sm-3">
-                    Curent Ether Price
-                </dt>
-                <dd class="col-sm-9">
-                    $@CurrentEthPrice/Ether
-                </dd>
-                <dt class="col-sm-3">
-                    Input Data
-                </dt>
-                @if (InputData.MethodId.Length <= 2)
+                </dl>
+            }
+            else if (CurrentPage == DisplayPage.InternalTxns)
+            {
+                @if (InternalTxns.Count() == 0)
                 {
-                    <dd class="col-sm-9">
-                        0x
-                    </dd>
+                    <p>Loading <span class="spinner-border spinner-border-sm ml-1" /></p>
                 }
                 else
                 {
-                    if (DisplayInputSetings == DisplayInput.DefaultView)
-                    {
-                        <dd class="col-sm-9">
-                            MethodID: @InputData.MethodId<br />
-                            @for (int i = 0; i < InputData.Parametrs.Count; i++)
+                    <table class="main-table">
+                        <thead>
+                            <tr>
+                                <th>Type Trace Address</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Value</th>
+                                <th>Gas Limit</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var row in InternalTxns)
                             {
-                                @($"[{i}]: 0x{InputData.Parametrs[i]}") <br />
+                                <tr>
+                                    <td>@row.Type.ToString()</td>
+                                    <td>
+                                        <NavLink class="nav-link hash-width text-truncate" href="@("https://etherscan.io/address/" + row.From)">
+                                            @row.From
+                                        </NavLink>
+                                    </td>
+                                    <td>
+                                        <NavLink class="nav-link hash-width text-truncate" href="@("https://etherscan.io/address/" + row.To)">
+                                            @row.To
+                                        </NavLink>
+                                    </td>
+                                    <td>@(Web3.Convert.FromWei(row.Value)) Ether</td>
+                                    <td>@row.GasLimit.ToString("#,###")</td>
+                                </tr>
                             }
-
-                        </dd>
-                    }
-                    else if (DisplayInputSetings == DisplayInput.Original)
-                    {
-                        <dd class="col-sm-9">
-                            <div style="max-width: 500px;">@transactionDetails.Input</div>
-                        </dd>
-                    }
-
-                    <dt class="col-sm-3" />
-                    <dd class="col-sm-9">
-                        <div class="dropdown dropup">
-                            <button class="btn btn-primary dropdown-toggle mr-4"
-                                    data-toggle="dropdown"
-                                    type="button"
-                                    aria-haspopup="true"
-                                    aria-expanded="false"
-                                    @onclick="e => this.show=!this.show">
-                                View Input As
-                            </button>
-                            <ul class="dropdown-menu @(show? "show":"")" aria-labelledby="dropdownMenuButton1" @onclick="_ => this.show = false">
-                                <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.Original">Original</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.DefaultView">Default view</a></li>
-                            </ul>
-                        </div>
-                    </dd>
-                }
-            </dl>
+                        </tbody>
+                    </table>
+               }
+           }
         </div>
     </div>
 }
@@ -179,6 +239,15 @@ else
         Original,
         DefaultView
     }
+
+    public enum DisplayPage
+    {
+        Overview,
+        InternalTxns,
+        State
+    }
+
+    public DisplayPage CurrentPage { get; set; } = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -263,4 +332,31 @@ else
 
         return data;
     }
+
+    #region Internal Txn
+
+    public List<InternalTxnResponse> InternalTxns { get; set; } = new List<InternalTxnResponse>();
+
+    protected async Task InitializeInternalTxn()
+    {
+        var httpResponse = await Http.GetAsync($"/api/transaction/getInternalTxn?txhash={txnHash}");
+
+        var responseString = await httpResponse.Content.ReadAsStringAsync();
+
+        Console.WriteLine(responseString);
+
+        InternalTxns = JsonSerializer.Deserialize<List<InternalTxnResponse>>(responseString,
+        new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+        Web3 web3 = new(config.GetSection("RPCUrls")["Eth"]);
+
+        foreach (var internalTxn in InternalTxns)
+        {
+            internalTxn.Value = transactionDetails.Value;
+
+            internalTxn.GasLimit = transactionDetails.Gas;
+        }
+    }
+
+    #endregion
 }
