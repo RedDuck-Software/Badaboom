@@ -68,5 +68,11 @@ namespace Backend.Controllers
         {
             return await _transactionService.GetPaginatedFilteredTransactionsWithInputParameters(request, 10);
         }
+
+        [HttpGet("getInternalTxn")]
+        public async Task<ActionResult<IEnumerable<InternalTxnResponse>>> GetInternalTxn([FromQuery] string txhash)
+        {
+            return Ok(await _transactionService.GetInternalTxns(txhash));
+        }
     }
 }

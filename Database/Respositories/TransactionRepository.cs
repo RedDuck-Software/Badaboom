@@ -131,5 +131,15 @@ namespace Database.Respositories
 
             return (result, null);
         }
+
+        public async Task<IEnumerable<Call>> GetInternalTransactions(string tx)
+        {
+            var sql = "SELECT c.[Type], convert(varchar(44), c.[From], 1) as [From],convert(varchar(44), c.[To], 1) as [To] " +
+                        "FROM [dbo].[Calls] c " +
+                       "WHERE TransactionHash = convert(binary(32), @TransactionHash, 1) " +
+                    "ORDER BY [CallId] ASC";
+
+            return await SqlConnection.QueryAsync<Call>(sql, new { TransactionHash = tx });
+        }
     }
 }

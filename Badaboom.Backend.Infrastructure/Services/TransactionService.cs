@@ -19,6 +19,8 @@ namespace Badaboom.Backend.Infrastructure.Services
         Task<PaginationTransactionResponse> GetPaginatedFilteredTransactionsWithInputParameters(GetFilteredTransactionRequest request, int maxSearchTries);
         List<Nethereum.ABI.FunctionEncoding.ParameterOutput> DecodeInputData(DecodeInputDataRequest request, string contractAddress, string methodName, string inputData);
         Task<string> GetContractAbi(string contractAddress);
+
+        Task<IEnumerable<InternalTxnResponse>> GetInternalTxns(string txhash);
     }
 
     class EtherscanResponse
@@ -171,6 +173,25 @@ namespace Badaboom.Backend.Infrastructure.Services
                             return false;
 
             return true;
+        }
+
+        public async Task<IEnumerable<InternalTxnResponse>> GetInternalTxns(string txhash)
+        {
+            IEnumerable<Call> res;
+            using (var tRepo = new TransactionRepository(_connectionStringIndexes))
+            {
+                res = await tRepo.GetInternalTransactions(txhash);
+            };
+
+            return res.Select(c => 
+            {
+                return new InternalTxnResponse()
+                {
+                    Type = (Core.Models.Enums.CallTypes)c.Type,
+                    From = c.From,
+                    To = c.To
+                };
+            });
         }
     }
 }
