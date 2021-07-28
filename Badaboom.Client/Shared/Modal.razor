@@ -1,0 +1,180 @@
+﻿@using Badaboom.Core.Models.Enums
+@using Badaboom.Core.Models.Request
+
+<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <form class="form-inline">
+                    <div class="d-flex col-8">Quantity of requests</div>
+                    <label class="col">@(Nethereum.Web3.Web3.Convert.FromWei(PricePerItem)) Eth per item</label>
+                </form>
+                <input type="range" class="mr-2" style="width:100%" min="1" max="1000" @bind="@QuantityForBuy" />
+                <input type="number" min="1" max="1000" @bind="@QuantityForBuy" />
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="Close">Close</button>
+                <button type="button" class="btn btn-primary" @onclick="Buy">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (ShowBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+
+@code {
+    public string ModalDisplay = "none;";
+    public string ModalClass = "";
+    public bool ShowBackdrop = false;
+
+    [Parameter]
+    public Filtration Filtration { get; set; }
+
+    public int QuantityForBuy { get; set; } = 1;
+
+    public long PricePerItem { get; set; }
+
+    public int Quantity
+    {
+        get
+        {
+            if (Filtration._authService.User != null && Filtration._authService.User.AvailableProduct.ContainsKey(ProductType.ArgumentFunctionRequests.ToString()))
+            {
+                return Filtration._authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()];
+            }
+            else
+            {
+                return default;
+            }
+        }
+    }
+
+
+    public async Task Open()
+    {
+        Filtration.Index.Loading = false;
+        PricePerItem = long.Parse(await Filtration._httpService.Get($"/api/Payment/pricePerItem?ProductType={ProductType.ArgumentFunctionRequests}"));
+        ModalDisplay = "block;";
+        ModalClass = "Show";
+        ShowBackdrop = true;
+        StateHasChanged();
+    }
+
+    public async Task Close()
+    {
+        ModalDisplay = "none";
+        ModalClass = "";
+        ShowBackdrop = false;
+        StateHasChanged();
+    }
+
+    public async Task Buy()
+    {
+        Filtration.Index.Loading = true;
+
+        StateHasChanged();
+
+        string toAddress = (await Filtration._httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend")).walletAddress; // generate ex if auth token ends
+
+        System.Numerics.BigInteger weiValue = PricePerItem * QuantityForBuy;
+
+        string txnHash;
+
+        try
+        {
+            txnHash = await Filtration.MetaMaskService.SendTransaction(toAddress, weiValue);
+
+            if (await CheckIsSuccessTransaction(txnHash))
+            {
+                Console.WriteLine("(Transaction status code success)");
+
+                await Filtration._httpService.Post<PurchaseRequest>("/api/payment/purchase", new PurchaseRequest()
+                {
+                    ProductType = ProductType.ArgumentFunctionRequests,
+                    Quantity = QuantityForBuy,
+                    TxnHash = txnHash
+                });
+
+                if (Filtration._authService.User.AvailableProduct.ContainsKey(ProductType.ArgumentFunctionRequests.ToString()))
+                {
+                    Filtration._authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()] += QuantityForBuy;
+                }
+                else
+                {
+                    Filtration._authService.User.AvailableProduct.Add(ProductType.ArgumentFunctionRequests.ToString(), QuantityForBuy);
+                }
+
+                await Filtration._localStorageService.SetItem("user", Filtration._authService.User);
+            }
+            else
+            {
+                Console.WriteLine("(There is something wrong with your transaction)");
+                Filtration.Index.Loading = false;
+                return;
+            }
+        }
+        catch (MetaMask.Blazor.Exceptions.UserDeniedException)
+        {
+            System.Console.WriteLine($"User Denied");
+            Filtration.Index.Loading = false;
+            return;
+        }
+
+        System.Console.WriteLine($"TX Hash: {txnHash}");
+
+        await Close();
+    }
+
+    private async Task<bool> CheckIsSuccessTransaction(string txnHash)
+    {
+        int maxCycle = 18 * 2;
+        int cycle = 0;
+        Console.WriteLine($"Wait between 5 and 180 seconds, we check your transaction");
+        while (cycle < maxCycle)
+        {
+            Nethereum.Web3.Web3 web3 = new("https://ropsten.infura.io/v3/89b011b73e644d77a85bad2a0cbe4e61");
+            var transaction = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txnHash);
+
+            await Task.Delay(5_000);
+
+            try
+            {
+                if (transaction.Status.Value == 1)
+                {
+                    return true;
+                }
+            }
+            catch (NullReferenceException)
+            {
+                Console.WriteLine("(Pending)");
+            }
+
+            cycle++;
+        }
+
+        return false;
+    }
+
+    private class WalletAddress
+    {
+        public string walletAddress { get; set; }
+    }
+
+    private class ResponseQuantity
+    {
+        public int? Quantity { get; set; }
+    }
+}

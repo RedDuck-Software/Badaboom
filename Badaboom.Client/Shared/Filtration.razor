@@ -102,7 +102,7 @@
                 @if (IsProFiltering)
                 {
                     <div class="d-grid gap-2 d-flex justify-content-end">
-                        <label class="btn-round clr-danger mb-0 mr-2 text-center" style="padding: 5px 10px;">Requests remainded: @Quantity</label>
+                        <label class="btn-round clr-danger mb-0 mr-2 text-center" style="padding: 5px 10px;">Requests remainded: @Modal.Quantity</label>
                         <button type="button" class="btn btn-round clr-secondary" disabled="@Index.Loading" 
                                 @onclick="FilterPro">
                             @if (Index.Loading)
@@ -202,6 +202,10 @@
     </div>
 </div>
 
+<Modal @ref="Modal" Filtration="this"></Modal>
+
+
+
 @code {
     [Parameter]
     public Pages.Index Index { get; set; }
@@ -239,21 +243,6 @@
             Index.TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues != null &&
             Index.TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues.Count > 0);
 
-    public int Quantity
-    {
-        get
-        {
-            if (_authService.User != null && _authService.User.AvailableProduct.ContainsKey(ProductType.ArgumentFunctionRequests.ToString()))
-            {
-                return  _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()];
-            }
-            else
-            {
-                return default;
-            }
-        }
-    }
-
     public string CurrentValue
     {
         get
@@ -265,6 +254,8 @@
             TransactionFilters.ContractAddress = value.ReplaceAll(new[] { " ", "\t", "\n" }, "");
         }
     }
+
+    public Modal Modal { get; set; }
 
 
     public async Task GetAbi()
@@ -313,64 +304,18 @@
 
         StateHasChanged();
 
-        bool isAvailableUse = Quantity > 0;
+        bool isAvailableUse = Modal.Quantity > 0;
 
         if (!isAvailableUse) // buy requests
         {
-            string toAddress = (await _httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend")).walletAddress; // generate ex if auth token ends
+            await Modal.Open();
 
-            var pricePerItem = long.Parse(await _httpService.Get($"/api/Payment/pricePerItem?ProductType={ProductType.ArgumentFunctionRequests}"));
-
-            System.Numerics.BigInteger weiValue = pricePerItem * 10; // quantity hardcode
-
-            string txnHash;
-
-            try
-            {
-                txnHash = await MetaMaskService.SendTransaction(toAddress, weiValue);
-
-                if (await CheckIsSuccessTransaction(txnHash))
-                {
-                    Console.WriteLine("(Transaction status code success)");
-
-                    await _httpService.Post<PurchaseRequest>("/api/payment/purchase", new PurchaseRequest()
-                    {
-                        ProductType = ProductType.ArgumentFunctionRequests,
-                        Quantity = 10, // quantity hardcode
-                        TxnHash = txnHash
-                    });
-
-                    if (_authService.User.AvailableProduct.ContainsKey(ProductType.ArgumentFunctionRequests.ToString()))
-                    {
-                        _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()] += 10; // quantity hardcode
-                    }
-                    else
-                    {
-                        _authService.User.AvailableProduct.Add(ProductType.ArgumentFunctionRequests.ToString(), 10); // quantity hardcode
-                    }
-
-                    await _localStorageService.SetItem("user", _authService.User);
-                }
-                else
-                {
-                    Console.WriteLine("(There is something wrong with your transaction)");
-                    Index.Loading = false;
-                    return;
-                }
-            }
-            catch (MetaMask.Blazor.Exceptions.UserDeniedException)
-            {
-                System.Console.WriteLine($"User Denied");
-                Index.Loading = false;
-                return;
-            }
-
-            System.Console.WriteLine($"TX Hash: {txnHash}");
+            return;
         }
 
         await Index.Filter();
 
-        if (Quantity > 0)
+        if (Modal.Quantity > 0)
         {
             _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()]--;
 
@@ -378,45 +323,5 @@
         }
 
         Index.Loading = false;
-    }
-
-    private async Task<bool> CheckIsSuccessTransaction(string txnHash)
-    {
-        int maxCycle = 18 * 2;
-        int cycle = 0;
-        Console.WriteLine($"Wait between 5 and 180 seconds, we check your transaction");
-        while (cycle < maxCycle)
-        {
-            Nethereum.Web3.Web3 web3 = new("https://ropsten.infura.io/v3/89b011b73e644d77a85bad2a0cbe4e61");
-            var transaction = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txnHash);
-
-            await Task.Delay(5_000);
-
-            try
-            {
-                if (transaction.Status.Value == 1)
-                {
-                    return true;
-                }
-            }
-            catch (NullReferenceException)
-            {
-                Console.WriteLine("(Pending)");
-            }
-
-            cycle++;
-        }
-
-        return false;
-    }
-
-    private class WalletAddress
-    {
-        public string walletAddress { get; set; }
-    }
-
-    private class ResponseQuantity
-    {
-        public int? Quantity { get; set; }
     }
 }

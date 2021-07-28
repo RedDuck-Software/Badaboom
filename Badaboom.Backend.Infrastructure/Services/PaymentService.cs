@@ -62,7 +62,7 @@ namespace Badaboom.Backend.Infrastructure.Services
             Nethereum.Web3.Web3 web3 = new("https://ropsten.infura.io/v3/89b011b73e644d77a85bad2a0cbe4e61");
             var transaction = await web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(txhash);
 
-            bool _value = amountToSend == transaction.Value.Value;
+            bool _value = amountToSend.Equals(transaction.Value.Value);
             bool _from = from.ToLower() == transaction.From.ToLower();
             bool _to = GetWalletAddress().ToLower() == transaction.To.ToLower();
 

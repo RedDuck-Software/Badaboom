@@ -45,7 +45,7 @@ namespace Badaboom.Backend.Controllers
             bool transactionIsValid = await _paymentService.ValidatePurchase(
                 request.TxnHash, 
                 CurrentUser.Address, 
-                await _paymentService.PurchaseCost(ProductType.ArgumentFunctionRequests, 10)); // quantity hardcode
+                await _paymentService.PurchaseCost(ProductType.ArgumentFunctionRequests, request.Quantity));
 
             if (transactionIsValid)
             {
