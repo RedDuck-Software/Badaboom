@@ -1,5 +1,6 @@
 ﻿@using Badaboom.Core.Models.Enums
 @using Badaboom.Core.Models.Request
+@inject Microsoft.Extensions.Configuration.IConfiguration config;
 
 <div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
     <div class="modal-dialog">
@@ -145,7 +146,7 @@
         Console.WriteLine($"Wait between 5 and 180 seconds, we check your transaction");
         while (cycle < maxCycle)
         {
-            Nethereum.Web3.Web3 web3 = new("https://ropsten.infura.io/v3/89b011b73e644d77a85bad2a0cbe4e61");
+            Nethereum.Web3.Web3 web3 = new(config.GetSection("RPCUrls")["EthRopsten"]);
             var transaction = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txnHash);
 
             await Task.Delay(5_000);
