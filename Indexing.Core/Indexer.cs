@@ -26,16 +26,18 @@ namespace IndexerCore
 
         public readonly ILogger Logger;
 
+        public IEnumerable<string> AddressesToIndex { get; set; }
 
+        public bool IndexInnerCalls { get; }
 
-        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, InfuraProvider rpcProvider, int queueSize)
+        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, int queueSize, bool indexInnerCalls, IEnumerable<string> addressesToIndex = null)
         {
             _web3Tracer = web3Tracer;
             _connectionString = dbConnectionString;
             QueueSize = queueSize;
-            _rpcProvider = rpcProvider;
             Logger = logger;
-
+            IndexInnerCalls = indexInnerCalls;
+            AddressesToIndex = addressesToIndex == null || addressesToIndex.Count() == 0 ? null : addressesToIndex.Select(v => v.FormatHex().ToLower());
             ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).Where(v => v != CallTypes.NO_CALL_TYPE.ToString().ToLower()).ToArray();
         }
 
@@ -45,17 +47,11 @@ namespace IndexerCore
             {
                 return (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
+                Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
 
-                if (_rpcProvider.IsAllTokensUsed)
-                {
-                    Logger.LogError("All api keys are already used. Sleep for 24h to make them available again");
-                    _rpcProvider.Reset();
-                }
-
-                return await GetLatestBlockNumber();
+                throw ex;
             }
         }
 
@@ -100,18 +96,7 @@ namespace IndexerCore
                 catch (Exception ex)
                 {
                     Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
-
-                    foreach (var block in blockQueueList)
-                    {
-                        try
-                        {
-                            await bRepo.RemoveBlockAsync(block);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.LogCritical($"Error while removing block {block.BlockNumber}. ex: " + e.Message);
-                        }
-                    }
+                    Environment.Exit(1);
                 }
             }
 
@@ -146,7 +131,7 @@ namespace IndexerCore
         {
             var queueSnapshot = BlockQueue.ToArray();
 
-            if(startBlock > endBlock) 
+            if (startBlock > endBlock)
             {
                 var c = startBlock;
                 startBlock = endBlock;
@@ -170,45 +155,44 @@ namespace IndexerCore
             catch (Exception ex) // if exception wasn`t handled in IndexBlock method - this is a Rpc call Exception
             {
                 Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
-                
-                System.Environment.Exit(1);
 
-                /*BlockQueue.Clear();
-
-                _web3Tracer.ChangeWeb3Provider(_rpcProvider.GetNextRpcUrl());
-
-                if (_rpcProvider.IsAllTokensUsed)
-                    _rpcProvider.Reset();
-
-                await IndexInRange(startBlock, endBlock);*/
+                Environment.Exit(1);
             }
         }
 
         private async Task IndexBlock(ulong blockNubmer)
         {
-            if (await this.ContainsBlock(new Block { BlockNumber = (int)blockNubmer }))
-            {
-                Logger.LogWarning($"Block {blockNubmer} is already indexed. Skipping");
-                return;
-            }
-
             var currentBlock = new Block { BlockNumber = (int)blockNubmer };
 
             try
             {
-                var txs = (await GetBlockTransactions(blockNubmer)).ToList();
+                var txs = (await GetBlockTransactions(blockNubmer)).ToList().Where(v => AddressesToIndex == null ? true :
+                            AddressesToIndex.Contains(v.RawTransaction?.To?.ToLower() ?? "")
+                            || AddressesToIndex.Contains(v.RawTransaction?.From?.ToLower() ?? "")).ToList();
+
+                var txsToSave = new List<Transaction>();
 
                 if (!txs.Any())
                 {
-                    Logger.LogWarning($"no transactions in block {blockNubmer}. Skipping");
+                    Logger.LogWarning($"no transactions to index in block {blockNubmer}. Skipping");
                 }
                 else
                 {
                     foreach (var tx in txs)
-                        IndexTransaction(tx);
+                    {
+                        if (!await ContainsTransactions(tx))
+                        {
+                            await IndexTransaction(tx);
+                            txsToSave.Add(tx);
+                        }
+                        else
+                        {
+                            Logger.LogWarning($"Tx with 0x{tx.TransactionHash} is already indexed");
+                        }
+                    }
                 }
 
-                currentBlock.Transactions = txs.ToList();
+                currentBlock.Transactions = txsToSave.ToList();
                 BlockQueue.Enqueue(currentBlock);
 
                 Logger.LogInformation($"Block {blockNubmer} added to InsertBlockQueue");
@@ -220,21 +204,49 @@ namespace IndexerCore
             }
         }
 
-        private Transaction IndexTransaction(Transaction tx)
+        private async Task<Transaction> IndexTransaction(Transaction tx)
         {
-            tx.Calls.Add(new Call()
-            {
-                TransactionHash = tx.TransactionHash,
-                To = tx.RawTransaction.To,
-                MethodId = tx.RawTransaction.MethodId,
-                From = tx.RawTransaction.From,
-                Input = tx.RawTransaction.Input,
-                Type = CallTypes.Call
-            });
+            IEnumerable<Web3Tracer.Models.TraceResult> trace = null;
 
-            tx.TransactionHash = tx.TransactionHash.RemoveHashPrefix();
+            if (IndexInnerCalls)
+            {
+                try
+                {
+                    trace = await _web3Tracer.GetTracesForTransaction("0x" + tx.TransactionHash);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Unnable to get trace of {tx.TransactionHash}. Skipping internal calls. Ex message: {ex.Message}");
+
+                    trace = null;
+                }
+            }
+
+            if (trace is null || !IndexInnerCalls )
+            {
+                tx.Calls.Add(new Call()
+                {
+                    TransactionHash = tx.TransactionHash,
+                    To = tx.RawTransaction.To,
+                    MethodId = tx.RawTransaction.MethodId,
+                    From = tx.RawTransaction.From,
+                    Input = tx.RawTransaction.Input,
+                    Type = CallTypes.Call
+                });
+
+                if (trace is null)
+                    Logger.LogWarning("Trace is null, no internal transactions recorded");
+
+                return tx;
+            }
+
+            if (IndexInnerCalls)
+                foreach (var t in trace)
+                    IndexCall(t, tx);
 
             Logger.LogInformation(tx.TransactionHash);
+
+            tx.TransactionHash = tx.TransactionHash.RemoveHashPrefix();
             return tx;
         }
 
@@ -259,11 +271,10 @@ namespace IndexerCore
             });
         }
 
-
-        private async Task<bool> ContainsBlock(Block block)
+        private async Task<bool> ContainsTransactions(Transaction tx)
         {
-            using var bRepo = new BlocksRepository(_connectionString);
-            return await bRepo.ContainsBlockAsync(block);
+            using var tRepo = new TransactionRepository(_connectionString);
+            return await tRepo.ContainsTransactionAsync(tx);
         }
 
         private async Task<IEnumerable<Transaction>> GetBlockTransactions(ulong blockNubmer)
@@ -278,9 +289,11 @@ namespace IndexerCore
                     TimeStamp = (int)block.Timestamp.ToUlong(),
                     BlockId = (int)blockNubmer,
                     Calls = new List<Call>(),
-                    GasPrice = t.Gas?.HexValue?.FormatHex(),
+                    GasPrice = t.GasPrice?.HexValue?.FormatHex(),
+                    Nonce = ((int)t.Nonce.Value),
                     RawTransaction = new RawTransaction
                     {
+                       
                         From = t.From.RemoveHashPrefix(),
                         To = t.To.RemoveHashPrefix(),
                         MethodId = GetMethodIdFromInput(t.Input)?.FormatHex() ?? "",
@@ -299,7 +312,7 @@ namespace IndexerCore
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
         }
 
-        private readonly InfuraProvider _rpcProvider;
+        private readonly string _rpcUrl;
 
         private readonly IWeb3Tracer _web3Tracer;
 

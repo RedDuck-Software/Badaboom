@@ -35,40 +35,61 @@ namespace Database.Respositories
             await SqlConnection.ExecuteAsync(sql, block);
         }
 
-        public async Task AddNewBlocksWithTransactionsAndCallsAsync(IEnumerable<Block> blocks)
+        public async Task AddNewBlocksWithTransactionsAndCallsAsync(IEnumerable<Block> blocksUnsorted)
         {
             string getRowStringForBlocks(Block b) => $"{b.BlockNumber}";
-            string getRowStringForTx(Transaction tx) => $"convert(binary(32),'{tx.TransactionHash}',2),{tx.BlockId},'{tx.TimeStamp}', convert(binary(8), '{tx.GasPrice}', 2)";
+            string getRowStringForTx(Transaction tx) => $"convert(binary(32),'{tx.TransactionHash}',2),{tx.BlockId},'{tx.TimeStamp}', convert(binary(8), '{tx.GasPrice}', 2), {tx.Nonce}";
             string getRowStringForCall(Call c) => $"convert(binary(32),'{c.TransactionHash}',2),{$"'{c.Error}'".Replace("''", "NULL")},'{(int)c.Type}',convert(binary(20),'{c.From}',2), convert(binary(20),'{c.To}',2) ,convert(binary(4),'{c.MethodId ?? ""}',2), convert(varbinary(MAX),'{c.Input ?? ""}',2)";
 
-            string getInsertBlocksSql(string valueNames, string values) => $"insert into Blocks({valueNames}) values({values});";
-            string getInsertTransactionSql(string valueNames, string values) => $"insert into Transactions({valueNames}) values({values});";
-            string getInsertCallSql(string valueNames, string values) => $"insert into Calls({valueNames}) values({values});";
+            string getInsertBlocksSql(string valueNames, string values) => $"If Not Exists(select * from Blocks where BlockNumber={values}) Begin insert into Blocks({valueNames}) values({values}); end ";
+            string getInsertTransactionSql(string valueNames, string values) => $"insert into Transactions({valueNames}) values({values}); ";
+            string getInsertCallSql(string valueNames, string values) => $"insert into Calls({valueNames}) values({values}); ";
 
             string valueNamesForBlocks = "[BlockNumber]";
-            string valueNamesForTxs = "[TransactionHash],[BlockId],[TimeStamp],[GasPrice]";
+            string valueNamesForTxs = "[TransactionHash],[BlockId],[TimeStamp],[GasPrice],[Nonce]";
             string valueNamesForCalls = "[TransactionHash],[Error],[Type],[From],[To],[MethodId],[Input]";
 
-            List<Transaction> txs = new List<Transaction>();
-            List<Call> calls = new List<Call>();
+            List<Block> blocks = blocksUnsorted.OrderBy(x => x.BlockNumber).ToList();
 
             foreach (var block in blocks)
-                txs = txs.Concat(block.Transactions).AsList();
+            {
+                var insertValuesBlocks = getInsertBlocksSql(valueNamesForBlocks, getRowStringForBlocks(block)).Replace("''", "NULL"); ; //string.Join(' ', ))
 
-            foreach (var tx in txs)
-                calls = calls.Concat(tx.Calls).AsList();
+                var sql = "begin tran " +
+                    (string.IsNullOrEmpty(insertValuesBlocks) ? "" : insertValuesBlocks)
+                        .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL") + " commit tran ";
 
-            var insertValuesBlocks = string.Join(' ', blocks.Select(b => getInsertBlocksSql(valueNamesForBlocks, getRowStringForBlocks(b)))).Replace("''", "NULL");
-            var insertValuesTxs = string.Join(' ', txs.Select(t => getInsertTransactionSql(valueNamesForTxs, getRowStringForTx(t)))).Replace("''", "NULL");
-            var insertValuesCalls = string.Join(' ', calls.Select(c => getInsertCallSql(valueNamesForCalls, getRowStringForCall(c))));
+                await SqlConnection.ExecuteAsync(sql, commandTimeout: TimeSpan.FromHours(2).Seconds);
 
-            var sql =
-                (string.IsNullOrEmpty(insertValuesBlocks)? "" : insertValuesBlocks) +
-                (string.IsNullOrEmpty(insertValuesTxs) ? "" : insertValuesTxs) +
-                (string.IsNullOrEmpty(insertValuesCalls) ? "" : insertValuesCalls)
-                    .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL");
+                if (block.Transactions is null) continue;
 
-            await SqlConnection.ExecuteAsync(sql, commandTimeout: TimeSpan.FromHours(2).Seconds);
+                block.Transactions = block.Transactions.OrderBy(v => v.Nonce).ToList();
+
+                foreach (var tx in block.Transactions)
+                {
+                    var insertValuesTxs = getInsertTransactionSql(valueNamesForTxs, getRowStringForTx(tx)).Replace("''", "NULL");
+
+                    sql = "begin tran " +
+                        (string.IsNullOrEmpty(insertValuesTxs) ? "" : insertValuesTxs)
+                            .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL") + " commit tran ";
+
+                    await SqlConnection.ExecuteAsync(sql, commandTimeout: TimeSpan.FromHours(2).Seconds);
+
+                    if (tx.Calls is null) continue;
+
+                    foreach (var call in tx.Calls)
+                    {
+                        var insertValuesCalls = getInsertCallSql(valueNamesForCalls, getRowStringForCall(call));
+
+                        sql = "begin tran " +
+                            (string.IsNullOrEmpty(insertValuesCalls) ? "" : insertValuesCalls)
+                                .Replace(",;", ";").Replace(",)", ")").Replace("'NULL'", "NULL").Replace("'null'", "NULL") + " commit tran ";
+
+                        await SqlConnection.ExecuteAsync(sql, commandTimeout: TimeSpan.FromHours(2).Seconds);
+                    }
+                }
+
+            }
         }
 
 

@@ -11,6 +11,10 @@ namespace Database.Respositories
     {
         public TransactionRepository(string connectionString) : base(connectionString) { }
 
+        public async Task<bool> ContainsTransactionAsync(Transaction tx)
+        => await SqlConnection.ExecuteScalarAsync<bool>($"select count(1) from Transactions where TransactionHash=convert(binary(32),'{tx.TransactionHash}',2)");
+
+
 
         public async Task RemoveBlockTransftions(Block block)
         {
@@ -24,7 +28,7 @@ namespace Database.Respositories
             {
                 sql =
                     "delete from [Calls] " +
-                    "where [TransactionHash]=@TransactionHash";
+                    $"where [TransactionHash]=convert(binary(32),'{tx.TransactionHash}',2);";
 
                 await SqlConnection.ExecuteAsync(sql, tx);
 

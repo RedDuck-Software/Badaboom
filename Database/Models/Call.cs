@@ -44,5 +44,7 @@ namespace Database.Models
         NO_CALL_TYPE,
         Create,
         Call,
+        DelegateCall,
+        StaticCall
     }
 }
