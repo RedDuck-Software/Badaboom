@@ -12,10 +12,10 @@
 }
 else if (IsHashAddressValid)
 {
-    <div class="card">
-        <div class="card-header">
+    <div class="card-main col-md-8 col-sm-12 center">
+        <div class="">
             <div class="d-flex align-items-center">
-                <h5 class="col-6">Transaction Details</h5>
+                <label class="ml-3 mt-3 f-bold f-s-35 clr-secondary">Transaction Details</label>
                 <div class="col-6 btn-group btn-group-sm" role="group">
                     <button type="button" class="btn btn-outline-primary @(CurrentPage == DisplayPage.Overview ? "active" : "")"
                             @onclick="@(() => CurrentPage = DisplayPage.Overview)">Overview</button>
@@ -36,89 +36,83 @@ else if (IsHashAddressValid)
             @if (CurrentPage == DisplayPage.Overview)
             {
                 <dl class="row">
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         Transaction Hash
                     </dt>
-                    <dd class="col-sm-9">
-                        <NavLink href="@("https://etherscan.io/tx/" + transactionDetails.TransactionHash)">@transactionDetails.TransactionHash</NavLink> 
+                    <dd class="col-8">
+                        <a class="clr-main" href="@("https://etherscan.io/tx/" + transactionDetails.TransactionHash)">@transactionDetails.TransactionHash</a> 
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         Status
                     </dt>
-                    <dd class="col-sm-9">
-                        @if (transactionReceipt.Status.Value == 1)
-                        {
-                            <div class="alert alert-success" role="alert">
-                                Success
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="alert alert-danger" role="alert">
-                                Fail
-                            </div>
-                        }
-                    </dd>
-                    <dt class="col-sm-3">
+                    @if (transactionReceipt.Status.Value == 1)
+                    {
+                        <dd class="col-8" style="border: 2px solid #87D37C; padding-top: 0px;">Success</dd>
+                    }
+                    else
+                    {
+                        <dd class="col-8" style="border: 2px solid #F56A79; padding-top: 0px;">Fail</dd>
+                    }
+                    <dt class="col-4">
                         Block
                     </dt>
-                    <dd class="col-sm-9">
-                        <NavLink href="@("https://etherscan.io/block/" + transactionDetails.BlockNumber)">@transactionDetails.BlockNumber</NavLink>
+                    <dd class="col-8">
+                        <a href="@("https://etherscan.io/block/" + transactionDetails.BlockNumber)">@transactionDetails.BlockNumber</a>
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         Timestamp
                     </dt>
-                    <dd class="col-sm-9">
+                    <dd class="col-8">
                         @DateTimeOffset.FromUnixTimeSeconds(Timestamp).ToString("yyyy-MM-dd HH:mm:ss")
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         From
                     </dt>
-                    <dd class="col-sm-9">
-                        <NavLink href="@("https://etherscan.io/address/" + transactionDetails.From)">@transactionDetails.From</NavLink>
+                    <dd class="col-8">
+                        <a class="clr-main" href="@("https://etherscan.io/address/" + transactionDetails.From)">@transactionDetails.From</a>
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         To
                     </dt>
-                    <dd class="col-sm-9">
-                        <NavLink href="@("https://etherscan.io/address/" + transactionDetails.To)">@transactionDetails.To</NavLink>
+                    <dd class="col-8">
+                        <a class="clr-main" href="@("https://etherscan.io/address/" + transactionDetails.To)">@transactionDetails.To</a>
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         Value
                     </dt>
-                    <dd class="col-sm-9">
+                    <dd class="col-8">
                         @EthValue Ether ($@Math.Round(EthValue * EthPriceAtSpecificTime, 2))
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         Transaction Fee
                     </dt>
-                    <dd class="col-sm-9">
+                    <dd class="col-8">
                         @TransactionFee ($@Math.Round(TransactionFee * EthPriceAtSpecificTime, 2))
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         Gas Price
                     </dt>
-                    <dd class="col-sm-9">
+                    <dd class="col-8">
                         @GasPriceEth Ether (@((int)(GasPriceEth * 1_000_000_000)) Gwei)
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         Transaction Ether Price
                     </dt>
-                    <dd class="col-sm-9">
+                    <dd class="col-8">
                         $@EthPriceAtSpecificTime/Ether
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         Curent Ether Price
                     </dt>
-                    <dd class="col-sm-9">
+                    <dd class="col-8">
                         $@CurrentEthPrice/Ether
                     </dd>
-                    <dt class="col-sm-3">
+                    <dt class="col-4">
                         Input Data
                     </dt>
                     @if (InputData.MethodId.Length <= 2)
                     {
-                        <dd class="col-sm-9">
+                        <dd class="col-8">
                             0x
                         </dd>
                     }
@@ -126,7 +120,7 @@ else if (IsHashAddressValid)
                     {
                         if (DisplayInputSetings == DisplayInput.DefaultView)
                         {
-                            <dd class="col-sm-9">
+                            <dd class="col-8">
                                 MethodID: @InputData.MethodId<br />
                                 @for (int i = 0; i < InputData.Parametrs.Count; i++)
                                 {
@@ -137,29 +131,27 @@ else if (IsHashAddressValid)
                         }
                         else if (DisplayInputSetings == DisplayInput.Original)
                         {
-                            <dd class="col-sm-9">
+                            <dd class="col-8">
                                 <div style="max-width: 500px;">@transactionDetails.Input</div>
                             </dd>
                         }
 
-                        <dt class="col-sm-3" />
-                        <dd class="col-sm-9">
-                            <div class="dropdown dropup">
-                                <button class="btn btn-primary dropdown-toggle mr-4"
-                                        data-toggle="dropdown"
-                                        type="button"
-                                        aria-haspopup="true"
-                                        aria-expanded="false"
-                                        @onclick="e => this.show=!this.show">
-                                    View Input As
-                                </button>
-                                <ul class="dropdown-menu @(show? "show":"")" aria-labelledby="dropdownMenuButton1" @onclick="_ => this.show = false">
-                                    <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.Original">Original</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.DefaultView">Default view</a></li>
-                                </ul>
-                            </div>
-                        </dd>
+                        <dt class="col-4" />
+                        <div class="dropdown dropup">
+                            <button class="btn b-clr-secondary f-bold round-10 text-clr-light dropdown-toggle"
+                                    data-toggle="dropdown"
+                                    type="button"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
+                                    @onclick="e => this.show=!this.show">
+                                View Input As
+                            </button>
+                            <ul class="dropdown-menu @(show? "show":"")" aria-labelledby="dropdownMenuButton1" @onclick="_ => this.show = false">
+                                <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.Original">Original</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.DefaultView">Default view</a></li>
+                            </ul>
+                        </div>
                     }
                 </dl>
             }

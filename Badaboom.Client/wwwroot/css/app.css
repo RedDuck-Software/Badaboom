@@ -28,6 +28,10 @@ html, body {
     font-family: 'Geometria Regular', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+* {
+    transition: 0.5s;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;
@@ -137,9 +141,17 @@ body {
     .main-table tr:nth-child(2n) {
         background-color: #FFFFFF;
     }
-    .main-table tr:hover {
+    .main-table > tbody tr:hover {
         background-color: #ddd;
     }
+
+.main-table-link {
+    display: block;
+    padding-left: .5rem;
+    padding-right: .5rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
 
 .btn-round {
     border-radius: 30px;
@@ -170,7 +182,35 @@ body {
 }
 
 .mr-6 {
-    margin-right: 6rem!important
+    margin-right: 6rem!important;
+}
+
+dl dt, dl dd {
+    margin-bottom: 1rem !important;
+    margin-top: .5rem !important;
+}
+
+dl dt {
+    font-family: 'Geometria Medium';
+    font-size: 22px;
+    color: #425466;
+}
+
+dl dd {
+    font-size: 18px;
+    color: #425466;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: #EFF3F8;
+    border-radius: 7px;
+    padding-top: 2px;
+}
+
+.center {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 
@@ -251,7 +291,7 @@ body {
 }
 
 .clr-main {
-    color: #6773E5;
+    color: #6773E5 !important;
 }
 
 .text-clr-light {
