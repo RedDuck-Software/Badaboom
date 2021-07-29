@@ -5,12 +5,12 @@
 
 @if (ContractMethods != null)
 {
-    <label class="clr-secondary">Function</label>
+    <label class="clr-main f-bold f-s-20">Function</label>
     <form class="form-row">
-        <div class="col-4">
+        <div class="col-5">
             <Dropdown TItem="Method" OnSelected="@OnMethodSelected"
-                      AdditionalClass="btn-block">
-                <InitialTip>Select method</InitialTip>
+                      AdditionalClass="text-truncate">
+                <InitialTip>Method</InitialTip>
                 <ChildContent>
                     @foreach (var method in ContractMethods)
                     {
@@ -19,15 +19,15 @@
                 </ChildContent>
             </Dropdown>
         </div>
-        <div class="col-4">
+        <div class="col-6">
             @if (SelectedMethod != null)
             {
                 @if (SelectedMethodAvailableArguments.Count != 0)
                 {
                     <Dropdown TItem="Input" OnSelected="@OnArgumentSelected"
                               ReplaceInitialTip="false"
-                              AdditionalClass="ml-1">
-                        <InitialTip>Select argument</InitialTip>
+                              AdditionalClass="">
+                        <InitialTip>Select args</InitialTip>
                         <ChildContent>
                             @foreach (var arg in SelectedMethodAvailableArguments)
                             {
@@ -43,12 +43,12 @@
     @foreach (var arg in SelectedArgumentsValues)
     {
         <div class="form-inline">
-            <input type="text" class="form-control mb-2 mr-sm-2 round-10" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")"
+            <input type="text" class="form-control mb-2 mr-sm-2 input" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")"
                    @oninput="@(value => { 
                                    SelectedArgumentsValues[arg.Key] = value.Value.ToString().ReplaceAll(new[] { " ", "\t", "\n" }, ""); 
                                    UpdateFilteredTranscations(); 
                                })" />
-            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+            <button type="button" class="btn b-danger mb-2"
                     @onclick=" _ => {
                                   RemoveSelectedArgument(arg.Key);
                               }">
