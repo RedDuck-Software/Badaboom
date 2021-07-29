@@ -8,10 +8,8 @@
 @using Badaboom.Core.Models.Enums
 
 <div class=" d-flex justify-content-center">
-    <div class="card col-sm-10 round-30">
-        <div class="d-flex ml-3 mt-3 h4 font-weight-bold">
-            To Filter
-        </div>
+    <div class="card-main col-sm-10">
+        <div class="ml-3 mt-3 f-bold f-s-35 text-clr-dark">To Filter</div>
 
         <div class="card-body">
 
@@ -33,15 +31,15 @@
                     @if (SelectedFilters.ContractAddress)
                     {
                         <dt class="col-sm-6">
-                            <label class="clr-secondary">Contract address</label>
+                            <label class="clr-main f-bold f-s-20">Contract address</label>
                             <div class="form-inline">
-                                <input type="text" class="form-control mb-2 mr-sm-2 round-10" placeholder="Filter by contract address" 
+                                <input type="text" class="form-control mb-2 mr-2 input" placeholder="Filter by contract address" 
                                        @bind="@CurrentValue"
                                        @oninput="@((value) => {
                                                        ShowMethodFilter = false;
                                                        ContractMethods = null;
                                                   })" />
-                                <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                                <button type="button" class="btn b-danger mb-2"
                                         @onclick="@(_ => {
                                                       TransactionFilters.ContractAddress = null;
                                                       TransactionFilters.MethodId = null;
@@ -53,10 +51,10 @@
                                     Delete
                                 </button>
 
-                                <button type="button" class="btn btn-round mb-2 round-10"
+                                <button type="button" class="btn b-danger clr-main mb-2"
                                         disabled="@(!ContractAddressRegex.IsMatch(TransactionFilters.ContractAddress ?? ""))"
                                         @onclick="GetAbi">
-                                    Method Filters
+                                    Details
                                     @if (Loading)
                                     {
                                         <span class="spinner-border spinner-border-sm mt-1 ml-1"></span>
@@ -64,16 +62,18 @@
                                 </button>
                             </div>
                         </dt>
-                        <dt class="col-sm-6">
-                            @if (ShowMethodFilter)
-                            {
+                        
+                        @if (ShowMethodFilter)
+                        {
+                            <dt class="col-sm-6">
                                 <Badaboom.Client.Shared.Filters.MethodsFiltering Index="Index"
                                                                                  TransactionFilters="TransactionFilters"
                                                                                  SelectedFilters="SelectedFilters"
                                                                                  ContractMethods="ContractMethods"
                                                                                  Callback="@(() => StateHasChanged())"/>
-                            }
-                        </dt>
+                            </dt>
+                        }
+                        
                     }
 
                     @if (SelectedFilters.From)
@@ -116,11 +116,11 @@
                 else
                 {
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary" disabled="@Index.Loading"
+                        <button type="button" class="btn b-secondary clr-main d-flex justify-content-end" disabled="@Index.Loading"
                                 @onclick="Index.Filter">
                             @if (Index.Loading)
                             {
-                                <span class="spinner-border spinner-border-sm mt-1 mr-1"></span>
+                                <span class="spinner-border spinner-border-sm mt-2 mr-2"></span>
                             }
                             Filter
                         </button>
@@ -129,23 +129,23 @@
                 <hr />
             }
 
-            <h5 class="clr-secondary">You can also add filters</h5>
+            <h5 class="f-bold f-s-20 clr-main">You can also add filters</h5>
             <div class="d-grid gap-2 d-md-block">
                 @if (!SelectedFilters.BlockNumber)
-                {<button class="btn btn-round mr-1" type="button" @onclick="_ => SelectedFilters.BlockNumber = true">Block number</button>}
+                {<button class="btn b-secondary mr-1" type="button" @onclick="_ => SelectedFilters.BlockNumber = true">Block number</button>}
                 @if (!SelectedFilters.ContractAddress)
-                {<button class="btn btn-round ml-1 mr-1" type="button" disabled="@( SelectedFilters.To )" @onclick="_ => SelectedFilters.ContractAddress = true">Contract address</button>}
+                {<button class="btn b-secondary ml-1 mr-1" type="button" disabled="@( SelectedFilters.To )" @onclick="_ => SelectedFilters.ContractAddress = true">Contract address</button>}
                 @if (!SelectedFilters.From)
-                {<button class="btn btn-round ml-1 mr-1" type="button" @onclick="_ => SelectedFilters.From = true">«From» Address</button>}
+                {<button class="btn b-secondary ml-1 mr-1" type="button" @onclick="_ => SelectedFilters.From = true">«From» Address</button>}
                 @if (!SelectedFilters.To)
-                {<button class="btn btn-round ml-1 mr-1" type="button" disabled="@( SelectedFilters.ContractAddress )" @onclick="_ => SelectedFilters.To = true">«To» Address</button>}
+                {<button class="btn b-secondary ml-1 mr-1" type="button" disabled="@( SelectedFilters.ContractAddress )" @onclick="_ => SelectedFilters.To = true">«To» Address</button>}
             </div>
         </div>
     </div>
 </div>
 
 <div class="m-1 form-inline">
-    <h3 class="mt-1 mr-1">Results</h3>
+    <h3 class="f-bold f-s-35 text-clr-dark mt-1 mr-1">Results</h3>
     @if (SelectedFilters.BlockNumber)
     {
         <FilterButton OnClick="_ => {

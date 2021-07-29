@@ -1,9 +1,9 @@
 ﻿<dt class="col-sm-6">
-    <label class="clr-secondary">@Label</label>
+    <label class="clr-main f-bold f-s-20">@Label</label>
     <div class="form-inline">
-        <input type="@Type" class="form-control mb-2 mr-sm-2 round-10" placeholder="@PlaceHolder" 
+        <input type="@Type" class="form-control mb-2 mr-2 input" placeholder="@PlaceHolder" 
               @bind="@CurrentValue" @oninput="OnInput" />
-        <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+        <button type="button" class="btn b-danger mb-2"
                 @onclick="OnClick">
             Delete
         </button>
