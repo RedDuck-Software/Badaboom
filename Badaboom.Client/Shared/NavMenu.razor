@@ -1,8 +1,8 @@
 ﻿@inject NavigationManager NavigationManager;
 @inject IAuthenticationService AuthenticationService;
-<nav class="navbar navbar-expand-lg fixed-top" style="background: #f9f9f9;">
+<nav class="navbar navbar-expand-lg fixed-top" style="background-color: #F6F9FC;">
     <div class="container">
-        <a class="navbar-brand"><h2 class="clr-secondary font-weight-bold">Badaboom</h2></a>
+        <a class="navbar-brand" href="/"><h2 class="f-bold f-s-35 clr-main">Badaboom</h2></a>
         <button class="navbar-toggler" @onclick="ToggleNavMenu" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                 aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -11,24 +11,24 @@
             <ul class="nav justify-content-center mt-1">
 
                 <li class="nav-item">
-                    <a class="nav-link h5 font-weight-bold clr-secondary" href="#">Feauters</a>
+                    <a class="nav-link h5 f-bold f-s-25 clr-main" href="#">Feauters</a>
                 </li>
                 <li class="nav-item ml-5 mr-5">
-                    <a class="nav-link h5 font-weight-bold clr-secondary" href="#">Pricing</a>
+                    <a class="nav-link h5 f-bold f-s-25 clr-main" href="#">Pricing</a>
                 </li>
                 <li class="nav-item mr-6">
-                    <a class="nav-link h5 font-weight-bold clr-secondary" href="#">Explorer</a>
+                    <a class="nav-link h5 f-bold f-s-25 clr-main" href="#">Explorer</a>
                 </li>
 
             </ul>
             <form class="d-flex">
                 @if (AuthenticationService.User != null)
                 {
-                    <button class="btn bclr-secondary round-10 text-clr-light" @onclick="@(_ => NavigationManager.NavigateTo("logout"))"><b>Logout</b></button>
+                    <button class="btn b-clr-secondary round-10 text-clr-light" @onclick="@(_ => NavigationManager.NavigateTo("logout"))"><b>Logout</b></button>
                 }
                 else
                 {
-                    <button class="btn bclr-secondary round-10 text-clr-light" @onclick="@(_ => NavigationManager.NavigateTo("login"))"><b>Login</b></button>
+                    <button class="btn b-clr-secondary round-10 text-clr-light" @onclick="@(_ => NavigationManager.NavigateTo("login"))"><b>Login</b></button>
                 }
             </form>
 
