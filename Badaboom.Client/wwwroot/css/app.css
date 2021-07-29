@@ -92,6 +92,10 @@ body {
     width: 100%;
     border-spacing: 0 10px;
     margin-top: -10px; /* correct offset on first border spacing if desired */
+    background-color: #F9F9F9;
+    box-shadow: 0px 6px 4px 1px #F6F9FC;
+    border-radius: 33px;
+    padding: 10px;
 }
 
     .main-table td, .main-table th {
@@ -101,14 +105,18 @@ body {
     }
 
     .main-table th {
-        color: #8797aa;
-        background: #f9f9f9;
+        color: #8898AA;
+        background: #F9F9F9;
+        font-family: 'Geometria Bold';
+        font-size: 20px;
     }
 
     .main-table td {
         border: 0px;
         border-style: solid none;
-        color: #415466;
+        color: #425466;
+        font-family: 'Geometria Medium';
+        font-size: 20px;
     }
 
     .main-table td:first-child {
@@ -124,10 +132,10 @@ body {
     }
 
     .main-table tr:nth-child(2n+1) {
-        background-color: #eff3f7;
+        background-color: #EFF3F8;
     }
     .main-table tr:nth-child(2n) {
-        background-color: #ffffff;
+        background-color: #FFFFFF;
     }
     .main-table tr:hover {
         background-color: #ddd;
