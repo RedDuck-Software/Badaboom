@@ -1,0 +1,73 @@
+﻿@namespace Badaboom.Client.Shared.Filters
+@inherits MethodsFilteringBase;
+@using Badaboom.Client.Shared.DropdownList
+@using Badaboom.Core.Models.DTOs
+
+@if (ContractMethods != null)
+{
+    <label class="clr-secondary">Function</label>
+    <form class="form-row">
+        <div class="col-4">
+            <Dropdown TItem="Method" OnSelected="@OnMethodSelected"
+                      AdditionalClass="btn-block">
+                <InitialTip>Select method</InitialTip>
+                <ChildContent>
+                    @foreach (var method in ContractMethods)
+                    {
+                        <DropdownListItem Item="@method">@method.Name</DropdownListItem>
+                    }
+                </ChildContent>
+            </Dropdown>
+        </div>
+        <div class="col-4">
+            @if (SelectedMethod != null)
+            {
+                @if (SelectedMethodAvailableArguments.Count != 0)
+                {
+                    <Dropdown TItem="Input" OnSelected="@OnArgumentSelected"
+                              ReplaceInitialTip="false"
+                              AdditionalClass="ml-1">
+                        <InitialTip>Select argument</InitialTip>
+                        <ChildContent>
+                            @foreach (var arg in SelectedMethodAvailableArguments)
+                            {
+                                <DropdownListItem Item="@arg">@arg.Name</DropdownListItem>
+                            }
+                        </ChildContent>
+                    </Dropdown>
+                }
+            }
+        </div>
+    </form>
+
+    @foreach (var arg in SelectedArgumentsValues)
+    {
+        <div class="form-inline">
+            <input type="text" class="form-control mb-2 mr-sm-2 round-10" placeholder="@(arg.Key.Name + $": {arg.Key.Type}")"
+                   @oninput="@(value => { 
+                                   SelectedArgumentsValues[arg.Key] = value.Value.ToString().ReplaceAll(new[] { " ", "\t", "\n" }, ""); 
+                                   UpdateFilteredTranscations(); 
+                               })" />
+            <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                    @onclick=" _ => {
+                                  RemoveSelectedArgument(arg.Key);
+                              }">
+                Delete
+            </button>
+        </div>
+    }
+}
+else
+{
+    <label class="clr-secondary">Method signature</label>
+    <div class="form-inline">
+        <input type="number" class="form-control mb-2 mr-sm-2 round-10" @bind="TransactionFilters.MethodId" placeholder="Filter by method" />
+        <button type="button" class="btn btn-round mb-2 round-10 clr-danger"
+                @onclick="async _ => {
+                              TransactionFilters.MethodId = null;
+                              SelectedFilters.MethodId = false;
+                          }">
+            Delete
+        </button>
+    </div>
+}

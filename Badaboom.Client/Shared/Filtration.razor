@@ -1,0 +1,327 @@
+﻿@using Badaboom.Core.Models.Request
+@using Badaboom.Client.Pages
+@using System.Text.RegularExpressions
+@using System.Text.Json
+@using Badaboom.Core.Models.DTOs
+@using Badaboom.Client.Shared.DTOs
+@using Badaboom.Client.Shared.Filters
+@using Badaboom.Core.Models.Enums
+
+<div class=" d-flex justify-content-center">
+    <div class="card-main col-sm-10">
+        <div class="ml-3 mt-3 f-bold f-s-35 text-clr-dark">To Filter</div>
+
+        <div class="card-body">
+
+            @if (SelectedFilters.IsAnyFilterSelected)
+            {
+                <dl class="row">
+                    @if (SelectedFilters.BlockNumber)
+                    {
+                        <FilterBlock Label="Block number"
+                                     Type="number"
+                                     PlaceHolder="Filter by block number"
+                                     OnInput="v => TransactionFilters.BlockNumber = long.Parse(v.Value.ToString())"
+                                     OnClick="@(_ => {
+                                                  TransactionFilters.BlockNumber = null;
+                                                  SelectedFilters.BlockNumber = false;
+                                              })"/>
+                    }
+
+                    @if (SelectedFilters.ContractAddress)
+                    {
+                        <dt class="col-sm-6">
+                            <label class="clr-main f-bold f-s-20">Contract address</label>
+                            <div class="form-inline">
+                                <input type="text" class="form-control mb-2 mr-2 input" placeholder="Filter by contract address" 
+                                       @bind="@CurrentValue"
+                                       @oninput="@((value) => {
+                                                       ShowMethodFilter = false;
+                                                       ContractMethods = null;
+                                                  })" />
+                                <button type="button" class="btn b-danger mb-2"
+                                        @onclick="@(_ => {
+                                                      TransactionFilters.ContractAddress = null;
+                                                      TransactionFilters.MethodId = null;
+                                                      SelectedFilters.ContractAddress = false;
+                                                      SelectedFilters.MethodId = false;
+                                                      ShowMethodFilter = false;
+                                                      ContractMethods = null;
+                                                  })">
+                                    Delete
+                                </button>
+
+                                <button type="button" class="btn b-danger clr-main mb-2"
+                                        disabled="@(!ContractAddressRegex.IsMatch(TransactionFilters.ContractAddress ?? ""))"
+                                        @onclick="GetAbi">
+                                    Details
+                                    @if (Loading)
+                                    {
+                                        <span class="spinner-border spinner-border-sm mt-1 ml-1"></span>
+                                    }
+                                </button>
+                            </div>
+                        </dt>
+                        
+                        @if (ShowMethodFilter)
+                        {
+                            <dt class="col-sm-6">
+                                <Badaboom.Client.Shared.Filters.MethodsFiltering Index="Index"
+                                                                                 TransactionFilters="TransactionFilters"
+                                                                                 SelectedFilters="SelectedFilters"
+                                                                                 ContractMethods="ContractMethods"
+                                                                                 Callback="@(() => StateHasChanged())"/>
+                            </dt>
+                        }
+                        
+                    }
+
+                    @if (SelectedFilters.From)
+                    {
+                        <FilterBlock Label="From Address" 
+                                     PlaceHolder="Filter by «from»"
+                                     OnInput="v => TransactionFilters.From = v.Value.ToString()"
+                                     OnClick="@(_ => {
+                                                  TransactionFilters.From = null;
+                                                  SelectedFilters.From = false;
+                                              })"/>
+                    }
+
+                    @if (SelectedFilters.To)
+                    {
+                        <FilterBlock Label="To Address" 
+                                     PlaceHolder="Filter by «to»"
+                                     OnInput="v => TransactionFilters.ContractAddress = v.Value.ToString()"
+                                     OnClick="@(_ => {
+                                                  TransactionFilters.ContractAddress = null;
+                                                  SelectedFilters.To = false;
+                                              })"/>
+                    }
+                </dl>
+
+                @if (IsProFiltering)
+                {
+                    <div class="d-grid gap-2 d-flex justify-content-end">
+                        <label class="btn-round clr-danger mb-0 mr-2 text-center" style="padding: 5px 10px;">Requests remainded: @Modal.Quantity</label>
+                        <button type="button" class="btn btn-round clr-secondary" disabled="@Index.Loading" 
+                                @onclick="FilterPro">
+                            @if (Index.Loading)
+                            {
+                                <span class="spinner-border spinner-border-sm mt-1 mr-1"></span>
+                            }
+                            Filter <span class="clr-danger"> (Pro) </span>
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn b-secondary clr-main d-flex justify-content-end" disabled="@Index.Loading"
+                                @onclick="Index.Filter">
+                            @if (Index.Loading)
+                            {
+                                <span class="spinner-border spinner-border-sm mt-2 mr-2"></span>
+                            }
+                            Filter
+                        </button>
+                    </div>
+                }
+                <hr />
+            }
+
+            <h5 class="f-bold f-s-20 clr-main">You can also add filters</h5>
+            <div class="d-grid gap-2 d-md-block">
+                @if (!SelectedFilters.BlockNumber)
+                {<button class="btn b-secondary mr-1" type="button" @onclick="_ => SelectedFilters.BlockNumber = true">Block number</button>}
+                @if (!SelectedFilters.ContractAddress)
+                {<button class="btn b-secondary ml-1 mr-1" type="button" disabled="@( SelectedFilters.To )" @onclick="_ => SelectedFilters.ContractAddress = true">Contract address</button>}
+                @if (!SelectedFilters.From)
+                {<button class="btn b-secondary ml-1 mr-1" type="button" @onclick="_ => SelectedFilters.From = true">«From» Address</button>}
+                @if (!SelectedFilters.To)
+                {<button class="btn b-secondary ml-1 mr-1" type="button" disabled="@( SelectedFilters.ContractAddress )" @onclick="_ => SelectedFilters.To = true">«To» Address</button>}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="m-1 form-inline">
+    <h3 class="f-bold f-s-35 text-clr-dark mt-1 mr-1">Results</h3>
+    @if (SelectedFilters.BlockNumber)
+    {
+        <FilterButton OnClick="_ => {
+                                   TransactionFilters.BlockNumber = null;
+                                   SelectedFilters.BlockNumber = false;
+                               }">
+            By block number <span class="clr-danger">🗙</span>
+        </FilterButton>
+    }
+
+    @if (SelectedFilters.ContractAddress)
+    {
+        <FilterButton OnClick="async _ => {
+                                   TransactionFilters.DecodeInputDataInfo = null;
+                                   TransactionFilters.ContractAddress = null;
+                                   TransactionFilters.MethodId = null;
+                                   SelectedFilters.ContractAddress = false;
+                                   SelectedFilters.MethodId = false;
+                                   ShowMethodFilter = false;
+                                   ContractMethods = null;
+                               }">
+            By contract address <span class="clr-danger">🗙</span>
+        </FilterButton>
+    }
+
+    @if (SelectedFilters.From)
+    {
+        <FilterButton OnClick="_ => {
+                                   TransactionFilters.From = null;
+                                   SelectedFilters.From = false;
+                               }">
+            By «from» <span class="clr-danger">🗙</span>
+        </FilterButton>
+    }
+
+    @if (SelectedFilters.To)
+    {
+        <FilterButton OnClick="_ => {
+                                  TransactionFilters.ContractAddress = null;
+                                  SelectedFilters.To = false;
+                              }">
+            By «to» <span class="clr-danger">🗙</span>
+        </FilterButton>
+    }
+
+    <div class="d-flex justify-content-end col font-weight-bold">
+        <button type="button" class="btn btn-round d-flex justify-content-end clr-secondary p-2" disabled="@(IsProFiltering || Index.Loading)"
+                @onclick="Index.Filter">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise font-weight-bold" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
+                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
+            </svg>
+        </button>
+    </div>
+</div>
+
+<Modal @ref="Modal" Filtration="this"></Modal>
+
+
+
+@code {
+    [Parameter]
+    public Pages.Index Index { get; set; }
+
+    [Parameter]
+    public GetFilteredTransactionRequest TransactionFilters { get; set; }
+
+    [Inject]
+    public HttpClient HttpClient { get; set; }
+
+    [Inject]
+    public MetaMask.Blazor.MetaMaskService MetaMaskService { get; set; } = default!;
+
+    [Inject]
+    public IHttpService _httpService { get; set; }
+
+    [Inject]
+    public IAuthenticationService _authService { get; set; }
+
+    [Inject]
+    public ILocalStorageService _localStorageService { get; set; }
+
+    public Regex ContractAddressRegex = new Regex("^0x[a-fA-F0-9]{40}$");
+
+    public SelectedFiltersDTO SelectedFilters { get; set; } = new();
+
+    public IEnumerable<Method> ContractMethods { get; set; }
+
+    public bool ShowMethodFilter { get; set; }
+
+    public bool Loading { get; set; }
+
+    public bool IsProFiltering
+        => (Index.TransactionFilter.DecodeInputDataInfo != null &&
+            Index.TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues != null &&
+            Index.TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues.Count > 0);
+
+    public string CurrentValue
+    {
+        get
+        {
+            return TransactionFilters.ContractAddress;
+        }
+        set
+        {
+            TransactionFilters.ContractAddress = value.ReplaceAll(new[] { " ", "\t", "\n" }, "");
+        }
+    }
+
+    public Modal Modal { get; set; }
+
+
+    public async Task GetAbi()
+    {
+        Loading = true;
+
+        var httpResponse = await HttpClient.GetAsync($"api/Transaction/GetContractAbi?contractAddress={TransactionFilters.ContractAddress}");
+
+        if (httpResponse.IsSuccessStatusCode)
+
+        {
+            var responseString = await httpResponse.Content.ReadAsStringAsync();
+
+            ContractMethods = JsonSerializer.Deserialize<IEnumerable<Method>>(responseString,
+            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }).Where(v =>
+                !string.IsNullOrEmpty(v.Name) &&
+                    v.Type?.ToLower() == "function" &&
+                    !(v.StateMutability?.ToLower() == "view"
+                    || v.StateMutability?.ToLower() == "pure"));
+        }
+        else
+        {
+            Console.WriteLine("ABI is not found");
+            // todo: hande error
+        }
+
+        Loading = false;
+
+        ShowMethodFilter = true;
+    }
+
+    public async Task FilterPro()
+    {
+        if (_authService.User == null)
+        {
+            await _authService.Logout();
+        }
+
+        if (!await MetaMaskService.IsSiteConnected())
+        {
+            Console.WriteLine("Please login to use the filter(pro)");
+            return;
+        }
+
+        Index.Loading = true;
+
+        StateHasChanged();
+
+        bool isAvailableUse = Modal.Quantity > 0;
+
+        if (!isAvailableUse) // buy requests
+        {
+            await Modal.Open();
+
+            return;
+        }
+
+        await Index.Filter();
+
+        if (Modal.Quantity > 0)
+        {
+            _authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()]--;
+
+            await _localStorageService.SetItem("user", _authService.User);
+        }
+
+        Index.Loading = false;
+    }
+}

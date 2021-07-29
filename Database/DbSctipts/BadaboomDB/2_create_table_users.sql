@@ -1,5 +1,5 @@
 ﻿create table [Users](
-	[UserId] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+	[UserId] INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 
 	[Address] binary(20) NOT NULL UNIQUE, 
 
@@ -17,5 +17,5 @@ create table [RefreshTokens] (
 	
 	[Created] DateTime NOT NULL,
 	
-	[CreatedByIp] varchar(15) NULL,
+	[CreatedByIp] varchar(25) NULL,
 );

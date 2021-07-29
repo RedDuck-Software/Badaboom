@@ -13,6 +13,11 @@ namespace Database.Models
 
         public string Nonce { get; set; }
 
+        public int ArgumentFunctionRequests { get; set; }
+
+        public IDictionary<string, int> AvailableProduct { get; set; }
+
+        [JsonIgnore]
         public List<RefreshToken> RefreshTokens { get; set; }
     }
 }

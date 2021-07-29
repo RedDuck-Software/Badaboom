@@ -1,0 +1,12 @@
+﻿<button type="button" class="btn b-secondary-sm ml-1 mr-1"
+        @onclick="OnClick">
+    @ChildContent
+</button>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+}

@@ -1,0 +1,22 @@
+@media (min-width: 641px) {
+    .navbar-toggler {
+        display: none;
+    }
+
+    .collapse {
+        /* Never collapse the sidebar for wide screens */
+        display: block;
+    }
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+}
+
+    .container ul {
+        /* for IE below version 7 use `width` instead of `max-width` */
+        max-width: 800px;
+        margin-right: auto;
+        margin-left: auto;
+    }

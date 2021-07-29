@@ -1,0 +1,7 @@
+﻿CREATE TABLE [dbo].[Products](
+	[Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+
+	[Price] BIGINT NOT NULL,
+
+	[ApiEndpoint] VARCHAR(100) NOT NULL UNIQUE
+);

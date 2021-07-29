@@ -1,0 +1,16 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <NavMenu @ref="@_navMenu" />
+    <CascadingValue Value="@this">
+        <div class="container">
+            @Body
+        </div>
+    </CascadingValue>
+</div>
+
+@code {
+    private NavMenu _navMenu = new();
+
+    public void Rerender() => _navMenu.Prerender();
+}

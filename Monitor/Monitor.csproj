@@ -18,7 +18,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Database\Database.csproj" />
-    <ProjectReference Include="..\IndexingCore\Indexer.Core.csproj" />
+    <ProjectReference Include="..\Indexing.Core\Indexer.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="AddressesToIndex.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

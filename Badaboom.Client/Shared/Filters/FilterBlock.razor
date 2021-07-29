@@ -1,0 +1,42 @@
+﻿<dt class="col-sm-6">
+    <label class="clr-main f-bold f-s-20">@Label</label>
+    <div class="form-inline">
+        <input type="@Type" class="form-control mb-2 mr-2 input" placeholder="@PlaceHolder" 
+              @bind="@CurrentValue" @oninput="OnInput" />
+        <button type="button" class="btn b-danger mb-2"
+                @onclick="OnClick">
+            Delete
+        </button>
+    </div>
+</dt>
+
+@code {
+    [Parameter]
+    public string Type { get; set; } = "text";
+
+    [Parameter]
+    public string PlaceHolder { get; set; }
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> OnInput { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    [Parameter]
+    public string Label { get; set; }
+
+    private string currentValue;
+
+    public string CurrentValue
+    {
+        get
+        {
+            return currentValue;
+        }
+        set
+        {
+            currentValue = value.ReplaceAll(new[] { " ", "\t", "\n" }, "");
+        }
+    }
+}

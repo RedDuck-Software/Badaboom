@@ -33,33 +33,42 @@ namespace BadaboomIndexer
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
-            if (args.Length < 4) throw new ArgumentException("You need to provide at least 4 arguments: network type, LoggerFilePath, LoggerCriticalFilePath and BlockQueueSize");
+            if (args.Length < 6) throw new ArgumentException("You need to provide at least 6 arguments: network type, LoggerFilePath, LoggerCriticalFilePath, RPC url, bool:indexInnerCalls and BlockQueueSize");
 
-            var _config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName)
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Environment.CurrentDirectory)
                 .AddJsonFile("appsettings.json", false)
                 .AddUserSecrets<Program>()
                 .Build();
 
 
-            var conn = new ConnectionStringsHelperService(_config);
+            var conn = new ConnectionStringsHelperService(config);
 
-            var getBlockIOPrivateKeys = _config["GetBlockIOPrivateKeys"].Split(",").Select(s => s.Trim()).ToList();
+            var rpcUrl = args[3];
 
-            if (getBlockIOPrivateKeys.Count() == 0) throw new ArgumentException("You must provide at least one private key to use GetBlock rpc provider");
-
-            var rpcProvider = new GetBlockIOProvider(getBlockIOPrivateKeys, args[0]);
-
-            var web3 = new Web3Geth(rpcProvider.GetNextRpcUrl());
+            var web3 = new Web3Geth(rpcUrl);
 
             var tracer = new GethWeb3Tracer(web3);
 
             if (!File.Exists(args[1]))
                 File.Create(args[1]);
 
-
             if (!File.Exists(args[2]))
                 File.Create(args[2]);
+
+
+            var loadingInnerCalls = Convert.ToBoolean(args[4]);
+
+            var addressesToIndexFilePath = Path.Combine(Environment.CurrentDirectory, "AddressesToIndex.txt");
+
+            List<string> addressesToIndexList = null;
+
+            if(File.Exists(addressesToIndexFilePath))
+            {
+                addressesToIndexList = File.ReadAllLines(addressesToIndexFilePath).Select(x=>x.Trim()).ToList();
+                ConsoleColor.Magenta.WriteLine("\nIndexing only selected addresses");
+            }
+
 
             var Logger = new LoggerConfiguration()
                                 .Enrich.FromLogContext()
@@ -76,14 +85,11 @@ namespace BadaboomIndexer
                 })
                 .BuildServiceProvider();
 
-            serviceProvider
-                   .GetService<ILoggerFactory>();
-
             var logger = serviceProvider.GetService<ILoggerFactory>()
                   .CreateLogger<Program>();
 
 
-            var blockQueueSize = Convert.ToInt32(args[3]);
+            var blockQueueSize = Convert.ToInt32(args[5]);
 
             if (blockQueueSize < 1) throw new ArgumentException("BlockQueueSize must be greater than zero");
 
@@ -93,22 +99,18 @@ namespace BadaboomIndexer
                     args[0] == "bsc" ?
                     conn.BscDbName :
                     conn.EthDbName,
-                rpcProvider,
-                blockQueueSize
+                blockQueueSize,
+                loadingInnerCalls,
+                addressesToIndexList
             );
 
-            var startBlock = args.Length > 4 ? ulong.Parse(args[4]) : 0;
+            var startBlock = args.Length > 6 ? long.Parse(args[6]) : 0;
 
-            var endBlock = args.Length > 5 ? ulong.Parse(args[5]) : await indexer.GetLatestBlockNumber();
+            var endBlock = args.Length > 7 ? long.Parse(args[7]) : (long)await indexer.GetLatestBlockNumber();
 
-            await indexer.IndexInRangeParallel(startBlock, endBlock, 20);
+            await indexer.IndexInRangeParallel(startBlock, endBlock, 50);
 
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
-
-            ConsoleColor.DarkMagenta.WriteLine("\n\nStarting getting new blocks...\n\n");
-
-            // Run new block monitoring
-            await indexer.StartMonitorNewBlocks(1);
         }
     }
 }

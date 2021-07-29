@@ -1,6 +1,8 @@
 using Backend.Models;
 using BackendCore.Models.AppSettings;
 using BackendCore.Services;
+using Badaboom.Backend.Infrastructure.Services;
+using Badaboom.Backend.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,9 +14,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Nethereum.Web3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Backend
@@ -31,9 +35,19 @@ namespace Backend
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: "AllowAll",
+                                  builder =>
+                                  {
+                                      builder.WithOrigins("*")
+                                          .AllowAnyHeader()
+                                          .AllowAnyMethod();
+                                  });
+            });
+
             var jwtConfig = Configuration.GetSection("JWT");
             var servicesConfig = Configuration.GetSection("ServicesConfig");
-
 
             var jwtAuth = jwtConfig.Get<JWTAuth>();
             var servicesSettings = servicesConfig.Get<ServicesSettings>();
@@ -41,6 +55,7 @@ namespace Backend
             services.Configure<JWTAuth>(jwtConfig);
             services.Configure<ServicesSettings>(servicesConfig);
 
+            var rpcUrl = Configuration.GetSection("RpcUrls").GetSection("ETH").Value;
 
             services.AddAuthentication(x =>
             {
@@ -63,10 +78,14 @@ namespace Backend
                 };
             });
 
+            services.AddScoped(sp => new HttpClient());
+
             services.AddScoped<INonceGeneratorService, NonceGeneratorService>((factory) => new NonceGeneratorService(servicesSettings.NonceLenght));
 
             services.AddScoped<IUserService, UserService>();
-
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped((f) => new Web3(rpcUrl));
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -89,7 +108,11 @@ namespace Backend
 
             app.UseRouting();
 
+            app.UseCors("AllowAll");
+
             app.UseAuthorization();
+
+            app.UseMiddleware<JwtMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

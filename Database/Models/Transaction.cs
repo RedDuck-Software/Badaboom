@@ -12,6 +12,8 @@ namespace Database.Models
         public int TimeStamp { get; set; }
 
         public string GasPrice { get; set; }
+        
+        public int Nonce { get; set; }
 
         public List<Call> Calls { get; set; }
         
@@ -25,6 +27,8 @@ namespace Database.Models
         public string To { get; set; }
 
         public string MethodId { get; set; }
+
+        public string Input { get; set; }
 
         public string Value { get; set; }
 
