@@ -1,29 +1,35 @@
 ﻿@page "/login"
 
-<div class="col-md-6 offset-md-3 mt-5">
-    <div class="card">
-        <h4 class="card-header text-center">Connect to your future</h4>
+<div class="col-md-8 col-sm-12 mt-5 center">
+    <div class="card-main">
+        <label class="f-bold f-s-35 text-clr-dark center mt-3">Connect to your future</label>
+
         <div class="card-body text-center" >
 
             @if (!HasMetaMask)
             {
-                <div class="alert alert-primary" role="alert" style="margin-top: 15px;">
+                <div class="alert-main" role="alert">
                     No MetaMask detected. Please install <a href="https://metamask.io" target="_blank">MetaMask</a>.
                 </div>
             }
             else if (string.IsNullOrEmpty(SelectedAddress))
             {
-                <button class="btn btn-primary col-md-8 col-sm-12" @onclick="ConnectMetaMask">Login via Metamask</button>
+                <button class="btn b-secondary b-clr-secondary round-30 text-clr-light col-md-8 col-sm-12 mt-4 mb-1"
+                        @onclick="ConnectMetaMask">
+                    Login via Metamask
+                </button>
             }
             else
             {
-                <div class="alert alert-primary" role="alert" style="margin-top: 15px;">
-                    Addres: @SelectedAddress
+                <div class="alert-main text-truncate text-truncate pl-3 pr-3" role="alert">
+                    Address: @SelectedAddress
                 </div>
-                <button class="btn btn-primary mx-auto col-md-8 col-sm-12" @onclick="LoginOnServer">
+                <button class="btn b-secondary b-clr-secondary round-30 text-clr-light col-md-8 col-sm-12 mt-4 mb-1"
+                        disabled="@Loading"
+                        @onclick="LoginOnServer">
                     @if (Loading)
                     {
-                        <span class="spinner-border spinner-border-sm mr-1"></span>
+                        <span class="spinner-border spinner-border-sm mr-1 mb-1"></span>
                     }
                     Login
                 </button>

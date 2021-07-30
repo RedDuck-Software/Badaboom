@@ -7,6 +7,7 @@
 @using Badaboom.Client.Shared.Filters
 @using Badaboom.Core.Models.Enums
 
+
 <div class=" d-flex justify-content-center">
     <div class="card-main col-sm-10">
         <div class="ml-3 mt-3 f-bold f-s-35 text-clr-dark">To Filter</div>
@@ -57,7 +58,7 @@
                                     Details
                                     @if (Loading)
                                     {
-                                        <span class="spinner-border spinner-border-sm mt-1 ml-1"></span>
+                                        <span class="spinner-border spinner-border-sm mb-1 ml-1"></span>
                                     }
                                 </button>
                             </div>
@@ -102,12 +103,12 @@
                 @if (IsProFiltering)
                 {
                     <div class="d-grid gap-2 d-flex justify-content-end">
-                        <label class="btn-round clr-danger mb-0 mr-2 text-center" style="padding: 5px 10px;">Requests remainded: @Modal.Quantity</label>
-                        <button type="button" class="btn btn-round clr-secondary" disabled="@Index.Loading" 
+                        <label class="b-secondary clr-danger p-2 mb-0 mr-2 text-center">Requests remainded: @Modal.Quantity</label>
+                        <button type="button" class="btn b-secondary clr-main" disabled="@Index.Loading" 
                                 @onclick="FilterPro">
                             @if (Index.Loading)
                             {
-                                <span class="spinner-border spinner-border-sm mt-1 mr-1"></span>
+                                <span class="spinner-border spinner-border-sm mb-1 mr-2"></span>
                             }
                             Filter <span class="clr-danger"> (Pro) </span>
                         </button>
@@ -308,7 +309,7 @@
 
         if (!isAvailableUse) // buy requests
         {
-            await Modal.Open();
+            await Modal.Open(ProductType.ArgumentFunctionRequests);
 
             return;
         }

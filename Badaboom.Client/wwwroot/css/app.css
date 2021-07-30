@@ -28,6 +28,10 @@ html, body {
     font-family: 'Geometria Regular', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+* {
+    transition: 0.5s;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;
@@ -92,6 +96,10 @@ body {
     width: 100%;
     border-spacing: 0 10px;
     margin-top: -10px; /* correct offset on first border spacing if desired */
+    background-color: #F9F9F9;
+    box-shadow: 0px 6px 4px 1px #F6F9FC;
+    border-radius: 33px;
+    padding: 10px;
 }
 
     .main-table td, .main-table th {
@@ -101,14 +109,18 @@ body {
     }
 
     .main-table th {
-        color: #8797aa;
-        background: #f9f9f9;
+        color: #8898AA;
+        background: #F9F9F9;
+        font-family: 'Geometria Bold';
+        font-size: 20px;
     }
 
     .main-table td {
         border: 0px;
         border-style: solid none;
-        color: #415466;
+        color: #425466;
+        font-family: 'Geometria Medium';
+        font-size: 20px;
     }
 
     .main-table td:first-child {
@@ -124,14 +136,22 @@ body {
     }
 
     .main-table tr:nth-child(2n+1) {
-        background-color: #eff3f7;
+        background-color: #EFF3F8;
     }
     .main-table tr:nth-child(2n) {
-        background-color: #ffffff;
+        background-color: #FFFFFF;
     }
-    .main-table tr:hover {
+    .main-table > tbody tr:hover {
         background-color: #ddd;
     }
+
+.main-table-link {
+    display: block;
+    padding-left: .5rem;
+    padding-right: .5rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
 
 .btn-round {
     border-radius: 30px;
@@ -154,15 +174,64 @@ body {
 }
 
 .b-clr-secondary {
-    background-color: #635BFF;
+    background-color: #635BFF !important;
 }
 
 .clr-danger {
-    color: #f56a79;
+    color: #f56a79 !important;
 }
 
 .mr-6 {
-    margin-right: 6rem!important
+    margin-right: 6rem!important;
+}
+
+dl dt, dl dd {
+    margin-bottom: 1rem !important;
+    margin-top: .5rem !important;
+}
+
+dl dt {
+    font-family: 'Geometria Medium';
+    font-size: 22px;
+    color: #425466;
+}
+
+dl dd {
+    font-size: 18px;
+    color: #425466;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: #EFF3F8;
+    border-radius: 7px;
+    padding-top: 2px;
+}
+
+textarea {
+    background: #EFF3F8;
+    border-radius: 8px;
+    border: 0px;
+    font-size: 15px;
+    color: #425466;
+}
+
+.b-group {
+    display: inline-flex;
+}
+
+.b-outline-dark {
+    color: #8898AA;
+    font-family: 'Geometria Bold';
+    font-size: 20px !important;
+    border: 0px;
+    border-bottom: 1px solid #8898AA;
+}
+
+.active-d {
+    color: #6772E5;
+    font-size: 24px !important;
+    border-bottom: 5px solid #6772E5;
 }
 
 
@@ -216,8 +285,54 @@ body {
         background-color: #c8c8c8;
     }
 
+/* Login */
 
+.alert-main {
+    background: #EFF3F8;
+    border-radius: 30px;
+    font-family: 'Geometria Medium';
+    font-size: 20px;
+    color: #425466;
+    padding-top: .5rem !important;
+    padding-bottom: .5rem !important;
+}
 
+/* ----- */
+
+/* Details Internal Transaction */
+
+.internal-table {
+    border-collapse: separate;
+    width: 100%;
+    border-spacing: 0 10px;
+    margin-top: -10px; /* correct offset on first border spacing if desired */
+}
+
+    .internal-table td, .internal-table th {
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+    }
+
+    .internal-table th {
+        color: #8898AA;
+        font-family: 'Geometria Bold';
+        font-size: 20px;
+    }
+
+    .internal-table td {
+        border: 0px;
+        border-style: solid none;
+        color: #425466;
+        font-family: 'Geometria Medium';
+        font-size: 20px;
+    }
+
+.internal-table-link {
+    display: block;
+    max-width: 120px;
+}
+/* ----- */
 .f-regular {
     font-family: 'Geometria Regular';
 }
@@ -243,7 +358,7 @@ body {
 }
 
 .clr-main {
-    color: #6773E5;
+    color: #6773E5 !important;
 }
 
 .text-clr-light {
@@ -262,5 +377,8 @@ body {
     border-radius: 30px;
 }
 
-
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}
 

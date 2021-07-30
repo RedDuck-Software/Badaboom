@@ -39,22 +39,22 @@ else
             {
                 <tr>
                     <td>
-                        <NavLink class="nav-link hash-width text-truncate" href="@($"details/{row.TxnHash}")">
+                        <a class="nav-link hash-width text-truncate clr-main" href="@($"details/{row.TxnHash}")">
                             @row.TxnHash
-                        </NavLink>
+                        </a>
                     </td>
                     <td>@row.Method</td>
                     <td>@row.Block</td>
                     <td>@DateTimeOffset.FromUnixTimeSeconds((long)@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
                     <td>
-                        <NavLink class="nav-link hash-width text-truncate" href="@row.From">
+                        <a class="nav-link hash-width text-truncate clr-main" href="@row.From">
                             @row.From
-                        </NavLink>
+                        </a>
                     </td>
                     <td>
-                        <NavLink class="nav-link hash-width text-truncate" href="@row.To">
+                        <a class="nav-link hash-width text-truncate clr-main" href="@row.To">
                             @row.To
-                        </NavLink>
+                        </a>
                     </td>
                 </tr>
             }
