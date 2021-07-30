@@ -6,26 +6,34 @@
 
 <div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
+        <div class="modal-content card-main">
 
+            <div class="modal-header" style="border: 0px;">
+                <label class="f-bold f-s-35 text-clr-dark" id="staticBackdropLabel">Buy requsts</label>
+                <label class="f-regular">/@Product.ToString()</label>
+            </div>
+
+            <div class="modal-body">
                 <form class="form-inline">
-                    <div class="d-flex col-7">Quantity of requests</div>
-                    <label class="col">@(Nethereum.Web3.Web3.Convert.FromWei(ProductPrice.PricePerItem)) Eth per item</label>
+                    <div class="col-md-7 col-sm-12 f-medium f-s-20 text-clr-dark">Quantity of requests</div>
+                    <label class="col-md col-sm-12 f-medium text-clr-dark" style="font-size: 19px;">@(Nethereum.Web3.Web3.Convert.FromWei(ProductPrice.PricePerItem)) Eth per item</label>
                 </form>
                 <input type="range" class="mr-2" style="width:100%" min="1" max="1000" @bind="@QuantityForBuy" />
-                <input type="number" min="1" max="1000" @bind="@QuantityForBuy" />
-                <label> * @(Nethereum.Web3.Web3.Convert.FromWei(ProductPrice.PricePerItem)) = @(Nethereum.Web3.Web3.Convert.FromWei(TotalPrice)) Eth (Discount - @CurrentDiscount%)</label> 
+                <form class="form-inline col center">
+                    <input type="number" class="input pl-2 mr-2" min="1" max="1000" @bind="@QuantityForBuy" />
+                    <label class="f-medium text-clr-dark f-s-20"> * @(Nethereum.Web3.Web3.Convert.FromWei(ProductPrice.PricePerItem)) = @(Nethereum.Web3.Web3.Convert.FromWei(TotalPrice)) Eth (Discount - @CurrentDiscount%)</label> 
+                </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="Close">Close</button>
-                <button type="button" class="btn btn-primary" @onclick="Buy">Save changes</button>
+
+            <div class="modal-footer" style="border: 0px;">
+                <button type="button" class="btn b-secondary" data-dismiss="modal" disabled="@loading" @onclick="Close">Close</button>
+                <button type="button" class="btn b-secondary clr-main" disabled="@loading" @onclick="Buy">
+                    @if (loading)
+                    {
+                        <span class="spinner-border spinner-border-sm mr-1 mb-1"></span>
+                    }
+                    Buy
+                </button>
             </div>
         </div>
     </div>
@@ -39,6 +47,8 @@
 
 
 @code {
+    private bool loading = false;
+
     public string ModalDisplay = "none;";
     public string ModalClass = "";
     public bool ShowBackdrop = false;
@@ -68,6 +78,8 @@
 
     public IOrderedEnumerable<KeyValuePair<int, byte>> SortedDiscounts { get; set; }
 
+    public ProductType Product { get; set; }
+
     public int Quantity
     {
         get
@@ -84,16 +96,18 @@
     }
 
 
-    public async Task Open()
+    public async Task Open(ProductType productType)
     {
         Filtration.Index.Loading = false;
+
+        Product = productType;
 
         var response = await Filtration._httpService.Get($"/api/Payment/productPrice?ProductType={ProductType.ArgumentFunctionRequests}");
         ProductPrice = JsonSerializer.Deserialize<ProductPriceResponse>(response,
             new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-        TotalPrice = ProductPrice.PricePerItem;
-        var sorted = ProductPrice.AmountFromPercents.OrderByDescending(x => x.Key);
 
+        TotalPrice = ProductPrice.PricePerItem;
+        SortedDiscounts = ProductPrice.AmountFromPercents.OrderByDescending(x => x.Key);
 
         ModalDisplay = "block;";
         ModalClass = "Show";
@@ -106,24 +120,23 @@
         ModalDisplay = "none";
         ModalClass = "";
         ShowBackdrop = false;
+        loading = false;
         StateHasChanged();
     }
 
     public async Task Buy()
     {
-        Filtration.Index.Loading = true;
+        loading = true;
 
         StateHasChanged();
 
         string toAddress = (await Filtration._httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend")).walletAddress; // generate ex if auth token ends
 
-        System.Numerics.BigInteger weiValue = TotalPrice;
-
         string txnHash;
 
         try
         {
-            txnHash = await Filtration.MetaMaskService.SendTransaction(toAddress, weiValue);
+            txnHash = await Filtration.MetaMaskService.SendTransaction(toAddress, TotalPrice);
 
             if (await CheckIsSuccessTransaction(txnHash))
             {
@@ -131,18 +144,18 @@
 
                 await Filtration._httpService.Post<PurchaseRequest>("/api/payment/purchase", new PurchaseRequest()
                 {
-                    ProductType = ProductType.ArgumentFunctionRequests,
+                    ProductType = Product,
                     Quantity = QuantityForBuy,
                     TxnHash = txnHash
                 });
 
-                if (Filtration._authService.User.AvailableProduct.ContainsKey(ProductType.ArgumentFunctionRequests.ToString()))
+                if (Filtration._authService.User.AvailableProduct.ContainsKey(Product.ToString()))
                 {
-                    Filtration._authService.User.AvailableProduct[ProductType.ArgumentFunctionRequests.ToString()] += QuantityForBuy;
+                    Filtration._authService.User.AvailableProduct[Product.ToString()] += QuantityForBuy;
                 }
                 else
                 {
-                    Filtration._authService.User.AvailableProduct.Add(ProductType.ArgumentFunctionRequests.ToString(), QuantityForBuy);
+                    Filtration._authService.User.AvailableProduct.Add(Product.ToString(), QuantityForBuy);
                 }
 
                 await Filtration._localStorageService.SetItem("user", Filtration._authService.User);
@@ -150,14 +163,14 @@
             else
             {
                 Console.WriteLine("(There is something wrong with your transaction)");
-                Filtration.Index.Loading = false;
+                loading = false;
                 return;
             }
         }
         catch (MetaMask.Blazor.Exceptions.UserDeniedException)
         {
             System.Console.WriteLine($"User Denied");
-            Filtration.Index.Loading = false;
+            loading = false;
             return;
         }
 
@@ -208,9 +221,7 @@
 
     public void CountTotalPrice()
     {
-        var sorted = ProductPrice.AmountFromPercents.OrderByDescending(x => x.Key);
-
-        foreach (var item in sorted)
+        foreach (var item in SortedDiscounts)
         {
             if (QuantityForBuy >= item.Key)
             {
