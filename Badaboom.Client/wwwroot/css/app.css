@@ -299,6 +299,40 @@ textarea {
 
 /* ----- */
 
+/* Details Internal Transaction */
+
+.internal-table {
+    border-collapse: separate;
+    width: 100%;
+    border-spacing: 0 10px;
+    margin-top: -10px; /* correct offset on first border spacing if desired */
+}
+
+    .internal-table td, .internal-table th {
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+    }
+
+    .internal-table th {
+        color: #8898AA;
+        font-family: 'Geometria Bold';
+        font-size: 20px;
+    }
+
+    .internal-table td {
+        border: 0px;
+        border-style: solid none;
+        color: #425466;
+        font-family: 'Geometria Medium';
+        font-size: 20px;
+    }
+
+.internal-table-link {
+    display: block;
+    max-width: 120px;
+}
+/* ----- */
 .f-regular {
     font-family: 'Geometria Regular';
 }

@@ -122,7 +122,7 @@ else if (IsHashAddressValid)
                     }
                     else
                     {
-                        <table class="main-table">
+                        <table class="internal-table">
                             <thead>
                                 <tr>
                                     <th>Type Trace Address</th>
@@ -139,14 +139,18 @@ else if (IsHashAddressValid)
                                     <tr>
                                         <td>@row.Type.ToString()</td>
                                         <td>
-                                            <NavLink class="nav-link hash-width text-truncate" href="@("https://etherscan.io/address/" + row.From)">
+                                            <a class="internal-table-link text-truncate clr-main"
+                                               target="_blank"
+                                               href="@("https://etherscan.io/address/" + row.From)">
                                                 @row.From
-                                            </NavLink>
+                                            </a>
                                         </td>
                                         <td>
-                                            <NavLink class="nav-link hash-width text-truncate" href="@("https://etherscan.io/address/" + row.To)">
+                                            <a class="internal-table-link text-truncate clr-main"
+                                               target="_blank"
+                                               href="@("https://etherscan.io/address/" + row.To)">
                                                 @row.To
-                                            </NavLink>
+                                            </a>
                                         </td>
                                         <td>@(Web3.Convert.FromWei(row.Value)) Ether</td>
                                         <td>@row.GasLimit.ToString("#,###")</td>
