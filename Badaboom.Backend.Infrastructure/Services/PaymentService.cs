@@ -1,4 +1,5 @@
 ﻿using Badaboom.Core.Models.Enums;
+using Badaboom.Core.Models.Response;
 using Database.Respositories;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -17,7 +18,7 @@ namespace Badaboom.Backend.Infrastructure.Services
 
         string GetWalletAddress();
 
-        Task<long> GetPricePerItem(ProductType productType);
+        Task<ProductPriceResponse> GetProductPrice(ProductType productType);
 
         Task<BigInteger> PurchaseCost(ProductType productType, int quantity);
 
@@ -48,13 +49,17 @@ namespace Badaboom.Backend.Infrastructure.Services
         public string GetWalletAddress()
             => _configuration.GetSection("NetworkSettings").GetSection("ETH")["WaletAddress"];
 
-        public async Task<long> GetPricePerItem(ProductType productType)
+        public async Task<ProductPriceResponse> GetProductPrice(ProductType productType)
         {
             using var pRepo = new PeymentRepository(_connectionString);
 
-            long pricePerItem = await pRepo.GetProductPrice(productType.ToString());
+            var res = await pRepo.GetProductPrice(productType.ToString());
 
-            return pricePerItem;
+            return new ProductPriceResponse()
+            {
+                PricePerItem = res.Item1,
+                AmountFromPercents = res.Item2
+            };
         }
 
         public async Task<bool> ValidatePurchase(string txhash, string from, BigInteger amountToSend)
@@ -71,9 +76,19 @@ namespace Badaboom.Backend.Infrastructure.Services
 
         public async Task<BigInteger> PurchaseCost(ProductType productType, int quantity)
         {
-            long pricePerItem = await GetPricePerItem(productType);
+            var productPrice = await GetProductPrice(productType);
 
-            return pricePerItem * quantity;
+            var sorted = productPrice.AmountFromPercents.OrderByDescending(x => x.Key);
+
+            foreach (var item in sorted)
+            {
+                if (quantity >= item.Key)
+                {
+                    return (BigInteger)productPrice.PricePerItem * quantity * item.Value / 100;
+                }
+            }
+
+            return (BigInteger)productPrice.PricePerItem * quantity;
         }
 
         public async Task SetProduct(string address, ProductType productType, int quantity)

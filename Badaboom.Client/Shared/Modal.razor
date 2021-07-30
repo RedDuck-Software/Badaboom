@@ -1,6 +1,8 @@
-﻿@using Badaboom.Core.Models.Enums
+﻿@inject Microsoft.Extensions.Configuration.IConfiguration config;
+@using Badaboom.Core.Models.Enums
 @using Badaboom.Core.Models.Request
-@inject Microsoft.Extensions.Configuration.IConfiguration config;
+@using System.Text.Json
+@using System.Numerics 
 
 <div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
     <div class="modal-dialog">
@@ -14,12 +16,12 @@
             <div class="modal-body">
 
                 <form class="form-inline">
-                    <div class="d-flex col-8">Quantity of requests</div>
-                    <label class="col">@(Nethereum.Web3.Web3.Convert.FromWei(PricePerItem)) Eth per item</label>
+                    <div class="d-flex col-7">Quantity of requests</div>
+                    <label class="col">@(Nethereum.Web3.Web3.Convert.FromWei(ProductPrice.PricePerItem)) Eth per item</label>
                 </form>
                 <input type="range" class="mr-2" style="width:100%" min="1" max="1000" @bind="@QuantityForBuy" />
                 <input type="number" min="1" max="1000" @bind="@QuantityForBuy" />
-
+                <label> * @(Nethereum.Web3.Web3.Convert.FromWei(ProductPrice.PricePerItem)) = @(Nethereum.Web3.Web3.Convert.FromWei(TotalPrice)) Eth (Discount - @CurrentDiscount%)</label> 
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="Close">Close</button>
@@ -44,9 +46,27 @@
     [Parameter]
     public Filtration Filtration { get; set; }
 
-    public int QuantityForBuy { get; set; } = 1;
+    private int quantityForBuy = 1;
 
-    public long PricePerItem { get; set; }
+    public int QuantityForBuy
+    {
+        get => quantityForBuy;
+
+        set
+        {
+            quantityForBuy = value;
+            CountTotalPrice();
+            StateHasChanged();
+        }
+    }
+
+    public byte CurrentDiscount { get; set; }
+
+    public ProductPriceResponse ProductPrice { get; set; } = new ProductPriceResponse();
+
+    public BigInteger TotalPrice { get; set; }
+
+    public IOrderedEnumerable<KeyValuePair<int, byte>> SortedDiscounts { get; set; }
 
     public int Quantity
     {
@@ -67,7 +87,14 @@
     public async Task Open()
     {
         Filtration.Index.Loading = false;
-        PricePerItem = long.Parse(await Filtration._httpService.Get($"/api/Payment/pricePerItem?ProductType={ProductType.ArgumentFunctionRequests}"));
+
+        var response = await Filtration._httpService.Get($"/api/Payment/productPrice?ProductType={ProductType.ArgumentFunctionRequests}");
+        ProductPrice = JsonSerializer.Deserialize<ProductPriceResponse>(response,
+            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+        TotalPrice = ProductPrice.PricePerItem;
+        var sorted = ProductPrice.AmountFromPercents.OrderByDescending(x => x.Key);
+
+
         ModalDisplay = "block;";
         ModalClass = "Show";
         ShowBackdrop = true;
@@ -90,7 +117,7 @@
 
         string toAddress = (await Filtration._httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend")).walletAddress; // generate ex if auth token ends
 
-        System.Numerics.BigInteger weiValue = PricePerItem * QuantityForBuy;
+        System.Numerics.BigInteger weiValue = TotalPrice;
 
         string txnHash;
 
@@ -177,5 +204,26 @@
     private class ResponseQuantity
     {
         public int? Quantity { get; set; }
+    }
+
+    public void CountTotalPrice()
+    {
+        var sorted = ProductPrice.AmountFromPercents.OrderByDescending(x => x.Key);
+
+        foreach (var item in sorted)
+        {
+            if (QuantityForBuy >= item.Key)
+            {
+                TotalPrice = (BigInteger)ProductPrice.PricePerItem * QuantityForBuy * item.Value / 100;
+
+                CurrentDiscount = (byte)(100 - item.Value);
+
+                return;
+            }
+        }
+
+        CurrentDiscount = 0;
+
+        TotalPrice = ProductPrice.PricePerItem * QuantityForBuy;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using System.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 
 namespace Database.Respositories
 {
@@ -69,13 +70,29 @@ namespace Database.Respositories
             await SqlConnection.ExecuteAsync(sql);
         }
 
-        public async Task<long> GetProductPrice(string productType)
+        public async Task<(long, Dictionary<int, byte>)> GetProductPrice(string productType)
         {
-            var sql = "SELECT p.Price " +
-                        "FROM Products p " +
+            var sql = "SELECT p.Price, pd.AmountFrom, pd.Percents " +
+                        "FROM Products p, ProductsDiscount pd " +
                       $"WHERE p.ApiEndpoint = '{productType}';";
 
-            return await SqlConnection.QuerySingleOrDefaultAsync<long>(sql);
+            var response = await SqlConnection.QueryAsync<(long price, int amountFrom, byte percents)>(sql);
+
+            long price = 0;
+
+            Dictionary<int, byte> AmountFromPercents = new Dictionary<int, byte>();
+
+            foreach (var row in response)
+            {
+                price = row.price;
+
+                if (!AmountFromPercents.ContainsKey(row.amountFrom))
+                {
+                    AmountFromPercents.Add(row.amountFrom, row.percents);
+                }
+            }
+
+            return (price, AmountFromPercents);
         }
     }
 }

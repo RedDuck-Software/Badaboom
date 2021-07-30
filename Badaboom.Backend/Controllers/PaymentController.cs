@@ -2,6 +2,7 @@
 using Badaboom.Backend.Infrastructure.Services;
 using Badaboom.Core.Models.Enums;
 using Badaboom.Core.Models.Request;
+using Badaboom.Core.Models.Response;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -65,12 +66,12 @@ namespace Badaboom.Backend.Controllers
             return Ok(new { Quantity = quantity ?? 0 });
         }
 
-        [HttpGet("pricePerItem")]
-        public async Task<IActionResult> GetPricePerItem([FromQuery] ProductRequest request)
+        [HttpGet("productPrice")]
+        public async Task<ActionResult<ProductPriceResponse>> GetProductPrice([FromQuery] ProductRequest request)
         {
-            long pricePerItem = await _paymentService.GetPricePerItem(request.ProductType);
+            var productPrice = await _paymentService.GetProductPrice(request.ProductType);
 
-            return Ok(pricePerItem);
+            return Ok(productPrice);
         }
     }
 }
