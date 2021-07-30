@@ -24,11 +24,11 @@
             <form class="d-flex">
                 @if (AuthenticationService.User != null)
                 {
-                    <button class="btn b-clr-secondary round-10 text-clr-light" @onclick="@(_ => NavigationManager.NavigateTo("logout"))"><b>Logout</b></button>
+                    <button class="btn b-clr-secondary round-10 text-clr-light f-bold f-s-20" @onclick="@(_ => NavigationManager.NavigateTo("logout"))"><b>Logout</b></button>
                 }
                 else
                 {
-                    <button class="btn b-clr-secondary round-10 text-clr-light" @onclick="@(_ => NavigationManager.NavigateTo("login"))"><b>Login</b></button>
+                    <button class="btn b-clr-secondary round-10 text-clr-light f-bold f-s-20" @onclick="@(_ => NavigationManager.NavigateTo("login"))"><b>Login</b></button>
                 }
             </form>
 
