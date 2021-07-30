@@ -12,192 +12,210 @@
 }
 else if (IsHashAddressValid)
 {
-    <div class="card-main col-md-8 col-sm-12 center">
-        <div class="">
-            <div class="d-flex align-items-center">
-                <label class="ml-3 mt-3 f-bold f-s-35 clr-secondary">Transaction Details</label>
-                <div class="col-6 btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary @(CurrentPage == DisplayPage.Overview ? "active" : "")"
-                            @onclick="@(() => CurrentPage = DisplayPage.Overview)">Overview</button>
-                    <button type="button" class="btn btn-outline-primary @(CurrentPage == DisplayPage.InternalTxns ? "active" : "")"
-                            @onclick="@(async () => {
-                                            CurrentPage = DisplayPage.InternalTxns;
-                                            if (IsHashAddressValid && InternalTxns.Count == 0) { await InitializeInternalTxn(); }
-                                        })">
-                        Internal Txns
-                    </button>
-                    <button type="button" disabled
-                            class="btn btn-outline-primary @(CurrentPage == DisplayPage.State ? "active" : "")"
-                            @onclick="@(() => CurrentPage = DisplayPage.State)">State</button>
-                </div>
+    <div class="card-main col-md-8 col-sm-12 center" style="padding: 0px;">
+        <div class=" card-main">
+            <label class="ml-3 mt-3 f-bold f-s-35 clr-secondary">Transaction Details</label>
+            <div class="col-md-8 col-sm-12 btn-group btn-group-sm" role="group">
+
+                <button type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.Overview ? "active" : "")"
+                        @onclick="@(() => CurrentPage = DisplayPage.Overview)">
+                    Overview
+                </button>
+                <button type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.InternalTxns ? "active" : "")"
+                        @onclick="@(async () => {
+                                        CurrentPage = DisplayPage.InternalTxns;
+                                        if (IsHashAddressValid && InternalTxns.Count == 0) { await InitializeInternalTxn(); }
+                                    })">
+                    Internal Txns
+                </button>
+                <button type="button" disabled
+                        class="btn b-outline-dark @(CurrentPage == DisplayPage.State ? "active" : "")"
+                        @onclick="@(() => CurrentPage = DisplayPage.State)">
+                    State
+                </button>
+
+            </div>
+
+            <div class="card-body">
+                @if (CurrentPage == DisplayPage.Overview)
+                {
+                    <dl class="row">
+                        <dt class="col-4">
+                            Transaction Hash
+                        </dt>
+                        <dd class="col-8">
+                            <a class="clr-main" href="@("https://etherscan.io/tx/" + transactionDetails.TransactionHash)">@transactionDetails.TransactionHash</a> 
+                        </dd>
+                        <dt class="col-4">
+                            Status
+                        </dt>
+                        @if (transactionReceipt.Status.Value == 1)
+                        {
+                            <dd class="col-8" style="border: 2px solid #87D37C; padding-top: 0px;">Success</dd>
+                        }
+                        else
+                        {
+                            <dd class="col-8" style="border: 2px solid #F56A79; padding-top: 0px;">Fail</dd>
+                        }
+                        <dt class="col-4">
+                            Block
+                        </dt>
+                        <dd class="col-8">
+                            <a href="@("https://etherscan.io/block/" + transactionDetails.BlockNumber)">@transactionDetails.BlockNumber</a>
+                        </dd>
+                        <dt class="col-4">
+                            Timestamp
+                        </dt>
+                        <dd class="col-8">
+                            @DateTimeOffset.FromUnixTimeSeconds(Timestamp).ToString("yyyy-MM-dd HH:mm:ss")
+                        </dd>
+                        <dt class="col-4">
+                            From
+                        </dt>
+                        <dd class="col-8">
+                            <a class="clr-main" href="@("https://etherscan.io/address/" + transactionDetails.From)">@transactionDetails.From</a>
+                        </dd>
+                        <dt class="col-4">
+                            To
+                        </dt>
+                        <dd class="col-8">
+                            <a class="clr-main" href="@("https://etherscan.io/address/" + transactionDetails.To)">@transactionDetails.To</a>
+                        </dd>
+                        <dt class="col-4">
+                            Value
+                        </dt>
+                        <dd class="col-8">
+                            @EthValue Ether ($@Math.Round(EthValue * EthPriceAtSpecificTime, 2))
+                        </dd>
+                        <dt class="col-4">
+                            Transaction Fee
+                        </dt>
+                        <dd class="col-8">
+                            @TransactionFee ($@Math.Round(TransactionFee * EthPriceAtSpecificTime, 2))
+                        </dd>
+                        <dt class="col-4">
+                            Gas Price
+                        </dt>
+                        <dd class="col-8">
+                            @GasPriceEth Ether (@((int)(GasPriceEth * 1_000_000_000)) Gwei)
+                        </dd>
+                        <dt class="col-4">
+                            Transaction Ether Price
+                        </dt>
+                        <dd class="col-8">
+                            $@EthPriceAtSpecificTime/Ether
+                        </dd>
+                        <dt class="col-4">
+                            Curent Ether Price
+                        </dt>
+                        <dd class="col-8">
+                            $@CurrentEthPrice/Ether
+                        </dd>
+                        
+                    </dl>
+                }
+                else if (CurrentPage == DisplayPage.InternalTxns)
+                {
+                    @if (InternalTxns.Count() == 0)
+                    {
+                        <p>Loading <span class="spinner-border spinner-border-sm ml-1" /></p>
+                    }
+                    else
+                    {
+                        <table class="main-table">
+                            <thead>
+                                <tr>
+                                    <th>Type Trace Address</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Value</th>
+                                    <th>Gas Limit</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var row in InternalTxns)
+                                {
+                                    <tr>
+                                        <td>@row.Type.ToString()</td>
+                                        <td>
+                                            <NavLink class="nav-link hash-width text-truncate" href="@("https://etherscan.io/address/" + row.From)">
+                                                @row.From
+                                            </NavLink>
+                                        </td>
+                                        <td>
+                                            <NavLink class="nav-link hash-width text-truncate" href="@("https://etherscan.io/address/" + row.To)">
+                                                @row.To
+                                            </NavLink>
+                                        </td>
+                                        <td>@(Web3.Convert.FromWei(row.Value)) Ether</td>
+                                        <td>@row.GasLimit.ToString("#,###")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                   }
+               }
             </div>
         </div>
-        <div class="card-body">
-            @if (CurrentPage == DisplayPage.Overview)
-            {
-                <dl class="row">
-                    <dt class="col-4">
-                        Transaction Hash
-                    </dt>
-                    <dd class="col-8">
-                        <a class="clr-main" href="@("https://etherscan.io/tx/" + transactionDetails.TransactionHash)">@transactionDetails.TransactionHash</a> 
-                    </dd>
-                    <dt class="col-4">
-                        Status
-                    </dt>
-                    @if (transactionReceipt.Status.Value == 1)
-                    {
-                        <dd class="col-8" style="border: 2px solid #87D37C; padding-top: 0px;">Success</dd>
-                    }
-                    else
-                    {
-                        <dd class="col-8" style="border: 2px solid #F56A79; padding-top: 0px;">Fail</dd>
-                    }
-                    <dt class="col-4">
-                        Block
-                    </dt>
-                    <dd class="col-8">
-                        <a href="@("https://etherscan.io/block/" + transactionDetails.BlockNumber)">@transactionDetails.BlockNumber</a>
-                    </dd>
-                    <dt class="col-4">
-                        Timestamp
-                    </dt>
-                    <dd class="col-8">
-                        @DateTimeOffset.FromUnixTimeSeconds(Timestamp).ToString("yyyy-MM-dd HH:mm:ss")
-                    </dd>
-                    <dt class="col-4">
-                        From
-                    </dt>
-                    <dd class="col-8">
-                        <a class="clr-main" href="@("https://etherscan.io/address/" + transactionDetails.From)">@transactionDetails.From</a>
-                    </dd>
-                    <dt class="col-4">
-                        To
-                    </dt>
-                    <dd class="col-8">
-                        <a class="clr-main" href="@("https://etherscan.io/address/" + transactionDetails.To)">@transactionDetails.To</a>
-                    </dd>
-                    <dt class="col-4">
-                        Value
-                    </dt>
-                    <dd class="col-8">
-                        @EthValue Ether ($@Math.Round(EthValue * EthPriceAtSpecificTime, 2))
-                    </dd>
-                    <dt class="col-4">
-                        Transaction Fee
-                    </dt>
-                    <dd class="col-8">
-                        @TransactionFee ($@Math.Round(TransactionFee * EthPriceAtSpecificTime, 2))
-                    </dd>
-                    <dt class="col-4">
-                        Gas Price
-                    </dt>
-                    <dd class="col-8">
-                        @GasPriceEth Ether (@((int)(GasPriceEth * 1_000_000_000)) Gwei)
-                    </dd>
-                    <dt class="col-4">
-                        Transaction Ether Price
-                    </dt>
-                    <dd class="col-8">
-                        $@EthPriceAtSpecificTime/Ether
-                    </dd>
-                    <dt class="col-4">
-                        Curent Ether Price
-                    </dt>
-                    <dd class="col-8">
-                        $@CurrentEthPrice/Ether
-                    </dd>
-                    <dt class="col-4">
-                        Input Data
-                    </dt>
-                    @if (InputData.MethodId.Length <= 2)
-                    {
-                        <dd class="col-8">
-                            0x
-                        </dd>
-                    }
-                    else
-                    {
-                        if (DisplayInputSetings == DisplayInput.DefaultView)
-                        {
-                            <dd class="col-8">
-                                MethodID: @InputData.MethodId<br />
-                                @for (int i = 0; i < InputData.Parametrs.Count; i++)
-                                {
-                                    @($"[{i}]: 0x{InputData.Parametrs[i]}") <br />
-                                }
-
-                            </dd>
-                        }
-                        else if (DisplayInputSetings == DisplayInput.Original)
-                        {
-                            <dd class="col-8">
-                                <div style="max-width: 500px;">@transactionDetails.Input</div>
-                            </dd>
-                        }
-
-                        <dt class="col-4" />
-                        <div class="dropdown dropup">
-                            <button class="btn b-clr-secondary f-bold round-10 text-clr-light dropdown-toggle"
-                                    data-toggle="dropdown"
-                                    type="button"
-                                    aria-haspopup="true"
-                                    aria-expanded="false"
-                                    @onclick="e => this.show=!this.show">
-                                View Input As
-                            </button>
-                            <ul class="dropdown-menu @(show? "show":"")" aria-labelledby="dropdownMenuButton1" @onclick="_ => this.show = false">
-                                <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.Original">Original</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.DefaultView">Default view</a></li>
-                            </ul>
-                        </div>
-                    }
-                </dl>
-            }
-            else if (CurrentPage == DisplayPage.InternalTxns)
-            {
-                @if (InternalTxns.Count() == 0)
+            
+        @if (CurrentPage == DisplayPage.Overview)
+        {
+            <label class="col-11 center mt-4 mb-4 f-medium f-s-25 clr-main" @onclick="@(_ => this.showInputData = !this.showInputData)">
+                @if (!showInputData)
                 {
-                    <p>Loading <span class="spinner-border spinner-border-sm ml-1" /></p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-lg mb-1 mr-3" viewBox="0 0 16 16">
+                        <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z"/>
+                    </svg>
+                }
+                else
+                { 
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-dash-lg mb-1 mr-3" viewBox="0 0 16 16">
+                        <path d="M0 8a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H1a1 1 0 0 1-1-1z" />
+                    </svg>
+                }
+                Input Data</label>
+            <div class="col-10 center" hidden="@(!showInputData)">
+
+                @if (InputData.MethodId.Length <= 2)
+                {
+                    <textarea readonly class="mb-4 w-100 pl-3 pr-3" wrap="soft">0x</textarea>
                 }
                 else
                 {
-                    <table class="main-table">
-                        <thead>
-                            <tr>
-                                <th>Type Trace Address</th>
-                                <th>From</th>
-                                <th>To</th>
-                                <th>Value</th>
-                                <th>Gas Limit</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            @foreach (var row in InternalTxns)
+                    if (DisplayInputSetings == DisplayInput.DefaultView)
+                    {
+                        <textarea readonly class="mb-4 w-100 pl-3 pr-3" rows="6" wrap="soft">MethodID: @(InputData.MethodId + "\r\n\r\n")
+                            @for (int i = 0; i < InputData.Parametrs.Count; i++)
                             {
-                                <tr>
-                                    <td>@row.Type.ToString()</td>
-                                    <td>
-                                        <NavLink class="nav-link hash-width text-truncate" href="@("https://etherscan.io/address/" + row.From)">
-                                            @row.From
-                                        </NavLink>
-                                    </td>
-                                    <td>
-                                        <NavLink class="nav-link hash-width text-truncate" href="@("https://etherscan.io/address/" + row.To)">
-                                            @row.To
-                                        </NavLink>
-                                    </td>
-                                    <td>@(Web3.Convert.FromWei(row.Value)) Ether</td>
-                                    <td>@row.GasLimit.ToString("#,###")</td>
-                                </tr>
+                                @($"[{i}]: 0x{InputData.Parametrs[i]} \r\n")  
                             }
-                        </tbody>
-                    </table>
-               }
-           }
-        </div>
+                        </textarea>
+                    }
+                    else if (DisplayInputSetings == DisplayInput.Original)
+                    {
+                        <textarea readonly class="mb-4 w-100 pl-3 pr-3" rows="6" wrap="soft">@transactionDetails.Input</textarea>
+                    }
+
+                    <div class="dropdown dropup mb-4">
+                        <button class="btn b-clr-secondary f-bold round-10 text-clr-light dropdown-toggle"
+                                data-toggle="dropdown"
+                                type="button"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                @onclick="e => this.show=!this.show">
+                            View Input As
+                        </button>
+                        <ul class="dropdown-menu @(show? "show":"")" aria-labelledby="dropdownMenuButton1" @onclick="_ => this.show = false">
+                            <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.Original">Original</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" @onclick="_ => DisplayInputSetings = DisplayInput.DefaultView">Default view</a></li>
+                        </ul>
+                    </div>
+                }
+            </div>
+        }
+
     </div>
 }
 else
@@ -209,6 +227,7 @@ else
 
 @code {
     private bool show = false;
+    private bool showInputData = false;
 
     private bool IsHashAddressValid { get; set; } = true;
     private uint Timestamp { get; set; }
