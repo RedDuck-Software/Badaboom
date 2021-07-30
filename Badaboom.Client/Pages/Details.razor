@@ -17,11 +17,11 @@ else if (IsHashAddressValid)
             <label class="ml-3 mt-3 f-bold f-s-35 clr-secondary">Transaction Details</label>
             <div class="col-md-8 col-sm-12 btn-group btn-group-sm" role="group">
 
-                <button type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.Overview ? "active" : "")"
+                <button type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.Overview ? "active-d" : "")"
                         @onclick="@(() => CurrentPage = DisplayPage.Overview)">
                     Overview
                 </button>
-                <button type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.InternalTxns ? "active" : "")"
+                <button type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.InternalTxns ? "active-d" : "")"
                         @onclick="@(async () => {
                                         CurrentPage = DisplayPage.InternalTxns;
                                         if (IsHashAddressValid && InternalTxns.Count == 0) { await InitializeInternalTxn(); }
@@ -29,7 +29,7 @@ else if (IsHashAddressValid)
                     Internal Txns
                 </button>
                 <button type="button" disabled
-                        class="btn b-outline-dark @(CurrentPage == DisplayPage.State ? "active" : "")"
+                        class="btn b-outline-dark @(CurrentPage == DisplayPage.State ? "active-d" : "")"
                         @onclick="@(() => CurrentPage = DisplayPage.State)">
                     State
                 </button>
