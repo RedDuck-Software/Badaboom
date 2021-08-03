@@ -1,3 +1,47 @@
 ﻿@page "/"
+@inject NavigationManager NavigationManager;
 
-<h1 class="f-bold center">in developing</h1>
+<div class="row">
+    <div class="col-md-6 col-sm-12">
+        <div class="col-12 d-flex align-items-center">
+            <!--Ball-->
+            <div class="circle mb-1">
+                <div class="oval" />
+            </div>
+
+            <h1 class="clr-main mr-2 ml-2">Build</h1>
+
+            <div class="rectangle">
+                <label class="f-s-20 text-clr-light">Free now</label>
+            </div>
+        </div>
+
+        <h1 class="col-12" style="color:#32325D;">
+            Speed up your <br />
+            Smart <span class="clr-main">Contract</span> <br />
+            development
+        </h1>
+    </div>
+
+    <div class="col-md-6 col-sm-12">
+        <div class="main-card">
+            <h1 class="ml-3 f-bold">
+                <span style="color: #F56A79;">• </span>
+                <span style="color: #F4B651;">• </span>
+                <span style="color: #7ED321;">• </span>
+            </h1>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-sm-12 mb-5" style="margin-top: 30px;">
+        <button class="btn b-main m-3" @onclick="@(() => NavigationManager.NavigateTo("explorer"))">Get Started</button>
+        <button class="btn b-secondary ml-3" @onclick="@(() => NavigationManager.NavigateTo("#"))" title="in developing">Learn More</button>
+    </div>
+
+    <div class="col-md-8 col-sm-12 center">
+        <div class="second-card" style="display: flex; justify-content: center; align-items: flex-end;">
+                <label class="col-6 f-s-20 clr-gray">Details</label>
+                <label class="col-3 f-s-20 clr-gray">Transactions</label>
+        </div>
+    </div>
+</div>
