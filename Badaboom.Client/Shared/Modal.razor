@@ -176,6 +176,8 @@
 
         System.Console.WriteLine($"TX Hash: {txnHash}");
 
+        await Filtration.FilterPro();
+
         await Close();
     }
 
