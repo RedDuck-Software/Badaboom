@@ -1,0 +1,78 @@
+﻿@page "/explorer"
+@inject NavigationManager NavigationManager;
+
+<Filtration TransactionFilters="TransactionFilter" Explorer="this"></Filtration>
+
+@if (Transactions == null)
+{
+    <p class="ml-1">Loading <span class="spinner-border spinner-border-sm ml-1" /></p>
+}
+else
+{
+    <table class="main-table">
+        <thead>
+            <tr>
+                <th>Txn Hash</th>
+                <th>Method</th>
+                <th>Block</th>
+                <th>Age</th>
+                <th>From</th>
+                <th>To</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Transactions.Count() == 0)
+            {
+                @if (TransactionFilter.Page == 1)
+                {
+                    <tr><td colspan="6" class="justify-content-center p-2"><em>Maybe your filters are wrong ...</em></td></tr>
+                }
+                @if (TransactionFilter.Page != 1)
+                {
+                    <tr><td colspan="6" class="justify-content-center p-2"><em>End of the list, come back</em></td></tr>
+                }
+            }
+            else
+            {
+                @foreach (var row in Transactions)// tr td column=6
+                {
+                    <tr>
+                        <td>
+                            <a class="nav-link hash-width text-truncate clr-main" href="@($"details/{row.TxnHash}")">
+                                @row.TxnHash
+                            </a>
+                        </td>
+                        <td>@row.Method</td>
+                        <td>@row.Block</td>
+                        <td>@DateTimeOffset.FromUnixTimeSeconds((long)@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
+                        <td>
+                            <a class="nav-link hash-width text-truncate clr-main" href="@row.From">
+                                @row.From
+                            </a>
+                        </td>
+                        <td>
+                            <a class="nav-link hash-width text-truncate clr-main" href="@row.To">
+                                @row.To
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+
+        @if (!(Transactions.Count() == 0 && TransactionFilter.Page == 1))
+        {
+            <tfoot>
+                <tr>
+                    <td colspan="6" class="justify-content-center">
+                        <Pagination TotaPagesQuantity="TotalPageQuantity"
+                                    CurrentPage="TransactionFilter.Page"
+                                    Radius="2"
+                                    SelectedPage="SelectedPage" />
+                    </td>
+                </tr>
+            </tfoot>
+        }
+    </table>
+}
