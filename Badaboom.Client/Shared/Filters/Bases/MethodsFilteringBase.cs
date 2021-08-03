@@ -24,7 +24,7 @@ namespace Badaboom.Client.Shared.Filters
         public SelectedFiltersDTO SelectedFilters { get; set; }
 
         [Parameter]
-        public Pages.Index Index { get; set; }
+        public Pages.Explorer Explorer { get; set; }
 
         [Parameter]
         public Action Callback { get; set; }
