@@ -1,13 +1,10 @@
-﻿using BackendCore.Services;
-using Badaboom.Backend.Infrastructure.Services;
+﻿using Badaboom.Backend.Infrastructure.Services;
 using Badaboom.Core.Models.Enums;
 using Badaboom.Core.Models.Request;
 using Badaboom.Core.Models.Response;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Badaboom.Backend.Controllers
@@ -15,7 +12,6 @@ namespace Badaboom.Backend.Controllers
     [ApiController]
     [Route("/api/[controller]")]
     [EnableCors("AllowAll")]
-    [Badaboom.Backend.Attributes.Authorize]
     public class PaymentController : BaseController
     {
         private readonly IPaymentService _paymentService;
@@ -28,14 +24,14 @@ namespace Badaboom.Backend.Controllers
             _paymentService = paymentService;
         }
 
-        [HttpGet("walletAddressToSend")]
+        [HttpGet("walletAddressToSend"), Attributes.Authorize]
         public async Task<IActionResult> GetAddressToSend()
         {
             string address = _paymentService.GetWalletAddress();
             return Ok(new { walletAddress = address });
         }
 
-        [HttpPost("purchase")]
+        [HttpPost("purchase"), Attributes.Authorize]
         public async Task<IActionResult> Purchase([FromBody] PurchaseRequest request)
         {
             if (request.Quantity <= 0)
@@ -59,14 +55,14 @@ namespace Badaboom.Backend.Controllers
             }
         }
 
-        [HttpPost("checkPossibilityUsingFunction")]
+        [HttpPost("checkPossibilityUsingFunction"), Attributes.Authorize]
         public async Task<IActionResult> CheckPossibilityUsingFunction([FromBody] ProductRequest request)
         {
             int? quantity = await _paymentService.CheckQuantity(request.ProductType, CurrentUser.Address);
             return Ok(new { Quantity = quantity ?? 0 });
         }
 
-        [HttpGet("productPrice")]
+        [HttpGet("productPrice"), AllowAnonymous]
         public async Task<ActionResult<ProductPriceResponse>> GetProductPrice([FromQuery] ProductRequest request)
         {
             var productPrice = await _paymentService.GetProductPrice(request.ProductType);
