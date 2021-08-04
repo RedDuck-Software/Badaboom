@@ -1,0 +1,26 @@
+﻿@page "/pricing"
+
+<div class="d-flex justify-content-center">
+    <div class="col-md-10 col-sm-12">
+
+        @if (loading)
+        {
+            <div class="row">
+                <h1 class="clr-main col-11">Wait, we try get all our prices</h1>
+                <div class="spinner-grow clr-main mt-auto mb-auto" style="width: 3rem; height: 3rem;" />
+            </div>
+        }
+        else
+        {
+            <h1 class="clr-main center mb-3">Our product</h1>
+
+            <div class="row">
+                @foreach (var product in ProductsPrice)
+                {
+                    <Badaboom.Client.Pages.Pricing.Product.Product ProductType="product.Product"
+                                                                   ProductPrice="product.ProductPrice" />
+                }
+            </div>
+        }
+    </div>
+</div>

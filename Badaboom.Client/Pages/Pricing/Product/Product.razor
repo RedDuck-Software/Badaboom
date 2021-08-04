@@ -1,0 +1,34 @@
+﻿<div class="row main-card mb-3 pt-3">
+    <div class="col-md-6 col-sm-12">
+        <label class="col-12 f-bold f-s-20 clr-main">/@ProductType.ToString()</label>
+        <label class="col-12 text-clr-dark">Price per item @(Nethereum.Web3.Web3.Convert.FromWei(ProductPrice.PricePerItem)) Eth</label>
+
+        <input type="range" class="mr-2 ml-2" style="width:100%" min="1" max="1000" @bind="@QuantityForBuy" />
+    
+        <form class="form-inline col center">
+            <input type="number" class="input pl-2 mr-2 f-regular" style="font-size: 16px;" min="1" max="1000" @bind="@QuantityForBuy" />
+            <label class="text-clr-dark"> * @(Nethereum.Web3.Web3.Convert.FromWei(ProductPrice.PricePerItem)) = @(Nethereum.Web3.Web3.Convert.FromWei(TotalPrice)) Eth</label>
+        </form>
+
+        <div class="col-12 d-flex justify-content-end">
+            <label class="text-clr-dark">(Discount - @CurrentDiscount%)</label>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-sm-12">
+        <table class="table">
+            <tr>
+                <td>Amount from</td>
+                <td>Discount percentage</td>
+            </tr>
+
+            @foreach (var row in ProductPrice.AmountFromPercents)
+            {
+                <tr>
+                    <th>@row.Key</th>
+                    <th>@(100 -row.Value) %</th>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
