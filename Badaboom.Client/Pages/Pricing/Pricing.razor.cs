@@ -31,10 +31,6 @@ namespace Badaboom.Client.Pages.Pricing
 
                 ProductsPrice.Add((product, JsonSerializer.Deserialize<ProductPriceResponse>(responseString,
                     new JsonSerializerOptions() { PropertyNameCaseInsensitive = true })));
-                ProductsPrice.Add((product, JsonSerializer.Deserialize<ProductPriceResponse>(responseString,
-                    new JsonSerializerOptions() { PropertyNameCaseInsensitive = true })));
-                ProductsPrice.Add((product, JsonSerializer.Deserialize<ProductPriceResponse>(responseString,
-                    new JsonSerializerOptions() { PropertyNameCaseInsensitive = true })));
             }
 
             loading = false;

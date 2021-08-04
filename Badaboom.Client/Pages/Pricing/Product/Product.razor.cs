@@ -18,7 +18,7 @@ namespace Badaboom.Client.Pages.Pricing.Product
         [Parameter]
         public ProductPriceResponse ProductPrice { get; set; }
 
-        private byte CurrentDiscount { get; set; }
+        private int CurrentDiscount { get; set; }
 
         private BigInteger TotalPrice { get; set; }
 
@@ -52,7 +52,7 @@ namespace Badaboom.Client.Pages.Pricing.Product
                 {
                     TotalPrice = (BigInteger)ProductPrice.PricePerItem * QuantityForBuy * item.Value / 100;
 
-                    CurrentDiscount = (byte)(100 - item.Value);
+                    CurrentDiscount = 100 - item.Value;
 
                     return;
                 }
