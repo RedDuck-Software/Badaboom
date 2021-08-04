@@ -1,78 +1,47 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager;
 
-<Filtration TransactionFilters="TransactionFilter" Index="this"></Filtration>
+<div class="row">
+    <div class="col-md-6 col-sm-12">
+        <div class="col-12 d-flex align-items-center">
+            <!--Ball-->
+            <div class="circle mb-1">
+                <div class="oval" />
+            </div>
 
-@if (Transactions == null)
-{
-    <p class="ml-1">Loading <span class="spinner-border spinner-border-sm ml-1" /></p>
-}
-else
-{
-<table class="main-table">
-    <thead>
-        <tr>
-            <th>Txn Hash</th>
-            <th>Method</th>
-            <th>Block</th>
-            <th>Age</th>
-            <th>From</th>
-            <th>To</th>
-        </tr>
-    </thead>
+            <h1 class="clr-main mr-2 ml-2">Build</h1>
 
-    <tbody>
-        @if (Transactions.Count() == 0)
-        {
-            @if (TransactionFilter.Page == 1)
-            {
-                <tr><td colspan="6" class="justify-content-center p-2"><em>Maybe your filters are wrong ...</em></td></tr>
-            }
-            @if (TransactionFilter.Page != 1)
-            {
-                <tr><td colspan="6" class="justify-content-center p-2"><em>End of the list, come back</em></td></tr>
-            }
-        }
-        else
-        { 
-            @foreach (var row in Transactions)// tr td column=6
-            {
-                <tr>
-                    <td>
-                        <a class="nav-link hash-width text-truncate clr-main" href="@($"details/{row.TxnHash}")">
-                            @row.TxnHash
-                        </a>
-                    </td>
-                    <td>@row.Method</td>
-                    <td>@row.Block</td>
-                    <td>@DateTimeOffset.FromUnixTimeSeconds((long)@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
-                    <td>
-                        <a class="nav-link hash-width text-truncate clr-main" href="@row.From">
-                            @row.From
-                        </a>
-                    </td>
-                    <td>
-                        <a class="nav-link hash-width text-truncate clr-main" href="@row.To">
-                            @row.To
-                        </a>
-                    </td>
-                </tr>
-            }
-        }
-    </tbody>
+            <div class="rectangle">
+                <label class="f-s-20 text-clr-light">Free now</label>
+            </div>
+        </div>
 
-    @if (!(Transactions.Count() == 0 && TransactionFilter.Page == 1))
-    { 
-        <tfoot>
-            <tr>
-                <td colspan="6" class="justify-content-center">
-                    <Pagination TotaPagesQuantity="TotalPageQuantity"
-                                CurrentPage="TransactionFilter.Page"
-                                Radius="2"
-                                SelectedPage="SelectedPage" />
-                </td>
-            </tr>
-        </tfoot>
-    }
-</table>
-}
+        <h1 class="col-12" style="color:#32325D;">
+            Speed up your <br />
+            Smart <span class="clr-main">Contract</span> <br />
+            development
+        </h1>
+    </div>
+
+    <div class="col-md-6 col-sm-12">
+        <div class="main-card">
+            <h1 class="ml-3 f-bold">
+                <span style="color: #F56A79;">• </span>
+                <span style="color: #F4B651;">• </span>
+                <span style="color: #7ED321;">• </span>
+            </h1>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-sm-12 mb-5" style="margin-top: 30px;">
+        <button class="btn b-main m-3" @onclick="@(() => NavigationManager.NavigateTo("explorer"))">Get Started</button>
+        <button class="btn b-secondary ml-3" @onclick="@(() => NavigationManager.NavigateTo("#"))" title="in developing">Learn More</button>
+    </div>
+
+    <div class="col-md-8 col-sm-12 center">
+        <div class="second-card" style="display: flex; justify-content: center; align-items: flex-end;">
+                <label class="col-6 f-s-20 clr-gray">Details</label>
+                <label class="col-3 f-s-20 clr-gray">Transactions</label>
+        </div>
+    </div>
+</div>
