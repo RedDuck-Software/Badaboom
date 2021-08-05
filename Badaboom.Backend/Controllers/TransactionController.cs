@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Badaboom.Backend.Attributes;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers
 {
@@ -29,7 +30,7 @@ namespace Backend.Controllers
         }
 
 
-        [HttpGet("GetContractAbi")]
+        [HttpGet("GetContractAbi"), AllowAnonymous]
         public async Task<ActionResult<string>> GetContractAbi([FromQuery] string contractAddress)
         {
             var res = await _transactionService.GetContractAbi(contractAddress);
@@ -39,7 +40,7 @@ namespace Backend.Controllers
             return res;
         }
 
-        [HttpPost("GetTransactions")]
+        [HttpPost("GetTransactions"), AllowAnonymous]
         public async Task<ActionResult<PaginationTransactionResponse>> GetFilteredTransactions([FromBody] GetFilteredTransactionRequest request)
         {
             if (request.DecodeInputDataInfo != null &&
@@ -54,8 +55,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPost("getTransactionsByArgument")]
-        [Badaboom.Backend.Attributes.Authorize]
+        [HttpPost("getTransactionsByArgument"), Badaboom.Backend.Attributes.Authorize]
         [Purchase(ProductType.ArgumentFunctionRequests)]
         public async Task<ActionResult<PaginationTransactionResponse>> GetFilteredTransactionsByArgument([FromBody] GetFilteredTransactionRequest request)
         {
