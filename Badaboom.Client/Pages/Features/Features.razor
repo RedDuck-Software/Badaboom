@@ -1,0 +1,97 @@
+﻿@page "/features"
+@inject NavigationManager NavigationManager;
+
+<div class="row">
+    <div class="col">
+        <div class="col-md-11 col-sm-12 center d-flex align-items-center">
+            <!--Ball-->
+            <div class="circle mb-1">
+                <div class="small-cube" />
+            </div>
+
+            <h1 class="clr-main mr-2 ml-2">Features</h1>
+        </div>
+
+        <h1 class="col-md-11 col-sm-12 center" style="color:#32325D;">
+            All information about smart contact <br />
+            <span class="clr-main">Just try</span>
+        </h1>
+
+        <div class="col-md-11 col-sm-12 center mb-5" style="margin-top: 30px;">
+            <button class="btn b-main mt-3 mr-3 mb-3" @onclick="@(() => NavigationManager.NavigateTo("explorer"))">Get Started</button>
+            <button class="btn b-secondary ml-1" @onclick="@(() => NavigationManager.NavigateTo("pricing"))">Pricing</button>
+        </div>
+
+        <div class="col-md-11 col-sm-12 center block-center" style="margin-bottom: 50px;">
+            <img src="/images/features/circle.png" />
+
+            <h1 class="f-medium">About Us</h1>
+
+            <label style="text-align: center;" class="f-s-35 text-clr-dark">Badaboom provides hardly-accessible information in an instant time. It was developed for developers, to retrieve various information that might help them to test/debug Etherum and BSC transactions.</label>
+        </div>
+
+        <div class="form-inline mini-card">
+            <div class="div-img-1">
+                <h1 class="img-label f-bold text-clr-light">Monitoring</h1>
+            </div>
+
+            <div class="col">
+                <h1 class="f-medium" style="font-size: 27px; text-align: center;">Monitor state of <span class="clr-main">a contract</span></h1>
+
+                <label class="f-s-25" style="text-align: center;">A typical scenario is getting a transaction that altered a field to a specific value in the past. Or getting the transactions that called a function with a specific value to know how the function behaves in such a case.</label>
+            </div>
+        </div>
+
+        <div class="form-inline mini-card">
+            <div class="col">
+                <h1 class="f-medium" style="font-size: 27px; text-align: center;">We support <span class="clr-main">advanced transaction filters</span></h1>
+
+                <div class="col form-inline f-s-20 f-bold" style="text-align: center;">
+                    <label class="rectangle">From</label>
+                    <label class="rectangle">To</label>
+                    <label class="rectangle">Block number</label>
+                    <label class="rectangle">Contract Address</label>
+                    <label class="mb-2">with specific agruments</label>
+                </div>
+            </div>
+
+            <div class="div-img-2">
+                <h1 class="img-label f-bold text-clr-light">Filter</h1>
+            </div>
+        </div>
+
+        <label class="col f-bold label-secondary">Coming soon</label>
+
+        <div class="row">
+            <div class="col-md-4 col-sm-12 block-center mb-3">
+                <img src="/images/features/circle-lightning.png" />
+
+                <label class="f-medium f-s-30 text-clr-dark">Filters by contract</label>
+
+                <label class="f-bold f-s-25 block-description">
+                    Filters by contract state that was altered in the transaction
+                </label>
+            </div>
+
+            <div class="col-md-4 col-sm-12 block-center mb-3">
+                <img src="/images/features/circle-lightning.png" />
+
+                <label class="f-medium f-s-30 text-clr-dark">Notifications</label>
+
+                <label class="f-bold f-s-25 block-description">
+                    Monitor the changes to your contract's state
+                </label>
+            </div>
+            
+            <div class="col-md-4 col-sm-12 block-center mb-3">
+                <img src="/images/features/circle-lightning.png" />
+
+                <label class="f-medium f-s-30 text-clr-dark">Verifying</label>
+
+                <label class="f-bold f-s-25 block-description">
+                    Ability to verify previously unverified contract and restart indexing for it
+                </label>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,96 @@
+﻿body {
+}
+
+.circle {
+    width: 38px;
+    height: 38px;
+    background: #6772E5;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.small-cube {
+    width: 19.31px;
+    height: 19.31px;
+    background: #444789;
+    border-radius: 5px;
+    transform: rotate(-45deg);
+}
+
+.b-main, .b-secondary {
+    box-shadow: 0px 6px 4px 2px #E1E9F0;
+    border-radius: 6px;
+    font-size: 20px;
+}
+
+.b-main {
+    background: #6773E5;
+    color: #FFFFFF;
+}
+
+.b-secondary {
+    background: #FFFFFF;
+    color: #6773E5;
+}
+
+.mini-card {
+    background: #FFFFFF;
+    box-shadow: 0px 201px 254px rgba(190, 190, 190, 0.13), 0px 83.973px 106.115px rgba(190, 190, 190, 0.0757137), 0px 44.896px 56.7342px rgba(190, 190, 190, 0.0441395), 0px 25.1683px 31.8047px rgba(190, 190, 190, 0.0211154), 0px 13.3667px 16.8913px rgba(190, 190, 190, 0.00510903);
+    border-radius: 22px;
+    margin-bottom: 30px;
+}
+
+.img-label {
+    box-shadow: 0px 0px 20px 5px #00000057;
+    background: #0000003d;
+    border-radius: 30px;
+}
+
+.div-img-1 {
+    background: url(/images/features/laptop.png);
+    height: 400px;
+    width: 503px;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+}
+
+.div-img-2 {
+    background: url(/images/features/laptop2.png);
+    height: 400px;
+    width: 581.5px;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+}
+
+.rectangle {
+    color: #FFFFFF;
+    background: #6772E5;
+    box-shadow: 0px 143px 156px rgba(0, 0, 0, 0.1), 0px 52.1974px 56.9426px rgba(0, 0, 0, 0.0689982), 0px 25.3408px 27.6446px rgba(0, 0, 0, 0.0556291), 0px 12.4226px 13.5519px rgba(0, 0, 0, 0.0443709), 0px 4.9119px 5.35843px rgba(0, 0, 0, 0.0310018);
+    border-radius: 36px;
+    padding-right: 10px;
+    padding-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.label-secondary {
+    font-family: 'Geometria Bold';
+    font-size: 50px;
+    text-align: center;
+    color: #A1AAB3;
+    margin-bottom: 50px;
+}
+
+.block-center {
+    display: grid;
+    justify-items: center;
+}
+
+.block-description {
+    color: rgba(66, 84, 102, 0.49);
+    text-align: center;
+}
