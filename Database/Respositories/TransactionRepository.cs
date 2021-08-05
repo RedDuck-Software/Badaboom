@@ -71,11 +71,11 @@ namespace Database.Respositories
             int count = pagination?.Count ?? 1;
             long? callIdFrom = pagination?.CallIdFrom;
 
-            string blockWherePaginationQuery = block == null ? "" : $" t.BlockId={block} ";
-            string fromWherePaginationQuery = from == null ? "" : $" c.[From]=convert(binary(20),'{from}',1) ";
-            string toWherePaginationQuery = to == null ? "" : $" c.[To]=convert(binary(20),'{to}',1) ";
-            string methodWherePaginationQuery = method == null ? "" : $" c.MethodId=convert(binary(4),'{method}',1) ";
-            string fromCallIDWherePaginationQuery = callIdFrom == null ? "" : $" c.CallId<={callIdFrom.Value} ";
+            string blockWherePaginationQuery = block == null ? "" : $" t.BlockId=@BlockId ";
+            string fromWherePaginationQuery = from == null ? "" : $" c.[From]=convert(binary(20),@From,1) ";
+            string toWherePaginationQuery = to == null ? "" : $" c.[To]=convert(binary(20),@To,1) ";
+            string methodWherePaginationQuery = method == null ? "" : $" c.MethodId=convert(binary(4),@MethodId,1) ";
+            string fromCallIDWherePaginationQuery = callIdFrom == null ? "" : $" c.CallId<=@CallId ";
 
             List<string> whereList = new List<string>();
 
@@ -113,7 +113,14 @@ namespace Database.Respositories
                 $"FETCH NEXT {count} rows only;";
 
 
-            var result = await SqlConnection.QueryAsync<Call>(sql);
+            var result = await SqlConnection.QueryAsync<Call>(sql, 
+                new {
+                        BlockId = block,
+                        From = from,
+                        To = to, 
+                        MethodId = method, 
+                        CallId = callIdFrom ?? 0
+                    });
 
             if (isCountCalculatedNeded)
             {
@@ -127,7 +134,14 @@ namespace Database.Respositories
                       "WHERE t.TransactionHash = c.TransactionHash" +
                     (string.IsNullOrEmpty(resWhereStatement) ? "" : " and " + resWhereStatement);
 
-                    totalCount = await SqlConnection.QuerySingleAsync<int>(sql2);
+                    totalCount = await SqlConnection.QuerySingleAsync<int>(sql2,
+                        new {
+                                BlockId = block,
+                                From = from,
+                                To = to,
+                                MethodId = method,
+                                CallId = callIdFrom ?? 0
+                            });
                 }
 
                 return (result, totalCount);
