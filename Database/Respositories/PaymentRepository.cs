@@ -19,10 +19,10 @@ namespace Database.Respositories
                           "ON u.UserId = up.UserId " +
                   "INNER JOIN Products p " +
                           "ON up.ProductId = p.Id " +
-                      $"WHERE u.Address = convert(binary(20), '{address}', 1) " +
-                        $"AND p.ApiEndpoint = '{productType}';";
+                      $"WHERE u.Address = convert(binary(20), @Address, 1) " +
+                        $"AND p.ApiEndpoint = @ProductType;";
 
-            return await SqlConnection.QuerySingleOrDefaultAsync<int?>(sql);
+            return await SqlConnection.QuerySingleOrDefaultAsync<int?>(sql, new { Address = address, ProductType = productType });
         }
 
         public async Task UpdateProductQuantity(string address, string productType, int totalQuantity)
@@ -35,25 +35,25 @@ namespace Database.Respositories
                           "ON u.UserId = up.UserId " +
                   "INNER JOIN Products p " +
                           "ON up.ProductId = p.Id " +
-                      $"WHERE u.Address = convert(binary(20), '{address}', 1) " +
-                        $"AND p.ApiEndpoint = '{productType}';";
+                      $"WHERE u.Address = convert(binary(20), @Address, 1) " +
+                        $"AND p.ApiEndpoint = @ProductType;";
 
-            await SqlConnection.ExecuteAsync(sql, new { Quantity = totalQuantity });
+            await SqlConnection.ExecuteAsync(sql, new { Quantity = totalQuantity, Address = address, ProductType = productType });
         }
 
         public async Task AddUserProduct(string address, string productType, int quantity)
         {
             var sql = "SELECT u.UserId, p.Id " +
                         "FROM Users u, Products p " +
-                      $"WHERE u.Address = convert(binary(20), '{address}', 1) " +
-                        $"AND p.ApiEndpoint = '{productType}';";
+                      $"WHERE u.Address = convert(binary(20), @Address, 1) " +
+                        $"AND p.ApiEndpoint = @ProductType;";
 
-            (int UserId, int ProductId) response = await SqlConnection.QuerySingleAsync<(int, int)>(sql);
+            (int UserId, int ProductId) response = await SqlConnection.QuerySingleAsync<(int, int)>(sql, new { Address = address, ProductType = productType });
 
             var sql1 = "INSERT INTO UsersProducts (UserId, ProductId, Quantity) " +
-                           $"VALUES ({response.UserId}, {response.ProductId}, {quantity})";
+                           $"VALUES (@V1, @V2, @V3)";
 
-            await SqlConnection.ExecuteAsync(sql1);
+            await SqlConnection.ExecuteAsync(sql1, new { V1 = response.UserId, V2 = response.ProductId, V3 = quantity });
         }
 
         public async Task DeleteUserProduct(string address, string productType)
@@ -64,19 +64,19 @@ namespace Database.Respositories
                                "ON u.UserId = up.UserId " +
                        "INNER JOIN Products p " +
                                "ON up.ProductId = p.Id " +
-                           $"WHERE u.Address = convert(binary(20), '{address}', 1) " +
-                             $"AND p.ApiEndpoint = '{productType}';";
+                           $"WHERE u.Address = convert(binary(20), @Address, 1) " +
+                             $"AND p.ApiEndpoint = @ProductType;";
 
-            await SqlConnection.ExecuteAsync(sql);
+            await SqlConnection.ExecuteAsync(sql, new { Address = address, ProductType = productType });
         }
 
         public async Task<(long, Dictionary<int, byte>)> GetProductPrice(string productType)
         {
             var sql = "SELECT p.Price, pd.AmountFrom, pd.Percents " +
                         "FROM Products p, ProductsDiscount pd " +
-                      $"WHERE p.ApiEndpoint = '{productType}';";
+                      $"WHERE p.ApiEndpoint = @ProductType;";
 
-            var response = await SqlConnection.QueryAsync<(long price, int amountFrom, byte percents)>(sql);
+            var response = await SqlConnection.QueryAsync<(long price, int amountFrom, byte percents)>(sql, new { ProductType = productType });
 
             long price = 0;
 

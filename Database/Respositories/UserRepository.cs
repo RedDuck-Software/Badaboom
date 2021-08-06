@@ -44,9 +44,9 @@ namespace Database.Respositories
                             "Nonce " +
                       "from Users " +
                       "where " +
-                            $"Address=convert(binary(20),'{address}',1);";
+                            $"Address=convert(binary(20),@Address,1);";
 
-            User user = await SqlConnection.QuerySingleOrDefaultAsync<User>(sql);
+            User user = await SqlConnection.QuerySingleOrDefaultAsync<User>(sql, new { Address = address});
 
             if (user is null)
             {
@@ -57,9 +57,9 @@ namespace Database.Respositories
                          "FROM Products p " +
                         "INNER JOIN UsersProducts up " +
                            "ON up.ProductId = p.Id " +
-                       $"WHERE up.UserId = {user.UserId};";
+                       $"WHERE up.UserId = @UserId;";
 
-            Dictionary<string, int> response = (await SqlConnection.QueryAsync<(string, int)>(sql1)).ToDictionary(x => x.Item1, x => x.Item2);
+            Dictionary<string, int> response = (await SqlConnection.QueryAsync<(string, int)>(sql1, new { UserId = user.UserId })).ToDictionary(x => x.Item1, x => x.Item2);
 
             user.AvailableProduct = response;
 
