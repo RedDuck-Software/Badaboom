@@ -56,6 +56,9 @@
     [Parameter]
     public Filtration Filtration { get; set; }
 
+    [Inject]
+    public IHttpService _httpService { get; set; }
+
     private int quantityForBuy = 1;
 
     public int QuantityForBuy
@@ -102,7 +105,7 @@
 
         Product = productType;
 
-        var response = await Filtration._httpService.Get($"/api/Payment/productPrice?ProductType={ProductType.ArgumentFunctionRequests}");
+        var response = await _httpService.Get($"/api/Payment/productPrice?ProductType={ProductType.ArgumentFunctionRequests}");
         ProductPrice = JsonSerializer.Deserialize<ProductPriceResponse>(response,
             new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
@@ -130,7 +133,7 @@
 
         StateHasChanged();
 
-        string toAddress = (await Filtration._httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend")).walletAddress; // generate ex if auth token ends
+        string toAddress = (await _httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend")).walletAddress; // generate ex if auth token ends
 
         string txnHash;
 
@@ -142,7 +145,7 @@
             {
                 Console.WriteLine("(Transaction status code success)");
 
-                await Filtration._httpService.Post<PurchaseRequest>("/api/payment/purchase", new PurchaseRequest()
+                await _httpService.Post<PurchaseRequest>("/api/payment/purchase", new PurchaseRequest()
                 {
                     ProductType = Product,
                     Quantity = QuantityForBuy,
@@ -175,8 +178,6 @@
         }
 
         System.Console.WriteLine($"TX Hash: {txnHash}");
-
-        await Filtration.FilterPro();
 
         await Close();
     }
