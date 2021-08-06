@@ -11,7 +11,27 @@
         </form>
 
         <div class="col-12 d-flex justify-content-end">
-            <label class="text-clr-dark">(Discount - @CurrentDiscount%)</label>
+            <button class="btn b-secondary f-regular clr-main m-2"
+                    style="font-size: 16px;"
+                    @onclick="@(() => NavigationManager.NavigateTo("explorer"))">
+                Try it
+            </button>
+
+            <button class="btn b-secondary f-regular m-2"
+                    style="font-size: 16px;"
+                    disabled="@loading"
+                    @onclick="Buy">
+                @if (loading)
+                {
+                    <span>Please wait</span> <span class="spinner-border spinner-border-sm mr-1 mt-auto mb-auto"></span>
+                }
+                else
+                {
+                    <span>Buy requests</span>
+                }
+            </button>
+
+            <label class="text-clr-dark ml-2 mt-auto mb-auto">(Discount - @CurrentDiscount%)</label>
         </div>
     </div>
 
