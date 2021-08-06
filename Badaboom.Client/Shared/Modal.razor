@@ -59,6 +59,9 @@
     [Inject]
     public IHttpService _httpService { get; set; }
 
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = default!;
+
     private int quantityForBuy = 1;
 
     public int QuantityForBuy
@@ -133,7 +136,15 @@
 
         StateHasChanged();
 
-        string toAddress = (await _httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend")).walletAddress; // generate ex if auth token ends
+        string toAddress = (await _httpService.Get<WalletAddress>("/api/Payment/walletAddressToSend"))?.walletAddress; // generate ex if auth token ends
+
+        if (toAddress is null)
+        {
+            System.Console.WriteLine("User unauthorized");
+            NavigationManager.NavigateTo("logout");
+            loading = false;
+            return;
+        }
 
         string txnHash;
 
