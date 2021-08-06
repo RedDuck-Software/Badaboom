@@ -10,7 +10,7 @@ namespace Badaboom.Client.Pages.Pricing.Product
 {
     public partial class Product
     {
-        private short quantityForBuy;
+        private int quantityForBuy = 1;
 
         [Parameter]
         public ProductType ProductType { get; set; }
@@ -24,13 +24,13 @@ namespace Badaboom.Client.Pages.Pricing.Product
 
         private IOrderedEnumerable<KeyValuePair<int, byte>> SortedDiscounts { get; set; }
 
-        private short QuantityForBuy
+        private int QuantityForBuy
         {
             get => quantityForBuy;
 
             set
             {
-                quantityForBuy = value;
+                quantityForBuy = value > 1000 ? 1000 : value < 1 ? 1 : value;
                 CountTotalPrice();
                 StateHasChanged();
             }

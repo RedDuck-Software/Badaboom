@@ -64,7 +64,7 @@
 
         set
         {
-            quantityForBuy = value;
+            quantityForBuy = value > 1000 ? 1000 : value < 1 ? 1 : value;
             CountTotalPrice();
             StateHasChanged();
         }
