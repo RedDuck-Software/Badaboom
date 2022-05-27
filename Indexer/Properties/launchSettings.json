@@ -2,7 +2,7 @@
   "profiles": {
     "Badaboom-indexer": {
       "commandName": "Project",
-      "commandLineArgs": "eth \"D:\\Log.log\" \"D:\\LogCritical.log\" \"https://bsc.getblock.io/?api_key=96e0aa87-92a8-4bfc-b4ab-4c9e1c45e21a\" true 1 9000000"
+      "commandLineArgs": "CrimeChain \"D:\\Log.log\" \"D:\\LogCritical.log\" \"http://20.234.8.75:8545\" false 100 1230000"
     }
   }
 }

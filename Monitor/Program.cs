@@ -18,11 +18,11 @@ namespace Monitor
 {
     class Program
     {
-        private const int DEFAULT_SLEEP_SECONDS = 2;
+        private const int DEFAULT_SLEEP_MILISECONDS = 250;
 
         static async Task Main(string[] args)
         {
-            if (args.Length < 6) throw new ArgumentException("You need to provide at least 6 arguments: network type, LoggerFilePath, LoggerCriticalFilePath, RPC url, bool:indexInnerCalls and BlockQueueSize");
+            if (args.Length == 6) throw new ArgumentException("You need to provide at least 6 arguments: network type, LoggerFilePath, LoggerCriticalFilePath, RPC url, bool:indexInnerCalls and BlockQueueSize");
 
             var config = new ConfigurationBuilder()
                 .SetBasePath(Environment.CurrentDirectory)
@@ -47,18 +47,7 @@ namespace Monitor
 
 
             var loadingInnerCalls = Convert.ToBoolean(args[4]);
-
-            var addressesToIndexFilePath = Path.Combine(Environment.CurrentDirectory, "AddressesToIndex.txt");
-
-            List<string> addressesToIndexList = null;
-
-            if(File.Exists(addressesToIndexFilePath))
-            {
-                addressesToIndexList = (await File.ReadAllLinesAsync(addressesToIndexFilePath)).Select(x=>x.Trim()).ToList();
-                ConsoleColor.Magenta.WriteLine("\nIndexing only selected addresses");
-            }
-
-
+            
             var Logger = new LoggerConfiguration()
                                 .Enrich.FromLogContext()
                                 .WriteTo.Console()
@@ -85,19 +74,12 @@ namespace Monitor
             var indexer = new Indexer(
                 tracer,
                 logger,
-                    args[0] == "bsc" ?
-                    conn.BscDbName :
-                    conn.EthDbName,
+                conn.CrimeChain,
                 blockQueueSize,
-                loadingInnerCalls,
-                addressesToIndexList
+                loadingInnerCalls
             );
 
-            var startBlock = args.Length > 6 ? long.Parse(args[6]) : 0;
-
-            var endBlock = args.Length > 7 ? long.Parse(args[7]) : (long)await indexer.GetLatestBlockNumber();
-
-            await indexer.StartMonitorNewBlocks(DEFAULT_SLEEP_SECONDS);
+            await indexer.StartMonitorNewBlocks(DEFAULT_SLEEP_MILISECONDS);
 
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
         }

@@ -1,2 +1,1 @@
-create database bscBadaboomDb;
-create database ethBadaboomDb;
+create database indexerBadaboomDb;

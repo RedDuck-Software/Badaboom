@@ -39,7 +39,7 @@ namespace Database.Respositories
         {
             string getRowStringForBlocks(Block b) => $"{b.BlockNumber}";
             string getRowStringForTx(Transaction tx) => $"convert(binary(32),'{tx.TransactionHash}',2),{tx.BlockId},'{tx.TimeStamp}', convert(binary(8), '{tx.GasPrice}', 2), {tx.Nonce}";
-            string getRowStringForCall(Call c) => $"convert(binary(32),'{c.TransactionHash}',2),{$"'{c.Error}'".Replace("''", "NULL")},'{(int)c.Type}',convert(binary(20),'{c.From}',2), convert(binary(20),'{c.To}',2) ,convert(binary(4),'{c.MethodId ?? ""}',2), convert(varbinary(MAX),'{c.Input ?? ""}',2)";
+            string getRowStringForCall(Call c) => $"convert(binary(32),'{c.TransactionHash}',2),{$"'{c.Error}'".Replace("''", "NULL")},'{(int)c.Type}',convert(binary(20),'{c.From}',2), convert(binary(20),'{c.To}',2) ,convert(binary(4),'{c.MethodId ?? ""}',2)";
 
             string getInsertBlocksSql(string valueNames, string values) => $"If Not Exists(select * from Blocks where BlockNumber={values}) Begin insert into Blocks({valueNames}) values({values}); end ";
             string getInsertTransactionSql(string valueNames, string values) => $"insert into Transactions({valueNames}) values({values}); ";
@@ -47,7 +47,7 @@ namespace Database.Respositories
 
             string valueNamesForBlocks = "[BlockNumber]";
             string valueNamesForTxs = "[TransactionHash],[BlockId],[TimeStamp],[GasPrice],[Nonce]";
-            string valueNamesForCalls = "[TransactionHash],[Error],[Type],[From],[To],[MethodId],[Input]";
+            string valueNamesForCalls = "[TransactionHash],[Error],[Type],[From],[To],[MethodId]";
 
             List<Block> blocks = blocksUnsorted.OrderBy(x => x.BlockNumber).ToList();
 

@@ -47,7 +47,7 @@ namespace Badaboom.Backend.Infrastructure.Services
         }
 
         public string GetWalletAddress()
-            => _configuration.GetSection("NetworkSettings").GetSection("ETH")["WaletAddress"];
+            => _configuration.GetSection("NetworkSettings")["WaletAddress"];
 
         public async Task<ProductPriceResponse> GetProductPrice(ProductType productType)
         {

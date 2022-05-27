@@ -7,5 +7,5 @@ alter table [Calls]
 alter table [Calls]
 	drop column [Value];
 
-
-
+alter table [Calls]
+    drop column [Input];

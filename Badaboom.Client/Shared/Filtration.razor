@@ -255,33 +255,8 @@
 
     public Modal Modal { get; set; }
 
-
     public async Task GetAbi()
     {
-        Loading = true;
-
-        var httpResponse = await HttpClient.GetAsync($"api/Transaction/GetContractAbi?contractAddress={TransactionFilters.ContractAddress}");
-
-        if (httpResponse.IsSuccessStatusCode)
-
-        {
-            var responseString = await httpResponse.Content.ReadAsStringAsync();
-
-            ContractMethods = JsonSerializer.Deserialize<IEnumerable<Method>>(responseString,
-            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }).Where(v =>
-                !string.IsNullOrEmpty(v.Name) &&
-                    v.Type?.ToLower() == "function" &&
-                    !(v.StateMutability?.ToLower() == "view"
-                    || v.StateMutability?.ToLower() == "pure"));
-        }
-        else
-        {
-            Console.WriteLine("ABI is not found");
-            // todo: hande error
-        }
-
-        Loading = false;
-
         ShowMethodFilter = true;
     }
 

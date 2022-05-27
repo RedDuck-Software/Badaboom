@@ -1,4 +1,4 @@
-﻿@page "/details/{txnHash}"
+﻿@page "/tx/{txnHash}"
 @inject HttpClient Http;
 @inject Microsoft.Extensions.Configuration.IConfiguration config;
 @using Nethereum.Web3;
@@ -15,24 +15,24 @@ else if (IsHashAddressValid)
     <div class="card-main col-md-8 col-sm-12 center" style="padding: 0px;">
         <div class=" card-main">
             <label class="ml-3 mt-3 f-bold f-s-35 clr-secondary">Transaction Details</label>
-            <div class="col-md-8 col-sm-12 btn-group btn-group-sm" role="group">
+            <div class="col-sm-12 btn-group btn-group-sm" role="group">
 
-                <button type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.Overview ? "active-d" : "")"
+                <div type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.Overview ? "active-d" : "")"
                         @onclick="@(() => CurrentPage = DisplayPage.Overview)">
                     Overview
-                </button>
-                <button type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.InternalTxns ? "active-d" : "")"
-                        @onclick="@(async () => {
-                                        CurrentPage = DisplayPage.InternalTxns;
-                                        if (IsHashAddressValid && InternalTxns.Count == 0) { await InitializeInternalTxn(); }
-                                    })">
-                    Internal Txns
-                </button>
-                <button type="button" disabled
-                        class="btn b-outline-dark @(CurrentPage == DisplayPage.State ? "active-d" : "")"
-                        @onclick="@(() => CurrentPage = DisplayPage.State)">
-                    State
-                </button>
+                </div>
+                @* <button type="button" class="btn b-outline-dark @(CurrentPage == DisplayPage.InternalTxns ? "active-d" : "")" *@
+                @*         @onclick="@(async () => { *@
+                @*                         CurrentPage = DisplayPage.InternalTxns; *@
+                @*                         if (IsHashAddressValid && InternalTxns.Count == 0) { await InitializeInternalTxn(); } *@
+                @*                     })"> *@
+                @*     Internal Txns *@
+                @* </button> *@
+                @* <button type="button" disabled *@
+                @*         class="btn b-outline-dark @(CurrentPage == DisplayPage.State ? "active-d" : "")" *@
+                @*         @onclick="@(() => CurrentPage = DisplayPage.State)"> *@
+                @*     State *@
+                @* </button> *@
 
             </div>
 
@@ -44,7 +44,7 @@ else if (IsHashAddressValid)
                             Transaction Hash
                         </dt>
                         <dd class="col-8">
-                            <a class="clr-main" href="@("https://etherscan.io/tx/" + transactionDetails.TransactionHash)">@transactionDetails.TransactionHash</a> 
+                            <span class="clr-main">@transactionDetails.TransactionHash</span> 
                         </dd>
                         <dt class="col-4">
                             Status
@@ -85,32 +85,32 @@ else if (IsHashAddressValid)
                             Value
                         </dt>
                         <dd class="col-8">
-                            @EthValue Ether ($@Math.Round(EthValue * EthPriceAtSpecificTime, 2))
+                            @EthValue Crime @*($@Math.Round(EthValue * EthPriceAtSpecificTime, 2))*@
                         </dd>
                         <dt class="col-4">
                             Transaction Fee
                         </dt>
                         <dd class="col-8">
-                            @TransactionFee ($@Math.Round(TransactionFee * EthPriceAtSpecificTime, 2))
+                            @TransactionFee Crime@*($@Math.Round(TransactionFee * EthPriceAtSpecificTime, 2))*@
                         </dd>
                         <dt class="col-4">
                             Gas Price
                         </dt>
                         <dd class="col-8">
-                            @GasPriceEth Ether (@((int)(GasPriceEth * 1_000_000_000)) Gwei)
+                            @GasPriceEth Crime @*(@((int)(GasPriceEth * 1_000_000_000)) Gwei)*@
                         </dd>
-                        <dt class="col-4">
+                        @*<dt class="col-4">
                             Transaction Ether Price
-                        </dt>
-                        <dd class="col-8">
+                        </dt>*@
+                        @*<dd class="col-8">
                             $@EthPriceAtSpecificTime/Ether
-                        </dd>
-                        <dt class="col-4">
+                        </dd>*@
+                        @*<dt class="col-4">
                             Curent Ether Price
-                        </dt>
-                        <dd class="col-8">
+                        </dt>*@
+                        @*<dd class="col-8">
                             $@CurrentEthPrice/Ether
-                        </dd>
+                        </dd>*@
                         
                     </dl>
                 }
@@ -266,7 +266,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Web3 web3 = new(config.GetSection("RPCUrls")["Eth"]);
+        Web3 web3 = new(config.GetSection("RPCUrls")["CrimeChain"]);
 
         try
         {

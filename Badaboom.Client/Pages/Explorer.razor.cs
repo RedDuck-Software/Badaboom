@@ -1,4 +1,5 @@
-﻿using Badaboom.Client.Infrastructure.Services;
+﻿using System;
+using Badaboom.Client.Infrastructure.Services;
 using Badaboom.Core.Models.Request;
 using Badaboom.Core.Models.Response;
 using Badaboom.Core.Services;
@@ -14,14 +15,11 @@ namespace Badaboom.Client.Pages
 {
     public partial class Explorer
     {
-        [Inject]
-        public HttpClient Http { get; set; }
+        [Inject] public HttpClient Http { get; set; }
 
-        [Inject]
-        public Microsoft.Extensions.Configuration.IConfiguration Config { get; set; }
+        [Inject] public Microsoft.Extensions.Configuration.IConfiguration Config { get; set; }
 
-        [Inject]
-        public IHttpService _httpService { get; set; }
+        [Inject] public IHttpService _httpService { get; set; }
 
         public IEnumerable<Transaction> Transactions { get; set; }
 
@@ -33,7 +31,7 @@ namespace Badaboom.Client.Pages
 
         public long CallId { get; set; }
 
-        int maximumPages = 1;
+        private int _maximumPages = 1;
 
 
         protected override async Task OnInitializedAsync()
@@ -41,7 +39,7 @@ namespace Badaboom.Client.Pages
             await LoadTransactions();
         }
 
-        public async Task LoadTransactions()
+        private async Task LoadTransactions()
         {
             Loading = true;
 
@@ -54,26 +52,17 @@ namespace Badaboom.Client.Pages
 
             PaginationTransactionResponse paginationTransactionResponse = new();
 
-            if (TransactionFilter.DecodeInputDataInfo != null &&
-                TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues != null &&
-                TransactionFilter.DecodeInputDataInfo.ArgumentsNamesValues.Count > 0)
-            {
-                paginationTransactionResponse = await _httpService.Post<PaginationTransactionResponse>("/api/Transaction/getTransactionsByArgument", TransactionFilter);
-            }
-            else
-            {
-                HttpResponseMessage httpResponse = await Http.PostAsync("/api/Transaction/GetTransactions",
-                    new StringContent(
-                        JsonSerializer.Serialize(TransactionFilter),
-                        Encoding.UTF8,
-                        "application/json")
-                    );
+            HttpResponseMessage httpResponse = await Http.PostAsync("/api/Transaction/GetTransactions",
+                new StringContent(
+                    JsonSerializer.Serialize(TransactionFilter),
+                    Encoding.UTF8,
+                    "application/json")
+            );
 
-                var responseString = await httpResponse.Content.ReadAsStringAsync();
+            var responseString = await httpResponse.Content.ReadAsStringAsync();
 
-                paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
-                    new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            }
+            paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
+                new JsonSerializerOptions() {PropertyNameCaseInsensitive = true});
 
             System.Console.WriteLine(paginationTransactionResponse != null);
 
@@ -85,16 +74,17 @@ namespace Badaboom.Client.Pages
 
                 if (totalCount != 0)
                 {
-                    TotalPageQuantity = totalCount / TransactionFilter.Count + (totalCount % TransactionFilter.Count != 0 ? 1 : 0);
+                    TotalPageQuantity = totalCount / TransactionFilter.Count +
+                                        (totalCount % TransactionFilter.Count != 0 ? 1 : 0);
                 }
                 else
                 {
                     if (Transactions.Count() == TransactionFilter.Count && TotalPageQuantity == TransactionFilter.Page)
                     {
-                        maximumPages += 1;
+                        _maximumPages += 1;
                     }
 
-                    TotalPageQuantity = maximumPages;
+                    TotalPageQuantity = _maximumPages;
                 }
 
                 StateHasChanged();
@@ -102,6 +92,7 @@ namespace Badaboom.Client.Pages
             else
             {
                 // handle error
+                await Console.Error.WriteLineAsync("Data loading error");
             }
 
             Loading = false;
@@ -125,7 +116,7 @@ namespace Badaboom.Client.Pages
 
         public async Task Filter()
         {
-            maximumPages = 1;
+            _maximumPages = 1;
             TotalPageQuantity = 1;
             TransactionFilter.Page = 1;
             await LoadTransactions();

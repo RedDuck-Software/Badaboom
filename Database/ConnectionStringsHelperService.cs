@@ -8,11 +8,7 @@ namespace Database
     {
         public ConnectionStringsHelperService(IConfigurationRoot config) => (_config) = (config);
 
-
-        public string BscDbName => _config.GetConnectionString("BSC");
-
-        public string EthDbName => _config.GetConnectionString("ETH");
-
+        public string CrimeChain => _config.GetConnectionString("CrimeChain");
      
         private IConfigurationRoot _config;
     }

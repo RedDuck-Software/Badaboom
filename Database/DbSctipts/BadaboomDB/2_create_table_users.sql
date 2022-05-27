@@ -9,7 +9,7 @@
 create table [RefreshTokens] (
 	[TokenId] BIGINT NOT NULL IDENTITY(1,1) PRIMARY KEY,
 
-	[UserId] BIGINT NOT NULL FOREIGN KEY REFERENCES [Users]([UserId]),
+	[UserId] INT NOT NULL FOREIGN KEY REFERENCES [Users]([UserId]),
 
 	[Token] varchar(256) NOT NULL UNIQUE,
 

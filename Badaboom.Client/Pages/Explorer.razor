@@ -1,4 +1,4 @@
-﻿@page "/explorer"
+﻿@page "/"
 @inject NavigationManager NavigationManager;
 
 <Filtration TransactionFilters="TransactionFilter" Explorer="this"></Filtration>
@@ -39,7 +39,7 @@ else
                 {
                     <tr>
                         <td>
-                            <a class="nav-link hash-width text-truncate clr-main" href="@($"details/{row.TxnHash}")">
+                            <a class="nav-link hash-width text-truncate clr-main" href="@($"tx/{row.TxnHash}")">
                                 @row.TxnHash
                             </a>
                         </td>

@@ -13,24 +13,24 @@
                 <li class="nav-item">
                     <a class="nav-link h5 f-bold f-s-25 clr-main" href="/features">Features</a>
                 </li>
-                <li class="nav-item ml-5 mr-5">
-                    <a class="nav-link h5 f-bold f-s-25 clr-main" href="/pricing">Pricing</a>
-                </li>
+                @* <li class="nav-item ml-5 mr-5"> *@
+                @*     <a class="nav-link h5 f-bold f-s-25 clr-main" href="/pricing">Pricing</a> *@
+                @* </li> *@
                 <li class="nav-item mr-6">
                     <a class="nav-link h5 f-bold f-s-25 clr-main" href="/explorer">Explorer</a>
                 </li>
 
             </ul>
-            <form class="d-flex">
-                @if (AuthenticationService.User != null)
-                {
-                    <button class="btn b-clr-secondary round-10 text-clr-light f-bold f-s-20" @onclick="@(_ => NavigationManager.NavigateTo("logout"))"><b>Logout</b></button>
-                }
-                else
-                {
-                    <button class="btn b-clr-secondary round-10 text-clr-light f-bold f-s-20" @onclick="@(_ => NavigationManager.NavigateTo("login"))"><b>Login</b></button>
-                }
-            </form>
+            @* <form class="d-flex"> *@
+            @*     @if (AuthenticationService.User != null) *@
+            @*     { *@
+            @*         <button class="btn b-clr-secondary round-10 text-clr-light f-bold f-s-20" @onclick="@(_ => NavigationManager.NavigateTo("logout"))"><b>Logout</b></button> *@
+            @*     } *@
+            @*     else *@
+            @*     { *@
+            @*         <button class="btn b-clr-secondary round-10 text-clr-light f-bold f-s-20" @onclick="@(_ => NavigationManager.NavigateTo("login"))"><b>Login</b></button> *@
+            @*     } *@
+            @* </form> *@
 
         </div>
     </div>

@@ -26,18 +26,15 @@ namespace IndexerCore
 
         public readonly ILogger Logger;
 
-        public IEnumerable<string> AddressesToIndex { get; set; }
-
         public bool IndexInnerCalls { get; }
 
-        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, int queueSize, bool indexInnerCalls, IEnumerable<string> addressesToIndex = null)
+        public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, int queueSize, bool indexInnerCalls)
         {
             _web3Tracer = web3Tracer;
             _connectionString = dbConnectionString;
             QueueSize = queueSize;
             Logger = logger;
             IndexInnerCalls = indexInnerCalls;
-            AddressesToIndex = addressesToIndex == null || addressesToIndex.Count() == 0 ? null : addressesToIndex.Select(v => v.FormatHex().ToLower());
             ValidCallTypes = Enum.GetNames(typeof(CallTypes)).Select(v => v.ToLower()).Where(v => v != CallTypes.NO_CALL_TYPE.ToString().ToLower()).ToArray();
         }
 
@@ -107,7 +104,7 @@ namespace IndexerCore
         /// Starts monitor for new blocks. From latest block recorded in DB to Latest Block available in the Node
         /// </summary>
         /// <returns></returns>
-        public async Task StartMonitorNewBlocks(double secondsToSleepBeforeIterations)
+        public async Task StartMonitorNewBlocks(double milliSecondsToSleepBeforeIterations)
         {
             while (true)
             {
@@ -123,7 +120,7 @@ namespace IndexerCore
 
                 await CommitIndexedBlocks();
 
-                await Task.Delay(TimeSpan.FromSeconds(secondsToSleepBeforeIterations));
+                await Task.Delay(TimeSpan.FromMilliseconds(milliSecondsToSleepBeforeIterations));
             }
         }
 
@@ -166,9 +163,7 @@ namespace IndexerCore
 
             try
             {
-                var txs = (await GetBlockTransactions(blockNubmer)).ToList().Where(v => AddressesToIndex == null ? true :
-                            AddressesToIndex.Contains(v.RawTransaction?.To?.ToLower() ?? "")
-                            || AddressesToIndex.Contains(v.RawTransaction?.From?.ToLower() ?? "")).ToList();
+                var txs = (await GetBlockTransactions(blockNubmer)).ToList();
 
                 var txsToSave = new List<Transaction>();
 
@@ -230,7 +225,6 @@ namespace IndexerCore
                     To = tx.RawTransaction.To,
                     MethodId = tx.RawTransaction.MethodId,
                     From = tx.RawTransaction.From,
-                    Input = tx.RawTransaction.Input,
                     Type = CallTypes.Call
                 });
 

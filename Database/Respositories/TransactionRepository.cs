@@ -98,7 +98,6 @@ namespace Database.Respositories
                     "convert(varchar(44), c.[From], 1) as [From], " +
                     "convert(varchar(44), c.[To], 1) as [To], " +
                     "convert(varchar(10), c.[MethodId], 1) as [MethodId], " +
-                    "lower(convert(varchar(MAX), c.[Input], 1)) as [Input], " +
                     "t.BlockId, " +
                     "t.TimeStamp " +
 

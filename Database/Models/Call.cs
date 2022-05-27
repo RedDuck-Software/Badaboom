@@ -16,8 +16,6 @@ namespace Database.Models
 
         public string MethodId { get; set; }
 
-        public string Input { get; set; }
-
         public Transaction Transaction { get; set; }
 
         public CallTypes Type { get; set; }

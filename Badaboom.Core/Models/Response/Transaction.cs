@@ -17,8 +17,6 @@ namespace Badaboom.Core.Models.Response
         
         public string From { get; set; }
 
-        public string Input { get; set; }
-
         public string To { get; set; }
 
         public long CallId { get; set; }

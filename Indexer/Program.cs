@@ -59,16 +59,8 @@ namespace BadaboomIndexer
 
             var loadingInnerCalls = Convert.ToBoolean(args[4]);
 
-            var addressesToIndexFilePath = Path.Combine(Environment.CurrentDirectory, "AddressesToIndex.txt");
 
             List<string> addressesToIndexList = null;
-
-            if(File.Exists(addressesToIndexFilePath))
-            {
-                addressesToIndexList = File.ReadAllLines(addressesToIndexFilePath).Select(x=>x.Trim()).ToList();
-                ConsoleColor.Magenta.WriteLine("\nIndexing only selected addresses");
-            }
-
 
             var Logger = new LoggerConfiguration()
                                 .Enrich.FromLogContext()
@@ -96,12 +88,9 @@ namespace BadaboomIndexer
             var indexer = new Indexer(
                 tracer,
                 logger,
-                    args[0] == "bsc" ?
-                    conn.BscDbName :
-                    conn.EthDbName,
+                conn.CrimeChain,
                 blockQueueSize,
-                loadingInnerCalls,
-                addressesToIndexList
+                loadingInnerCalls
             );
 
             var startBlock = args.Length > 6 ? long.Parse(args[6]) : 0;

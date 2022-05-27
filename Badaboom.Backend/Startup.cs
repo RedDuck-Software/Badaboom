@@ -55,7 +55,7 @@ namespace Backend
             services.Configure<JWTAuth>(jwtConfig);
             services.Configure<ServicesSettings>(servicesConfig);
 
-            var rpcUrl = Configuration.GetSection("RpcUrls").GetSection("ETH").Value;
+            var rpcUrl = Configuration.GetSection("RpcUrls").GetSection("CrimeChain").Value;
 
             services.AddAuthentication(x =>
             {
@@ -85,7 +85,7 @@ namespace Backend
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<ITransactionService, TransactionService>();
-            services.AddScoped((f) => new Web3(rpcUrl));
+            // services.AddScoped((f) => new Web3(rpcUrl));
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
