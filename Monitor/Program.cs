@@ -28,6 +28,7 @@ namespace Monitor
                 .SetBasePath(Environment.CurrentDirectory)
                 .AddJsonFile("appsettings.json", false)
                 .AddUserSecrets<Program>()
+                .AddEnvironmentVariables()
                 .Build();
 
 
