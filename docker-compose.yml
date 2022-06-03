@@ -1,0 +1,7 @@
+﻿version: '3.0'
+
+services:
+  indexer:
+    build:
+      target: indexer
+      context: .
