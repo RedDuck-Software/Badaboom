@@ -145,7 +145,7 @@ namespace Badaboom.Client.Pages.Pricing.Product
         private async Task<bool> CheckIsSuccessTransaction(string txnHash)
         {
             int cycle = 0, maxCycle = 18 * 2;
-            Nethereum.Web3.Web3 web3 = new(_config.GetSection("RPCUrls")["EthRopsten"]);
+            Nethereum.Web3.Web3 web3 = new(_config["RPCUrl"]);
 
             System.Console.WriteLine($"Wait between 5 and 180 seconds, we check your transaction");
             

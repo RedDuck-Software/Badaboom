@@ -266,7 +266,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Web3 web3 = new(config.GetSection("RPCUrls")["CrimeChain"]);
+        Web3 web3 = new(config["RPCUrl"]);
 
         try
         {
@@ -363,7 +363,7 @@ else
         InternalTxns = JsonSerializer.Deserialize<List<InternalTxnResponse>>(responseString,
         new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-        Web3 web3 = new(config.GetSection("RPCUrls")["Eth"]);
+        Web3 web3 = new(config["RPCUrl"]);
 
         foreach (var internalTxn in InternalTxns)
         {

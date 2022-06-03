@@ -55,7 +55,7 @@ namespace Backend
             services.Configure<JWTAuth>(jwtConfig);
             services.Configure<ServicesSettings>(servicesConfig);
 
-            var rpcUrl = Configuration.GetSection("RpcUrls").GetSection("CrimeChain").Value;
+            var rpcUrl = Configuration.GetSection("RpcUrl").Value;
 
             services.AddAuthentication(x =>
             {

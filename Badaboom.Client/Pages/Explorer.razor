@@ -3,7 +3,7 @@
 
 <Filtration TransactionFilters="TransactionFilter" Explorer="this"></Filtration>
 
-@if (Transactions == null)
+@if (Loading)
 {
     <p class="ml-1">Loading <span class="spinner-border spinner-border-sm ml-1" /></p>
 }
@@ -22,46 +22,46 @@ else
         </thead>
 
         <tbody>
-            @if (Transactions.Count() == 0)
+        @if (Transactions is null || Transactions.Count() == 0 )
+        {
+            @if (TransactionFilter.Page == 1)
             {
-                @if (TransactionFilter.Page == 1)
-                {
-                    <tr><td colspan="6" class="justify-content-center p-2"><em>Maybe your filters are wrong ...</em></td></tr>
-                }
-                @if (TransactionFilter.Page != 1)
-                {
-                    <tr><td colspan="6" class="justify-content-center p-2"><em>End of the list, come back</em></td></tr>
-                }
+                <tr><td colspan="6" class="justify-content-center p-2"><em>Maybe your filters are wrong ...</em></td></tr>
             }
-            else
+            @if (TransactionFilter.Page != 1)
             {
-                @foreach (var row in Transactions)// tr td column=6
-                {
-                    <tr>
-                        <td>
-                            <a class="nav-link hash-width text-truncate clr-main" href="@($"tx/{row.TxnHash}")">
-                                @row.TxnHash
-                            </a>
-                        </td>
-                        <td>@row.Method</td>
-                        <td>@row.Block</td>
-                        <td>@DateTimeOffset.FromUnixTimeSeconds((long)@row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
-                        <td>
-                            <a class="nav-link hash-width text-truncate clr-main" href="@row.From">
-                                @row.From
-                            </a>
-                        </td>
-                        <td>
-                            <a class="nav-link hash-width text-truncate clr-main" href="@row.To">
-                                @row.To
-                            </a>
-                        </td>
-                    </tr>
-                }
+                <tr><td colspan="6" class="justify-content-center p-2"><em>End of the list, come back</em></td></tr>
             }
+        }
+        else
+        {
+            @foreach (var row in Transactions) // tr td column=6
+            {
+                <tr>
+                    <td>
+                        <a class="nav-link hash-width text-truncate clr-main" href="@($"tx/{row.TxnHash}")">
+                            @row.TxnHash
+                        </a>
+                    </td>
+                    <td>@row.Method</td>
+                    <td>@row.Block</td>
+                    <td>@DateTimeOffset.FromUnixTimeSeconds((long) @row.Age).ToString("yyyy:MM:dd:HH:mm:ss")</td>
+                    <td>
+                        <a class="nav-link hash-width text-truncate clr-main" href="@row.From">
+                            @row.From
+                        </a>
+                    </td>
+                    <td>
+                        <a class="nav-link hash-width text-truncate clr-main" href="@row.To">
+                            @row.To
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
         </tbody>
 
-        @if (!(Transactions.Count() == 0 && TransactionFilter.Page == 1))
+        @if (Transactions is not null && !( Transactions.Count() == 0 && TransactionFilter.Page == 1))
         {
             <tfoot>
                 <tr>

@@ -58,9 +58,16 @@ namespace Badaboom.Client.Pages
                     Encoding.UTF8,
                     "application/json")
             );
-
+        
+            if(!httpResponse.IsSuccessStatusCode)
+            {
+                Loading = false;
+                StateHasChanged();
+                return;
+            }
+            
             var responseString = await httpResponse.Content.ReadAsStringAsync();
-
+            
             paginationTransactionResponse = JsonSerializer.Deserialize<PaginationTransactionResponse>(responseString,
                 new JsonSerializerOptions() {PropertyNameCaseInsensitive = true});
 

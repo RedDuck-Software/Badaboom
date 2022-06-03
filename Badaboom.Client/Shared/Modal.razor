@@ -202,7 +202,7 @@
         Console.WriteLine($"Wait between 5 and 180 seconds, we check your transaction");
         while (cycle < maxCycle)
         {
-            Nethereum.Web3.Web3 web3 = new(config.GetSection("RPCUrls")["EthRopsten"]);
+            Nethereum.Web3.Web3 web3 = new(config["RPCUrl"]);
             var transaction = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txnHash);
 
             await Task.Delay(5_000);
