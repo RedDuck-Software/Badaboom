@@ -1,57 +1,44 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP.Net Core app to Azure Web App - crimechain-badabom-server
+name: Build and deploy crimechain badaboom server
 
 on:
   push:
-    branches:
-      - crimechain
+    branches: [ crimechain ]
   workflow_dispatch:
 
+env:
+  AZURE_WEBAPP_NAME: crimechain-badabom-server
+  AZURE_WEBAPP_PACKAGE_PATH: Badaboom.Backend/publish
+  CONFIGURATION: Release
+  DOTNET_CORE_VERSION: 5.0.x
+  WORKING_DIRECTORY: Badaboom.Backend
+  AZURE_WEBAPP_SLOT_NAME: production
 jobs:
-  build:
-    runs-on: windows-latest
-
+  build-and-publish:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up .NET Core
+      - name: 'Checkout Github Action'
+        uses: actions/checkout@v2
+      - name: Setup .NET Core ${{ env.DOTNET_CORE_VERSION }}
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.301'
-          include-prerelease: true
-
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
-
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v2
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+      - name: Restore dependencies
+        run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
+      - name: Caching Nuget and Npm packages
+        uses: actions/cache@v2
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
-
-  deploy:
-    runs-on: windows-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v2
-        with:
-          name: .net-app
-
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget
+      - name: Build Api
+        run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+      - name: Publish Api
+        run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'crimechain-badabom-server'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C7362E96CF3E41678018CD5DA74B8AF5 }}
-          package: .
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          slot-name: ${{ env.AZURE_WEBAPP_SLOT_NAME }}
