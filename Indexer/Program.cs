@@ -99,8 +99,10 @@ namespace BadaboomIndexer
             var endBlock = args.Length > 7 ? long.Parse(args[7]) : (long)await indexer.GetLatestBlockNumber();
 
             await indexer.IndexInRangeParallel(startBlock, endBlock, 50);
-
             ConsoleColor.Magenta.WriteLine("\nIndexing successfully done!");
+            
+            ConsoleColor.Magenta.WriteLine("\nStarting indexing to latest block");
+            await indexer.StartMonitorNewBlocks(100);
         }
     }
 }
