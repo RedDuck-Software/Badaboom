@@ -173,6 +173,7 @@ namespace IndexerCore
                 if (!txs.Any())
                 {
                     Logger.LogWarning($"no transactions to index in block {blockNubmer}. Skipping");
+                    return;
                 }
                 else
                 {
