@@ -33,15 +33,8 @@ namespace BadaboomIndexer
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
-            Console.WriteLine("Arg: ", args[0]);
-
             if (args.Length < 6) throw new ArgumentException("You need to provide at least 6 arguments: network type, LoggerFilePath, LoggerCriticalFilePath, RPC url, bool:indexInnerCalls and BlockQueueSize");
 
-            Console.WriteLine("Arg: ", args[0]);
-            Console.WriteLine("Arg: ", args[1]);
-            Console.WriteLine("Arg: ", args[2]);
-            Console.WriteLine("Arg: ", args[3]);
-            
             var config = new ConfigurationBuilder()
                 .SetBasePath(Environment.CurrentDirectory)
                 .AddJsonFile("appsettings.json", false)
