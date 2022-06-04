@@ -142,7 +142,10 @@ namespace IndexerCore
                 List<Task> tasks = new List<Task>();
 
                 for (ulong i = startBlock; i < endBlock; i++)
-                    tasks.Add(IndexBlock(i));
+                {
+                    if (!BlockQueue.Any(v => (ulong)v.BlockNumber == i))
+                        tasks.Add(IndexBlock(i));
+                }
 
                 await Task.WhenAll(tasks);
 

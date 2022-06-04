@@ -107,7 +107,7 @@ namespace BadaboomIndexer
             }
 
             ConsoleColor.Magenta.WriteLine("\nStarting indexing to latest block"); 
-            await indexer.StartMonitorNewBlocks(100);
+            await indexer.StartMonitorNewBlocks(1000);
         }
     }
 }
