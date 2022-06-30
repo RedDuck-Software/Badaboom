@@ -28,6 +28,9 @@ namespace IndexerCore
 
         public bool IndexInnerCalls { get; }
 
+        const int MaxAttempts = 5;
+        const int DelayAttempts = 20;
+
         public Indexer(IWeb3Tracer web3Tracer, ILogger logger, string dbConnectionString, int queueSize, bool indexInnerCalls)
         {
             _web3Tracer = web3Tracer;
@@ -40,18 +43,25 @@ namespace IndexerCore
 
         public async Task<ulong> GetLatestBlockNumber()
         {
-            try
+            int attempts = 0;
+            while (true)
             {
-                return (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
+                attempts++;
+                try
+                {
+                    return (await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).ToUlong();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
 
-                throw ex;
+                    if (attempts >= MaxAttempts)
+                        throw ex;
+                    else
+                        System.Threading.Thread.Sleep(DelayAttempts * 1000);
+                }
             }
         }
-
 
         public async Task IndexInRangeParallel(long startBlock, long endBlock, long step = 20)
         {
@@ -80,24 +90,34 @@ namespace IndexerCore
         {
             Logger.LogInformation($"Commiting queued blocks. Current queue size is: { BlockQueue.Count}");
 
-            var blockQueueList = BlockQueue.ToList();
-
-            using (var bRepo = new BlocksRepository(_connectionString))
+            int attempts = 0;
+            while (true)
             {
-                try
-                {
-                    await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(blockQueueList);
+                attempts++;
+                var blockQueueList = BlockQueue.ToList();
 
-                    Logger.LogInformation("Successfully saved");
-                }
-                catch (Exception ex)
+                using (var bRepo = new BlocksRepository(_connectionString))
                 {
-                    Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
-                    Environment.Exit(1);
+                    try
+                    {
+                        await bRepo.AddNewBlocksWithTransactionsAndCallsAsync(blockQueueList);
+
+                        Logger.LogInformation("Successfully saved");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
+
+                        if (attempts >= MaxAttempts)
+                            Environment.Exit(1);
+                        else
+                            System.Threading.Thread.Sleep(DelayAttempts * 1000);
+                    }
                 }
+
+                BlockQueue.Clear();
+                break;
             }
-
-            BlockQueue.Clear();
         }
 
         /// <summary>
@@ -126,80 +146,101 @@ namespace IndexerCore
 
         public async Task IndexInRange(ulong startBlock, ulong endBlock)
         {
-            var queueSnapshot = BlockQueue.ToArray();
-
-            if (startBlock > endBlock)
+            int attempts = 0;
+            while (true)
             {
-                var c = startBlock;
-                startBlock = endBlock;
-                endBlock = c;
-            }
+                attempts++;
+                var queueSnapshot = BlockQueue.ToArray();
 
-            try
-            {
-                Logger.LogInformation($"========= Blocks [{startBlock} , {endBlock}] =========");
-
-                List<Task> tasks = new List<Task>();
-
-                for (ulong i = startBlock; i < endBlock; i++)
+                if (startBlock > endBlock)
                 {
-                    if (!BlockQueue.Any(v => (ulong)v.BlockNumber == i))
-                        tasks.Add(IndexBlock(i));
+                    var c = startBlock;
+                    startBlock = endBlock;
+                    endBlock = c;
                 }
 
-                await Task.WhenAll(tasks);
+                try
+                {
+                    Logger.LogInformation($"========= Blocks [{startBlock} , {endBlock}] =========");
 
-                if (BlockQueue.Count >= QueueSize)
-                    await CommitIndexedBlocks();
-            }
-            catch (Exception ex) // if exception wasn`t handled in IndexBlock method - this is a Rpc call Exception
-            {
-                Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
+                    List<Task> tasks = new List<Task>();
 
-                Environment.Exit(1);
+                    for (ulong i = startBlock; i < endBlock; i++)
+                    {
+                        if (!BlockQueue.Any(v => (ulong)v.BlockNumber == i))
+                            tasks.Add(IndexBlock(i));
+                    }
+
+                    await Task.WhenAll(tasks);
+
+                    if (BlockQueue.Count >= QueueSize)
+                        await CommitIndexedBlocks();
+                }
+                catch (Exception ex) // if exception wasn`t handled in IndexBlock method - this is a Rpc call Exception
+                {
+                    Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
+                    
+                    if (attempts >= MaxAttempts)
+                        Environment.Exit(1);
+                    else
+                        System.Threading.Thread.Sleep(DelayAttempts * 1000);
+                }
+
+                break;
             }
         }
 
         private async Task IndexBlock(ulong blockNubmer)
         {
-            var currentBlock = new Block { BlockNumber = (int)blockNubmer };
-
-            try
+            int attempts = 0;
+            while (true)
             {
-                var txs = (await GetBlockTransactions(blockNubmer)).ToList();
+                attempts++;
+                var currentBlock = new Block { BlockNumber = (int)blockNubmer };
 
-                var txsToSave = new List<Transaction>();
+                try
+                {
+                    var txs = (await GetBlockTransactions(blockNubmer)).ToList();
 
-                if (!txs.Any())
-                {
-                    Logger.LogWarning($"no transactions to index in block {blockNubmer}. Skipping");
-                    return;
-                }
-                else
-                {
-                    foreach (var tx in txs)
+                    var txsToSave = new List<Transaction>();
+
+                    if (!txs.Any())
                     {
-                        if (!await ContainsTransactions(tx))
+                        Logger.LogWarning($"no transactions to index in block {blockNubmer}. Skipping");
+                        return;
+                    }
+                    else
+                    {
+                        foreach (var tx in txs)
                         {
-                            await IndexTransaction(tx);
-                            txsToSave.Add(tx);
-                        }
-                        else
-                        {
-                            Logger.LogWarning($"Tx with 0x{tx.TransactionHash} is already indexed");
+                            if (!await ContainsTransactions(tx))
+                            {
+                                await IndexTransaction(tx);
+                                txsToSave.Add(tx);
+                            }
+                            else
+                            {
+                                Logger.LogWarning($"Tx with 0x{tx.TransactionHash} is already indexed");
+                            }
                         }
                     }
+
+                    currentBlock.Transactions = txsToSave.ToList();
+                    BlockQueue.Enqueue(currentBlock);
+
+                    Logger.LogInformation($"Block {blockNubmer} added to InsertBlockQueue");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex.Message}");
+                    
+                    if (attempts >= MaxAttempts)
+                        throw ex;
+                    else
+                        System.Threading.Thread.Sleep(DelayAttempts * 1000);
                 }
 
-                currentBlock.Transactions = txsToSave.ToList();
-                BlockQueue.Enqueue(currentBlock);
-
-                Logger.LogInformation($"Block {blockNubmer} added to InsertBlockQueue");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex.Message}");
-                throw ex;
+                break;
             }
         }
 
