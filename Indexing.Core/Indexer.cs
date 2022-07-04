@@ -335,12 +335,12 @@ namespace IndexerCore
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
         }
 
-        private async void ThrowOrDelay(int attempts, Exception ex)
+        private void ThrowOrDelay(int attempts, Exception ex)
         {
             if (attempts >= MaxAttempts)
                 throw ex;
             else
-                await Task.Delay(DelayAttempts * 1000);
+                Task.Delay(DelayAttempts * 1000).Wait();
         }
         
         private readonly string _rpcUrl;
