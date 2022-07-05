@@ -54,7 +54,7 @@ namespace IndexerCore
                 catch (Exception ex)
                 {
                     Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
-                    ThrowOrDelay(attempts, ex);
+                    await ThrowOrDelay(attempts, ex);
                 }
             }
         }
@@ -103,7 +103,7 @@ namespace IndexerCore
                     catch (Exception ex)
                     {
                         Logger.LogCritical("Error while saving BlockQueue into database. ex: " + ex.Message);
-                        ThrowOrDelay(attempts, ex);
+                        await ThrowOrDelay(attempts, ex);
                     }
                 }
 
@@ -171,7 +171,7 @@ namespace IndexerCore
                 catch (Exception ex) // if exception wasn`t handled in IndexBlock method - this is a Rpc call Exception
                 {
                     Logger.LogCritical($"Super critical exception occured. Exiting the app. Ex: {ex.Message}");
-                    ThrowOrDelay(attempts, ex);
+                    await ThrowOrDelay(attempts, ex);
                 }
 
                 break;
@@ -221,7 +221,7 @@ namespace IndexerCore
                 catch (Exception ex)
                 {
                     Logger.LogError($"GetBlockTransactions() Failed on block {blockNubmer}. Ex: {ex.Message}");
-                    ThrowOrDelay(attempts, ex);
+                    await ThrowOrDelay(attempts, ex);
                 }
 
                 break;
@@ -335,12 +335,12 @@ namespace IndexerCore
             return value.Substring(0, value.Length > 10 ? 10 : value.Length);
         }
 
-        private void ThrowOrDelay(int attempts, Exception ex)
+        private async Task ThrowOrDelay(int attempts, Exception ex)
         {
             if (attempts >= MaxAttempts)
                 throw ex;
             else
-                Task.Delay(DelayAttempts * 1000).Wait();
+                await Task.Delay(DelayAttempts * 1000);
         }
         
         private readonly string _rpcUrl;
