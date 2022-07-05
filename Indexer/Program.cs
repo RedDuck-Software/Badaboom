@@ -33,8 +33,6 @@ namespace BadaboomIndexer
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
-            if (args.Length < 6) throw new ArgumentException("You need to provide at least 6 arguments: network type, LoggerFilePath, LoggerCriticalFilePath, RPC url, bool:indexInnerCalls and BlockQueueSize");
-
             var config = new ConfigurationBuilder()
                 .SetBasePath(Environment.CurrentDirectory)
                 .AddJsonFile("appsettings.json", false)
@@ -42,34 +40,65 @@ namespace BadaboomIndexer
                 .AddEnvironmentVariables()
                 .Build();
 
+            string sectionName;
+#if (DEBUG)
+    sectionName = "ArgsDebug";
+#else
+    sectionName = "ArgsRelease";
+#endif
+
+            var _args = config?.GetSection(sectionName);
+            if (_args == null)
+                throw new ArgumentException(sectionName + " section is expected in the config");
+
+            var LogFile = _args["LogFile"];
+            var LogCriticalFile = _args["LogCriticalFile"];
+            var sBlockQueueSize = _args["BlockQueueSize"];
+            var sStartBlock = _args["StartBlock"];
+            var sEndBlock = _args["EndBlock"];
+            var RPCProvider = _args["RPCProvider"];
+            var LoadingInnerCalls = _args["LoadingInnerCalls"];
+            var StartIndexing = _args["StartIndexing"];
+
+            if (LogFile == null)
+                throw new ArgumentException("LogFile parameter is expected");
+
+            if (LogCriticalFile == null)
+                throw new ArgumentException("LogCriticalFile parameter is expected");
+
+            if (sBlockQueueSize == null)
+                throw new ArgumentException("BlockQueueSize parameter is expected");
+
+            if (RPCProvider == null)
+                throw new ArgumentException("RPCProvider parameter is expected");
+
+            if (LoadingInnerCalls == null)
+                throw new ArgumentException("LoadingInnerCalls parameter is expected");
 
             var conn = new ConnectionStringsHelperService(config);
 
-            var rpcUrl = args[3];
+            var rpcUrl = RPCProvider;
 
             var web3 = new Web3Geth(rpcUrl);
 
             var tracer = new GethWeb3Tracer(web3);
 
-            if (!File.Exists(args[1]))
-                File.Create(args[1]);
+            if (!File.Exists(LogFile))
+                File.Create(LogFile);
 
-            if (!File.Exists(args[2]))
-                File.Create(args[2]);
+            if (!File.Exists(LogCriticalFile))
+                File.Create(LogCriticalFile);
 
-
-            var loadingInnerCalls = Convert.ToBoolean(args[4]);
-
+            var loadingInnerCalls = Convert.ToBoolean(LoadingInnerCalls);
 
             List<string> addressesToIndexList = null;
 
             var Logger = new LoggerConfiguration()
                                 .Enrich.FromLogContext()
                                 .WriteTo.Console()
-                                .WriteTo.File(args[1])
-                                .WriteTo.File(args[2], Serilog.Events.LogEventLevel.Fatal)
+                                .WriteTo.File(LogFile)
+                                .WriteTo.File(LogCriticalFile, Serilog.Events.LogEventLevel.Fatal)
                                 .CreateLogger();
-
 
             var serviceProvider = new ServiceCollection()
                 .AddLogging(config =>
@@ -81,9 +110,7 @@ namespace BadaboomIndexer
             var logger = serviceProvider.GetService<ILoggerFactory>()
                   .CreateLogger<Program>();
 
-
-            var blockQueueSize = Convert.ToInt32(args[5]);
-
+            var blockQueueSize = Convert.ToInt32(sBlockQueueSize);
             if (blockQueueSize < 1) throw new ArgumentException("BlockQueueSize must be greater than zero");
 
             var indexer = new Indexer(
@@ -94,12 +121,12 @@ namespace BadaboomIndexer
                 loadingInnerCalls
             );
 
-            var startBlock = args.Length > 6 ? long.Parse(args[6]) : 0;
+            var startBlock = sStartBlock != null ? long.Parse(sStartBlock) : 0;
+            var endBlock = sEndBlock != null ? long.Parse(sEndBlock) : (long)await indexer.GetLatestBlockNumber();
+            if (endBlock < 1)
+                endBlock = (long)await indexer.GetLatestBlockNumber();
 
-            var endBlock = args.Length > 7 ? long.Parse(args[7]) : (long)await indexer.GetLatestBlockNumber();
-
-            var startIndexing = args.Length > 8 ? Boolean.Parse(args[8]) : false;
-
+            var startIndexing = StartIndexing != null ? Boolean.Parse(StartIndexing) : false;
             if (startIndexing)
             {
                 await indexer.IndexInRangeParallel(startBlock, endBlock, 50);
@@ -111,4 +138,3 @@ namespace BadaboomIndexer
         }
     }
 }
-
