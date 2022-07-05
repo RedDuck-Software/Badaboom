@@ -40,11 +40,17 @@ namespace BadaboomIndexer
                 .AddEnvironmentVariables()
                 .Build();
 
-            var _args = config?.GetSection("Args");
-            if (_args == null)
-                throw new ArgumentException("Args section is expected in the config");
+            string sectionName;
+#if (DEBUG)
+    sectionName = "ArgsDebug";
+#else
+    sectionName = "ArgsRelease";
+#endif
 
-            var SelectedChain = _args["SelectedChain"];
+            var _args = config?.GetSection(sectionName);
+            if (_args == null)
+                throw new ArgumentException(sectionName + " section is expected in the config");
+
             var LogFile = _args["LogFile"];
             var LogCriticalFile = _args["LogCriticalFile"];
             var sBlockQueueSize = _args["BlockQueueSize"];
@@ -53,9 +59,6 @@ namespace BadaboomIndexer
             var RPCProvider = _args["RPCProvider"];
             var LoadingInnerCalls = _args["LoadingInnerCalls"];
             var StartIndexing = _args["StartIndexing"];
-
-            if (SelectedChain == null)
-                throw new ArgumentException("SelectedChain parameter is expected");
 
             if (LogFile == null)
                 throw new ArgumentException("LogFile parameter is expected");
@@ -69,7 +72,7 @@ namespace BadaboomIndexer
             if (RPCProvider == null)
                 throw new ArgumentException("RPCProvider parameter is expected");
 
-            if (LoadingInnerCalls != null)
+            if (LoadingInnerCalls == null)
                 throw new ArgumentException("LoadingInnerCalls parameter is expected");
 
             var conn = new ConnectionStringsHelperService(config);
@@ -120,6 +123,8 @@ namespace BadaboomIndexer
 
             var startBlock = sStartBlock != null ? long.Parse(sStartBlock) : 0;
             var endBlock = sEndBlock != null ? long.Parse(sEndBlock) : (long)await indexer.GetLatestBlockNumber();
+            if (endBlock < 1)
+                endBlock = (long)await indexer.GetLatestBlockNumber();
 
             var startIndexing = StartIndexing != null ? Boolean.Parse(StartIndexing) : false;
             if (startIndexing)
